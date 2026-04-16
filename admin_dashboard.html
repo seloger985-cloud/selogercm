@@ -34,25 +34,6 @@
     .btn-primary{ background:var(--orange); color:#fff; font-weight:700; }
     .btn-ghost{ background:#fff; border:1px solid #ddd; }
 
-    /* ── KYC ── */
-    .kyc-card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); padding:1rem 1.2rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:8px; }
-    .kyc-avatar { width:48px; height:48px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:900; color:#888; flex-shrink:0; overflow:hidden; }
-    .kyc-avatar img { width:100%; height:100%; object-fit:cover; }
-    .kyc-info { flex:1; min-width:0; }
-    .kyc-info .name  { font-weight:800; font-size:.95rem; color:#111; }
-    .kyc-info .email { font-size:.78rem; color:#888; }
-    .kyc-info .meta  { font-size:.75rem; color:#aaa; margin-top:.2rem; }
-    .kyc-doc-link { font-size:.82rem; color:var(--orange); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-top:.3rem; }
-    .kyc-doc-link:hover { text-decoration:underline; }
-    .kyc-actions { display:flex; gap:8px; flex-shrink:0; }
-    .btn-approve { background:#e8f5e9; color:#2e7d32; border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
-    .btn-approve:hover { opacity:.82; }
-    .btn-reject  { background:#fee2e2; color:#c00;    border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
-    .btn-reject:hover  { opacity:.82; }
-    .badge-pending  { background:#fff8e1; color:#f59e0b; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-    .badge-verified { background:#e8f5e9; color:#2e7d32; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-    .badge-rejected { background:#fee2e2; color:#c00;    border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-
     .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     .stat{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.05); }
     .stat .k{ font-size:22px; font-weight:900; }
@@ -98,6 +79,21 @@
     .b-dark{ background:#111; color:#fff; }
 
     .empty{ padding:24px; text-align:center; color:#666; border:1px dashed #ddd; border-radius:12px; }
+    .admin-pagination {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 0; margin-top:.5rem; flex-wrap:wrap; gap:.5rem;
+    }
+    .admin-pagination .pag-info { font-size:.82rem; color:#888; }
+    .admin-pagination .pag-btns { display:flex; gap:.4rem; flex-wrap:wrap; }
+    .pag-btn {
+      min-width:34px; height:34px; padding:0 .5rem;
+      border:1.5px solid #e5e5e5; background:#fff;
+      border-radius:8px; font-family:inherit; font-size:.82rem;
+      font-weight:700; color:#555; cursor:pointer; transition:all .2s;
+    }
+    .pag-btn:hover { border-color:#ff7a00; color:#ff7a00; }
+    .pag-btn.active { background:#ff7a00; border-color:#ff7a00; color:#fff; }
+    .pag-btn:disabled { opacity:.35; cursor:default; pointer-events:none; }
   </style>
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -169,22 +165,11 @@
       <div class="panel">
         <h2>All listings</h2>
         <div id="results" class="grid"></div>
-        <div id="empty" class="empty" style="display:none">No listing matches your filters.</div>
-      </div>
-
-
-      <!-- ═══ KYC AGENTS ═══ -->
-      <div class="panel" style="margin-top:1.5rem;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
-          <h2 style="margin:0;">🪪 Vérification Agents (KYC)</h2>
-          <div style="display:flex;gap:8px;">
-            <button onclick="loadKyc('pending')"  id="kycTabPending"  style="padding:.4rem .9rem;border-radius:8px;border:none;background:#fff8e1;color:#f59e0b;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">⏳ En attente</button>
-            <button onclick="loadKyc('verified')" id="kycTabVerified" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">✅ Vérifiés</button>
-            <button onclick="loadKyc('rejected')" id="kycTabRejected" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">❌ Rejetés</button>
-          </div>
+        <div id="adminPagination" class="admin-pagination" style="display:none">
+          <span class="pag-info" id="pagInfo"></span>
+          <div class="pag-btns" id="pagBtns"></div>
         </div>
-        <div id="kycList"><div style="text-align:center;color:#aaa;padding:2rem;">Chargement…</div></div>
-        <div id="kycEmpty" style="display:none;text-align:center;color:#aaa;padding:2rem;">Aucun agent dans cette catégorie.</div>
+        <div id="empty" class="empty" style="display:none">No listing matches your filters.</div>
       </div>
 
       <!-- ═══ BLOG MANAGEMENT ═══ -->
@@ -327,6 +312,49 @@
       return true;
     }
 
+    const PER_PAGE = 12;
+    let _adminPage = 1;
+    let _adminData = [];
+
+    function renderPage(arr, page) {
+      _adminPage = page;
+      const total = arr.length;
+      const totalPages = Math.ceil(total / PER_PAGE);
+      const start = (page - 1) * PER_PAGE;
+      const end   = Math.min(start + PER_PAGE, total);
+      const slice = arr.slice(start, end);
+
+      resultsEl.innerHTML = slice.map(ad => card(ad)).join('');
+      slice.forEach(ad => bindActions(ad));
+
+      /* Info + pagination */
+      const pagEl   = document.getElementById('adminPagination');
+      const infoEl  = document.getElementById('pagInfo');
+      const btnsEl  = document.getElementById('pagBtns');
+
+      if (totalPages <= 1) { pagEl.style.display = 'none'; return; }
+      pagEl.style.display = 'flex';
+      infoEl.textContent = `${start + 1}–${end} sur ${total} annonce${total > 1 ? 's' : ''}`;
+
+      let html = `<button class="pag-btn" onclick="adminGoTo(${page-1})" ${page===1?'disabled':''}>‹</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= page-2 && i <= page+2)) {
+          html += `<button class="pag-btn ${i===page?'active':''}" onclick="adminGoTo(${i})">${i}</button>`;
+        } else if (html.slice(-5) !== '…</b>') {
+          html += `<span style="padding:0 .2rem;color:#ccc">…</span>`;
+        }
+      }
+      html += `<button class="pag-btn" onclick="adminGoTo(${page+1})" ${page===totalPages?'disabled':''}>›</button>`;
+      btnsEl.innerHTML = html;
+    }
+
+    window.adminGoTo = function(page) {
+      const totalPages = Math.ceil(_adminData.length / PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      renderPage(_adminData, page);
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    };
+
     async function render(){
       const data = await load();
 
@@ -338,18 +366,20 @@
 
       // Filtrage
       const arr = data.filter(match);
+      _adminData = arr;
+      _adminPage = 1;
 
       if (arr.length === 0){
         resultsEl.innerHTML = '';
+        document.getElementById('adminPagination').style.display = 'none';
         emptyEl.style.display = 'block';
         return;
       }
       emptyEl.style.display = 'none';
 
-      resultsEl.innerHTML = arr.map(ad => card(ad)).join('');
+      renderPage(arr, 1);
 
       // Bind actions via délégation
-      arr.forEach(ad => bindActions(ad));
 
       // Délégation de secours sur le container
       resultsEl.onclick = null;
@@ -661,87 +691,6 @@
     });
 
     await renderBlogList();
-
-
-    /* ═══ KYC MANAGEMENT ═══ */
-    let _kycCurrentFilter = 'pending';
-
-    async function loadKyc(status = 'pending') {
-      _kycCurrentFilter = status;
-
-      /* Highlight tab actif */
-      ['pending','verified','rejected'].forEach(s => {
-        const btn = document.getElementById('kycTab' + s.charAt(0).toUpperCase() + s.slice(1));
-        if (!btn) return;
-        if (s === status) {
-          btn.style.background = s === 'pending' ? '#fff8e1' : s === 'verified' ? '#e8f5e9' : '#fee2e2';
-          btn.style.color = s === 'pending' ? '#f59e0b' : s === 'verified' ? '#2e7d32' : '#c00';
-        } else {
-          btn.style.background = '#f0f0f0';
-          btn.style.color = '#666';
-        }
-      });
-
-      const list  = document.getElementById('kycList');
-      const empty = document.getElementById('kycEmpty');
-      list.innerHTML = '<div style="text-align:center;color:#aaa;padding:2rem"><i class="fas fa-spinner fa-spin"></i></div>';
-      empty.style.display = 'none';
-
-      const client = window.SLCM_DB?.client;
-      if (!client) return;
-
-      const { data: agents, error } = await client
-        .from('profiles')
-        .select('id, name, phone, agent_bio, zone, kyc_status, kyc_doc_url, created_at')
-        .eq('role', 'agent_externe')
-        .eq('kyc_status', status)
-        .order('created_at', { ascending: false });
-
-      if (error) { list.innerHTML = '<p style="color:#c00">Erreur : ' + error.message + '</p>'; return; }
-      if (!agents || !agents.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-
-      list.innerHTML = '';
-      agents.forEach(agent => {
-        const card = document.createElement('div');
-        card.className = 'kyc-card';
-        const initials = (agent.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        const badgeClass = { pending: 'badge-pending', verified: 'badge-verified', rejected: 'badge-rejected' }[agent.kyc_status] || '';
-        const badgeLabel = { pending: '⏳ En attente', verified: '✅ Vérifié', rejected: '❌ Rejeté' }[agent.kyc_status] || '';
-        const docLink = agent.kyc_doc_url
-          ? `<a href="${agent.kyc_doc_url}" target="_blank" class="kyc-doc-link"><i class="fas fa-id-card"></i> Voir la CNI</a>`
-          : '<span style="font-size:.78rem;color:#bbb">Aucun document</span>';
-
-        card.innerHTML = `
-          <div class="kyc-avatar">${initials}</div>
-          <div class="kyc-info">
-            <div class="name">${agent.name || '—'} <span class="${badgeClass}">${badgeLabel}</span></div>
-            <div class="email">${agent.phone || 'Pas de téléphone'}</div>
-            <div class="meta">${agent.zone || 'Zone non renseignée'} · Inscrit le ${new Date(agent.created_at).toLocaleDateString('fr-FR')}</div>
-            <div>${docLink}</div>
-          </div>
-          <div class="kyc-actions">
-            ${status !== 'verified' ? `<button class="btn-approve" onclick="updateKyc('${agent.id}', 'verified')">✅ Approuver</button>` : ''}
-            ${status !== 'rejected' ? `<button class="btn-reject"  onclick="updateKyc('${agent.id}', 'rejected')">❌ Rejeter</button>`  : ''}
-          </div>`;
-        list.appendChild(card);
-      });
-    }
-
-    async function updateKyc(agentId, newStatus) {
-      const labels = { verified: 'approuver', rejected: 'rejeter' };
-      if (!confirm('Voulez-vous ' + (labels[newStatus] || newStatus) + ' cet agent ?')) return;
-      const client = window.SLCM_DB?.client;
-      if (!client) return;
-      const updates = { kyc_status: newStatus };
-      if (newStatus === 'verified') updates.verified_at = new Date().toISOString();
-      const { error } = await client.from('profiles').update(updates).eq('id', agentId);
-      if (error) { alert('Erreur : ' + error.message); return; }
-      loadKyc(_kycCurrentFilter);
-    }
-
-    /* Charger KYC au démarrage */
-    loadKyc('pending');
-
   });
   </script>
 </body>
