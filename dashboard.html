@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Mon Espace — SE LOGER CM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <style>
+    :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
+    * { box-sizing: border-box; }
+    body { background: var(--gray); font-family: 'Poppins', sans-serif; }
+    main { padding-top: 90px; padding-bottom: 60px; min-height: 100vh; }
+    .wrap { max-width: 1000px; margin: auto; padding: 0 1.2rem; }
+
+    .dash-topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.8rem; }
+    .dash-topbar h1 { font-size:1.6rem; font-weight:900; color:var(--dark); }
+    .dash-topbar h1 span { color:var(--orange); }
+    .user-badge { display:flex; align-items:center; gap:.6rem; background:#fff; border-radius:999px; padding:.5rem 1rem; box-shadow:0 2px 10px rgba(0,0,0,.07); font-size:.85rem; font-weight:600; }
+    .user-badge i { color:var(--orange); }
+
+    .stats-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-bottom:1.8rem; }
+    .stat-card { background:#fff; border-radius:16px; padding:1.2rem; box-shadow:0 4px 14px rgba(0,0,0,.05); border-left:4px solid #eee; text-align:center; }
+    .stat-card.orange { border-left-color:var(--orange); }
+    .stat-card.green  { border-left-color:#2e7d32; }
+    .stat-card.blue   { border-left-color:#1565c0; }
+    .stat-card.gray2  { border-left-color:#888; }
+    .stat-card .num   { font-size:1.8rem; font-weight:900; color:var(--dark); }
+    .stat-card.orange .num { color:var(--orange); }
+    .stat-card.green .num  { color:#2e7d32; }
+    .stat-card.blue .num   { color:#1565c0; }
+    .stat-card .lbl   { font-size:.75rem; color:#888; font-weight:600; margin-top:2px; }
+
+    .quick-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:2rem; }
+    .btn-action { display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1.2rem; border-radius:12px; font-family:inherit; font-size:.88rem; font-weight:700; cursor:pointer; text-decoration:none; transition:transform .15s,opacity .15s; border:none; }
+    .btn-action:hover { transform:translateY(-2px); opacity:.9; }
+    .btn-action.primary { background:var(--orange); color:#fff; }
+    .btn-action.dark    { background:var(--dark); color:#fff; }
+    .btn-action.outline { background:#fff; color:var(--dark); border:1.5px solid #e5e5e5; }
+
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .section-head h2 { font-size:1.1rem; font-weight:800; color:var(--dark); }
+
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.2rem; }
+    .filter-pill { padding:.4rem .9rem; border-radius:999px; border:1.5px solid #e5e5e5; background:#fff; font-family:inherit; font-size:.8rem; font-weight:700; cursor:pointer; color:#666; transition:all .15s; }
+    .filter-pill.active { background:var(--orange); color:#fff; border-color:var(--orange); }
+
+    .listing-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .dash-card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.07); display:flex; flex-direction:column; transition:transform .2s,box-shadow .2s; }
+    .dash-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,0,0,.11); }
+    .dash-card .thumb { position:relative; height:170px; background:#eee; overflow:hidden; }
+    .dash-card .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .status-badge { position:absolute; top:10px; left:10px; border-radius:999px; padding:.25rem .7rem; font-size:.72rem; font-weight:800; color:#fff; }
+    .s-disponible  { background:#2e7d32; }
+    .s-negociation { background:#e65100; }
+    .s-loue        { background:#1565c0; }
+    .photo-count { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; border-radius:6px; padding:2px 8px; font-size:.72rem; font-weight:700; }
+    .dash-card .info { padding:12px 14px; flex:1; }
+    .dash-card .info h3 { font-size:.95rem; font-weight:800; color:var(--dark); margin-bottom:4px; }
+    .dash-card .info .meta { font-size:.78rem; color:#888; margin-bottom:4px; }
+    .dash-card .info .price { font-size:1rem; font-weight:900; color:var(--orange); }
+    .dash-card .info .views { font-size:.75rem; color:#aaa; margin-top:4px; }
+    .card-actions { display:flex; gap:6px; padding:10px 12px; border-top:1px solid #f0f0f0; }
+    .card-actions button { flex:1; padding:.45rem; border-radius:8px; border:none; font-family:inherit; font-size:.78rem; font-weight:700; cursor:pointer; transition:opacity .2s; }
+    .card-actions button:hover { opacity:.82; }
+    .btn-view   { background:#f0f0f0; color:#333; }
+    .btn-edit   { background:var(--orange); color:#fff; }
+    .btn-status { background:#e8f5e9; color:#2e7d32; }
+    .btn-delete { background:#fee2e2; color:#c00; }
+    .btn-boost  { background:#fff4e8; color:#ff7a00; border:1px solid #ffd4a8 !important; }
+
+    .empty-state { text-align:center; padding:3rem 1rem; background:#fff; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,.05); }
+    .empty-state i { font-size:2.5rem; color:#ddd; margin-bottom:1rem; display:block; }
+    .empty-state p { color:#888; margin-bottom:1.2rem; }
+
+    .rdv-banner { background:var(--dark); border-radius:16px; padding:1.4rem 1.8rem; margin-bottom:2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .rdv-banner .text h3 { color:#fff; font-size:1rem; font-weight:800; margin-bottom:.2rem; }
+    .rdv-banner .text p  { color:rgba(255,255,255,.6); font-size:.82rem; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:18px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:1.8rem; }
+    .modal-box h2 { font-size:1.1rem; font-weight:800; margin-bottom:1.2rem; }
+    .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .modal-grid .full { grid-column:1/-1; }
+    .field label { display:block; font-size:.75rem; font-weight:700; color:#555; margin-bottom:.3rem; }
+    .field input,.field select,.field textarea { width:100%; border:1.5px solid #e5e5e5; border-radius:10px; padding:.6rem .85rem; font-family:inherit; font-size:.9rem; background:#fafafa; transition:border-color .2s; }
+    .field input:focus,.field select:focus,.field textarea:focus { outline:none; border-color:var(--orange); }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:1.2rem; }
+    .btn-cancel { padding:.7rem 1.2rem; border-radius:10px; border:1.5px solid #ddd; background:#fff; font-family:inherit; font-weight:700; cursor:pointer; }
+    .btn-save   { padding:.7rem 1.4rem; border-radius:10px; border:none; background:var(--orange); color:#fff; font-family:inherit; font-weight:800; cursor:pointer; }
+
+    .status-options { display:flex; gap:8px; flex-wrap:wrap; margin-top:.5rem; }
+    .status-opt { flex:1; padding:.8rem; border-radius:12px; border:2px solid #eee; background:#fff; font-family:inherit; font-size:.85rem; font-weight:700; cursor:pointer; text-align:center; transition:all .15s; min-width:100px; }
+    .status-opt.sel-disponible  { border-color:#2e7d32; background:#e8f5e9; color:#2e7d32; }
+    .status-opt.sel-negociation { border-color:#e65100; background:#fff3e0; color:#e65100; }
+    .status-opt.sel-loue        { border-color:#1565c0; background:#e3f2fd; color:#1565c0; }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#111; color:#fff; border-radius:999px; padding:.7rem 1.6rem; font-size:.88rem; font-weight:700; z-index:9999; transition:transform .3s,opacity .3s; opacity:0; display:flex; align-items:center; gap:.5rem; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+    .toast i { color:var(--orange); }
+
+    @media (max-width:640px) {
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .modal-grid { grid-template-columns:1fr; }
+      .modal-grid .full { grid-column:1; }
+    }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<header>
+  <div class="container px navbar">
+    <a class="brand" href="/">
+      <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+      <span>SE LOGER CM</span>
+    </a>
+    <div class="nav-right" style="display:flex;align-items:center;gap:1rem">
+      <span id="userLabel" style="font-size:.85rem;color:#555;font-weight:600"></span>
+      <button id="signOutBtn" style="background:#111;border:none;cursor:pointer;padding:.6rem 1rem;border-radius:10px;color:#fff;font-family:inherit;font-weight:700;font-size:.82rem">
+        <i class="fas fa-sign-out-alt"></i> Déconnexion
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="dash-topbar">
+      <div>
+        <h1>Mon <span>Espace</span></h1>
+        <p style="font-size:.82rem;color:#888;margin-top:2px">Gérez vos annonces immobilières</p>
+      </div>
+      <div class="user-badge">
+        <i class="fas fa-user-circle"></i>
+        <span id="userEmail">—</span>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card orange"><div class="num" id="statTotal">0</div><div class="lbl">Mes annonces</div></div>
+      <div class="stat-card green"><div class="num" id="statDispo">0</div><div class="lbl">Disponibles</div></div>
+      <div class="stat-card blue"><div class="num" id="statLoue">0</div><div class="lbl">Loués / Vendus</div></div>
+      <div class="stat-card gray2"><div class="num" id="statNego">0</div><div class="lbl">En négociation</div></div>
+      <div class="stat-card" style="border-left-color:#8b5cf6"><div class="num" id="statVues" style="color:#8b5cf6">0</div><div class="lbl">Vues totales</div></div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="/publier" class="btn-action primary"><i class="fas fa-plus"></i> Publier une annonce</a>
+      <a href="/annonces" class="btn-action outline"><i class="fas fa-search"></i> Voir toutes les annonces</a>
+      <a href="/rendez-vous" class="btn-action dark"><i class="fas fa-calendar-check"></i> Prendre RDV</a>
+    </div>
+
+    <div class="rdv-banner">
+      <div class="text">
+        <h3>Besoin d'aide pour vendre ou louer ?</h3>
+        <p>Notre équipe vous accompagne — estimation, visites, conseil juridique.</p>
+      </div>
+      <a href="/rendez-vous" class="btn-action primary" style="white-space:nowrap">
+        <i class="fas fa-phone"></i> Nous contacter
+      </a>
+    </div>
+
+    <div class="section-head"><h2>Mes annonces</h2></div>
+
+    <div class="filters">
+      <button class="filter-pill active" data-filter="">Toutes</button>
+      <button class="filter-pill" data-filter="disponible">Disponibles</button>
+      <button class="filter-pill" data-filter="negociation">En négociation</button>
+      <button class="filter-pill" data-filter="loue">Loués / Vendus</button>
+    </div>
+
+    <div id="listingsGrid" class="listing-grid"></div>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <i class="fas fa-home"></i>
+      <p>Vous n'avez pas encore d'annonce publiée.</p>
+      <a href="/publier" class="btn-action primary" style="display:inline-flex;margin-top:.5rem">
+        <i class="fas fa-plus"></i> Publier ma première annonce
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<footer></footer>
+
+<!-- Modal édition -->
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal-box">
+    <h2><i class="fas fa-edit" style="color:var(--orange);margin-right:.4rem"></i> Modifier l'annonce</h2>
+    <input type="hidden" id="editId">
+    <div class="modal-grid">
+      <div class="field full"><label>Titre</label><input id="editTitle" type="text"></div>
+      <div class="field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
+      <div class="field"><label>Type</label>
+        <select id="editType">
+          <option value="apartment">Appartement</option><option value="house">Maison</option>
+          <option value="villa">Villa</option><option value="studio">Studio</option>
+          <option value="duplex">Duplex</option><option value="warehouse">Entrepôt</option>
+          <option value="plots-of-land">Terrain</option>
+        </select>
+      </div>
+      <div class="field"><label>Opération</label>
+        <select id="editMode"><option value="rent">À louer</option><option value="sale">À vendre</option></select>
+      </div>
+      <div class="field"><label>Ville</label>
+        <select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select>
+      </div>
+      <div class="field"><label>Quartier</label><select id="editDistrict"></select></div>
+      <div class="field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="editCancel">Annuler</button>
+      <button class="btn-save" id="editSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Boost Request -->
+<div class="modal-overlay" id="boostOverlay">
+  <div class="modal-box" style="max-width:440px">
+    <h2>⚡ Booster cette annonce</h2>
+    <p style="font-size:.85rem;color:#666;margin-bottom:1.5rem;line-height:1.6">
+      Mettez votre annonce en vitrine sur la page d'accueil. Choisissez votre formule et nous vous contacterons pour finaliser le paiement.
+    </p>
+
+    <input type="hidden" id="boostAdId">
+    <input type="hidden" id="boostAdTitle">
+    <input type="hidden" id="boostAdRef">
+    <input type="hidden" id="boostAdMode">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.2rem">
+      <div id="boostOptRent" onclick="selectBoostOpt('rent')"
+        style="border:2px solid #eee;border-radius:12px;padding:1rem;cursor:pointer;text-align:center;transition:all .2s">
+        <div style="font-size:1.4rem;margin-bottom:.4rem">🏠</div>
+        <div style="font-weight:800;font-size:.85rem;margin-bottom:.25rem">Boost Location</div>
+        <div style="font-size:.75rem;color:#888;margin-bottom:.5rem">5 jours en vitrine</div>
+        <div style="font-weight:900;color:#ff7a00">5 000 FCFA</div>
+      </div>
+      <div id="boostOptSale" onclick="selectBoostOpt('sale')"
+        style="border:2px solid #eee;border-radius:12px;padding:1rem;cursor:pointer;text-align:center;transition:all .2s">
+        <div style="font-size:1.4rem;margin-bottom:.4rem">🏡</div>
+        <div style="font-weight:800;font-size:.85rem;margin-bottom:.25rem">Boost Vente</div>
+        <div style="font-size:.75rem;color:#888;margin-bottom:.5rem">15 jours en vitrine</div>
+        <div style="font-weight:900;color:#ff7a00">10 000 FCFA</div>
+      </div>
+    </div>
+
+    <div id="boostSummary" style="display:none;background:#fff4e8;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.2rem;font-size:.84rem;color:#e65100;font-weight:600;line-height:1.5"></div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn-cancel" onclick="document.getElementById('boostOverlay').classList.remove('open')">Annuler</button>
+      <a id="boostWhatsappBtn" href="#" target="_blank"
+        style="display:none;padding:.7rem 1.2rem;border-radius:10px;background:#25d366;color:#fff;font-weight:800;font-size:.88rem;text-decoration:none;display:none;align-items:center;gap:.4rem">
+        <i class="fab fa-whatsapp"></i> Demander via WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal statut -->
+<div class="modal-overlay" id="statusOverlay">
+  <div class="modal-box" style="max-width:400px">
+    <h2><i class="fas fa-toggle-on" style="color:var(--orange);margin-right:.4rem"></i> Changer le statut</h2>
+    <p style="font-size:.88rem;color:#666;margin-bottom:1rem">Sélectionnez le nouveau statut :</p>
+    <div class="status-options">
+      <button class="status-opt" data-status="disponible">✅ Disponible</button>
+      <button class="status-opt" data-status="negociation">🤝 En négociation</button>
+      <button class="status-opt" data-status="loue">🔑 Loué / Vendu</button>
+    </div>
+    <input type="hidden" id="statusListingId">
+    <div class="modal-actions" style="margin-top:1.5rem">
+      <button class="btn-cancel" id="statusCancel">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/footer.js"></script>
+<script src="assets/js/nav.js"></script>
+
+<script>
+const CITIES = {
+  'Douala':    ['Bonapriso','Akwa','Bali','Bonanjo','Deïdo','Bonamoussadi','Makepe','Kotto','Logpom','Ndogbong','PK8','Ndogpassi','Ndokoti'],
+  'Yaoundé':   ['Bastos','Nlongkak','Etoudi','Elig-Edzoa','Centre Ville','Melen','Mfandena','Omnisports'],
+  'Bafoussam': ['Banengo','Djeleng','Famla','Kamkop','Évêché','Tamdja']
+};
+
+function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
+let currentFilter = '';
+let allListings = [];
+let toastTimer;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function loadMyListings(userId) {
+  const { data, error } = await window.SLCM_DB.client
+    .from('listings').select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return (data || []).map(ad => ({
+    ...ad,
+    title_fr: ad.title_fr || ad.title || '',
+    rentSale: ad.rentSale || ad.rent_sale || 'rent',
+    statut:   ad.statut   || 'disponible',
+  }));
+}
+
+function renderGrid() {
+  const grid  = document.getElementById('listingsGrid');
+  const empty = document.getElementById('emptyState');
+  const list  = currentFilter ? allListings.filter(a => a.statut === currentFilter) : allListings;
+
+  document.getElementById('statTotal').textContent = allListings.length;
+  document.getElementById('statDispo').textContent = allListings.filter(a => (a.statut||'disponible') === 'disponible').length;
+  document.getElementById('statLoue').textContent  = allListings.filter(a => a.statut === 'loue').length;
+  document.getElementById('statNego').textContent  = allListings.filter(a => a.statut === 'negociation').length;
+  const totalViews = allListings.reduce((sum, a) => sum + (a.views || 0), 0);
+  document.getElementById('statVues').textContent = totalViews;
+
+  if (!list.length) {
+    grid.innerHTML = ''; grid.style.display = 'none'; empty.style.display = 'block'; return;
+  }
+  grid.style.display = 'grid'; empty.style.display = 'none';
+
+  grid.innerHTML = list.map(ad => {
+    const img  = ad.images?.[0] || 'assets/img/no-image.png';
+    const title = ad.title_fr || ad.title || 'Annonce';
+    const st   = ad.statut || 'disponible';
+    const stLab = { disponible:'Disponible', negociation:'En négociation', loue:'Loué / Vendu' }[st];
+    const mode  = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';
+    const pCount = ad.images?.length || 0;
+    return `
+      <div class="dash-card">
+        <div class="thumb">
+          <img src="${img}" alt="${title}" loading="lazy">
+          <span class="status-badge s-${st}">${stLab}</span>
+          ${pCount > 1 ? `<span class="photo-count"><i class="fas fa-camera"></i> ${pCount}</span>` : ''}
+        </div>
+        <div class="info">
+          <h3>${title}</h3>
+          <div class="meta"><i class="fas fa-map-marker-alt"></i> ${ad.district||''} ${ad.city||''} · ${mode}</div>
+          <div class="price">${fmtPrice(ad.price)}</div>
+          ${ad.ref ? `<div style="font-size:.72rem;color:#aaa;margin-top:2px">🔑 ${ad.ref}</div>` : ''}
+          <div class="views" style="display:flex;align-items:center;gap:.4rem;margin-top:4px">
+            <i class="fas fa-eye" style="color:#ff7a00;font-size:.8rem"></i>
+            <span style="font-weight:700;color:#555">${ad.views||0}</span>
+            <span style="color:#aaa">vue${(ad.views||0)>1?'s':''}</span>
+            ${(ad.views||0) >= 10 ? '<span style="background:#fff4e8;color:#ff7a00;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:800">🔥 Populaire</span>' : ''}
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-view"   onclick="viewListing('${ad.id}')"><i class="fas fa-eye"></i> Voir</button>
+          <button class="btn-edit"   onclick="openEdit('${ad.id}')"><i class="fas fa-edit"></i> Modifier</button>
+          <button class="btn-status" onclick="openStatus('${ad.id}')"><i class="fas fa-toggle-on"></i> Statut</button>
+          <button class="btn-boost"  onclick="openBoostRequest('${ad.id}', '${ad.title_fr || ad.title}', '${ad.ref || ''}', '${ad.rentSale || ad.rent_sale}')">⚡ Boost</button>
+          <button class="btn-delete" onclick="deleteListing('${ad.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function viewListing(id) { window.location.href = '/annonce?id=' + id; }
+
+async function deleteListing(id) {
+  const ad = allListings.find(a => a.id === id);
+  if (!confirm(`Supprimer "${ad?.title_fr||ad?.title}" ? Cette action est irréversible.`)) return;
+  const { error } = await window.SLCM_DB.client.from('listings').delete().eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  allListings = allListings.filter(a => a.id !== id);
+  renderGrid(); showToast('Annonce supprimée');
+}
+
+function openEdit(id) {
+  const ad = allListings.find(a => a.id === id);
+  if (!ad) return;
+  document.getElementById('editId').value    = id;
+  document.getElementById('editTitle').value = ad.title_fr || ad.title || '';
+  document.getElementById('editPrice').value = ad.price || '';
+  document.getElementById('editType').value  = ad.type || 'apartment';
+  document.getElementById('editMode').value  = ad.rentSale || 'rent';
+  document.getElementById('editCity').value  = ad.city || 'Douala';
+  document.getElementById('editDesc').value  = ad.description || '';
+  refreshEditDistricts(ad.city||'Douala', ad.district||'');
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function refreshEditDistricts(city, selected) {
+  const sel = document.getElementById('editDistrict');
+  sel.innerHTML = (CITIES[city]||[]).map(d =>
+    `<option value="${d}" ${d===selected?'selected':''}>${d}</option>`
+  ).join('');
+}
+
+document.getElementById('editCity').addEventListener('change', function() {
+  refreshEditDistricts(this.value, '');
+});
+
+document.getElementById('editCancel').addEventListener('click', () => {
+  document.getElementById('editOverlay').classList.remove('open');
+});
+
+document.getElementById('editSave').addEventListener('click', async () => {
+  const id = document.getElementById('editId').value;
+  const updates = {
+    title:       document.getElementById('editTitle').value.trim(),
+    price:       Number(document.getElementById('editPrice').value)||0,
+    type:        document.getElementById('editType').value,
+    rent_sale:   document.getElementById('editMode').value,
+    city:        document.getElementById('editCity').value,
+    district:    document.getElementById('editDistrict').value,
+    description: document.getElementById('editDesc').value.trim(),
+    updated_at:  new Date().toISOString(),
+  };
+  const { error } = await window.SLCM_DB.client.from('listings').update(updates).eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  const idx = allListings.findIndex(a => a.id === id);
+  if (idx !== -1) allListings[idx] = { ...allListings[idx], ...updates, title_fr: updates.title, rentSale: updates.rent_sale };
+  document.getElementById('editOverlay').classList.remove('open');
+  renderGrid(); showToast('Annonce mise à jour');
+});
+
+function openStatus(id) {
+  document.getElementById('statusListingId').value = id;
+  const ad = allListings.find(a => a.id === id);
+  document.querySelectorAll('.status-opt').forEach(btn => {
+    btn.className = 'status-opt';
+    if (btn.dataset.status === (ad?.statut||'disponible')) btn.classList.add('sel-'+btn.dataset.status);
+  });
+  document.getElementById('statusOverlay').classList.add('open');
+}
+
+document.getElementById('statusCancel').addEventListener('click', () => {
+  document.getElementById('statusOverlay').classList.remove('open');
+});
+
+document.querySelectorAll('.status-opt').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = document.getElementById('statusListingId').value;
+    const statut = btn.dataset.status;
+    const { error } = await window.SLCM_DB.client.from('listings').update({ statut }).eq('id', id);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    const idx = allListings.findIndex(a => a.id === id);
+    if (idx !== -1) allListings[idx].statut = statut;
+    document.getElementById('statusOverlay').classList.remove('open');
+    renderGrid();
+    const labels = { disponible:'Disponible', negociation:'En négociation', loue:'Loué / Vendu' };
+    showToast('Statut : ' + labels[statut]);
+  });
+});
+
+document.querySelectorAll('.filter-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderGrid();
+  });
+});
+
+/* ── Boost Request ── */
+let selectedBoostOpt = null;
+
+function openBoostRequest(id, title, ref, mode) {
+  document.getElementById('boostAdId').value    = id;
+  document.getElementById('boostAdTitle').value = title;
+  document.getElementById('boostAdRef').value   = ref;
+  document.getElementById('boostAdMode').value  = mode;
+  selectedBoostOpt = null;
+  document.getElementById('boostSummary').style.display = 'none';
+  document.getElementById('boostWhatsappBtn').style.display = 'none';
+  document.getElementById('boostOptRent').style.borderColor = '#eee';
+  document.getElementById('boostOptSale').style.borderColor = '#eee';
+  document.getElementById('boostOverlay').classList.add('open');
+}
+
+function selectBoostOpt(type) {
+  selectedBoostOpt = type;
+  document.getElementById('boostOptRent').style.borderColor = type === 'rent' ? '#ff7a00' : '#eee';
+  document.getElementById('boostOptSale').style.borderColor = type === 'sale' ? '#ff7a00' : '#eee';
+
+  const title = document.getElementById('boostAdTitle').value;
+  const ref   = document.getElementById('boostAdRef').value;
+  const days  = type === 'rent' ? 5 : 15;
+  const price = type === 'rent' ? '5 000' : '10 000';
+
+  const summary = document.getElementById('boostSummary');
+  summary.style.display = 'block';
+  summary.innerHTML = `✅ Boost ${type === 'rent' ? 'Location' : 'Vente'} — ${price} FCFA — ${days} jours en vitrine`;
+
+  /* Préparer le message WhatsApp */
+  const msg = encodeURIComponent(
+    `Bonjour SE LOGER CM,\n\n` +
+    `Je souhaite booster mon annonce :\n` +
+    `📌 ${title}\n` +
+    `🔑 Réf: ${ref || 'N/A'}\n` +
+    `⚡ Formule: Boost ${type === 'rent' ? 'Location' : 'Vente'} (${price} FCFA / ${days} jours)\n\n` +
+    `Merci de me confirmer les modalités de paiement.`
+  );
+
+  const waBtn = document.getElementById('boostWhatsappBtn');
+  waBtn.href = `https://wa.me/237650840714?text=${msg}`;
+  waBtn.style.display = 'inline-flex';
+}
+
+['editOverlay','statusOverlay','boostOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === document.getElementById(id)) document.getElementById(id).classList.remove('open');
+  });
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await SLCM.requireLogin();
+  if (!user) return;
+
+  const displayName = user.user_metadata?.name || user.email;
+  const userEmailEl = document.getElementById('userEmail');
+  const userLabelEl = document.getElementById('userLabel');
+  if (userEmailEl) userEmailEl.textContent = displayName;
+  if (userLabelEl) userLabelEl.textContent = displayName;
+
+  document.getElementById('listingsGrid').innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa">
+      <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+      <p style="margin-top:.75rem">Chargement de vos annonces…</p>
+    </div>`;
+
+  allListings = await loadMyListings(user.id);
+  renderGrid();
+});
+</script>
+</body>
+</html>

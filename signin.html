@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>SE LOGER CM — Connexion</title>
+  <meta name="description" content="Connectez-vous à votre espace SE LOGER CM pour gérer vos annonces immobilières à Douala.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root { --orange: #ff7a00; }
+    body { background: linear-gradient(135deg, #ff9966, #ff5e62); display: flex; flex-direction: column; min-height: 100vh; font-family: 'Poppins', sans-serif; }
+    main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .auth-box { background: #fff; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.15); padding: 2.5rem; width: 100%; max-width: 440px; }
+    .auth-logo { text-align: center; margin-bottom: 1.5rem; }
+    .auth-logo span { font-size: 1.3rem; font-weight: 800; color: #111; }
+    .auth-logo span em { color: var(--orange); font-style: normal; }
+    .tabs { display: flex; background: #f5f5f5; border-radius: 12px; padding: 4px; margin-bottom: 1.8rem; }
+    .tab-btn { flex: 1; padding: .55rem; border: none; background: transparent; border-radius: 9px; font-family: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; color: #888; transition: all .2s; }
+    .tab-btn.active { background: #fff; color: #111; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .78rem; font-weight: 700; color: #666; margin-bottom: .35rem; text-transform: uppercase; }
+    .field input { width: 100%; padding: .75rem 1rem; border: 1.5px solid #e5e5e5; border-radius: 10px; font-family: inherit; font-size: .95rem; transition: border-color .2s; background: #fafafa; }
+    .field input:focus { outline: none; border-color: var(--orange); background: #fff; }
+
+    /* Sélecteur rôle */
+    .role-label { font-size: .78rem; font-weight: 700; color: #666; text-transform: uppercase; margin-bottom: .5rem; display: block; }
+    .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.2rem; }
+    .role-card { border: 2px solid #e5e5e5; border-radius: 14px; padding: 1rem .75rem; cursor: pointer; text-align: center; transition: all .2s; background: #fafafa; }
+    .role-card:hover { border-color: var(--orange); background: #fff8f0; }
+    .role-card.selected { border-color: var(--orange); background: #fff4e8; }
+    .role-card .role-icon { font-size: 1.8rem; display: block; margin-bottom: .4rem; }
+    .role-card .role-name { font-size: .85rem; font-weight: 800; color: #111; }
+    .role-card .role-desc { font-size: .72rem; color: #888; margin-top: .2rem; line-height: 1.4; }
+
+    .btn-submit { width: 100%; padding: .9rem; border: none; border-radius: 12px; background: var(--orange); color: #fff; font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; transition: opacity .2s, transform .2s; margin-top: .5rem; }
+    .btn-submit:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .error-msg   { color: #c00;    font-size: .85rem; margin-top: .5rem; text-align: center; min-height: 1.2rem; }
+    .success-msg { color: #128c47; font-size: .85rem; margin-top: .5rem; text-align: center; min-height: 1.2rem; }
+    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.2rem 0; color: #ccc; font-size: .8rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #eee; }
+    .btn-whatsapp { width: 100%; padding: .8rem; border: none; border-radius: 12px; background: #e8fdf0; color: #128c47; font-family: inherit; font-size: .92rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .5rem; transition: background .2s; text-decoration: none; }
+    .btn-whatsapp:hover { background: #d0f5e3; }
+    footer { text-align: center; padding: 1rem; font-size: .85rem; color: rgba(255,255,255,.8); }
+  </style>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<header>
+  <div class="container px navbar">
+    <a class="brand" href="/"><img src="./assets/img/logo.png" alt="logo SE LOGER CM"><span>SE LOGER CM</span></a>
+  </div>
+</header>
+<main>
+  <div class="auth-box">
+    <div class="auth-logo"><span>SE <em>LOGER</em> CM</span></div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabSignin">Connexion</button>
+      <button class="tab-btn" id="tabRegister">Créer un compte</button>
+    </div>
+
+    <!-- CONNEXION -->
+    <div class="panel active" id="panelSignin">
+      <div class="field"><label>Adresse email</label><input id="signinEmail" type="email" placeholder="votre@email.com" required></div>
+      <div class="field"><label>Mot de passe</label>
+        <div style="position:relative">
+          <input id="signinPass" type="password" placeholder="••••••••" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <button type="button" onclick="togglePwd('signinPass',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+      <button class="btn-submit" id="signinBtn"><i class="fas fa-sign-in-alt"></i> Se connecter</button>
+      <div class="error-msg" id="signinError"></div>
+      <div style="text-align:right;margin-top:.5rem">
+        <button id="forgotBtn" type="button" style="background:none;border:none;color:#ff7a00;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;padding:0">Mot de passe oublié ?</button>
+      </div>
+      <div id="resetPanel" style="display:none;margin-top:1rem;padding:1rem;background:#f6f7f9;border-radius:12px">
+        <p style="font-size:.85rem;color:#555;margin:0 0 .75rem;font-weight:600">Entrez votre email pour recevoir un lien de réinitialisation :</p>
+        <input id="resetEmail" type="email" placeholder="votre@email.com" style="width:100%;padding:.7rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.92rem;background:#fff;margin-bottom:.75rem">
+        <button id="resetBtn" class="btn-submit" style="margin-top:0"><i class="fas fa-paper-plane"></i> Envoyer le lien</button>
+        <div class="success-msg" id="resetSuccess"></div>
+        <div class="error-msg"   id="resetError"></div>
+      </div>
+      <div class="divider">ou</div>
+      <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20acc%C3%A9der%20%C3%A0%20mon%20espace%20SE%20LOGER%20CM." target="_blank" class="btn-whatsapp">
+        <i class="fab fa-whatsapp"></i> Contacter via WhatsApp
+      </a>
+    </div>
+
+    <!-- INSCRIPTION -->
+    <div class="panel" id="panelRegister">
+      <span class="role-label">Je suis un(e)…</span>
+      <div class="role-selector">
+        <div class="role-card selected" id="roleProprietaire" onclick="selectRole('proprietaire')">
+          <span class="role-icon">🏠</span>
+          <div class="role-name">Propriétaire</div>
+          <div class="role-desc">Je publie mon bien</div>
+        </div>
+        <div class="role-card" id="roleAgent" onclick="selectRole('agent_externe')">
+          <span class="role-icon">🤝</span>
+          <div class="role-name">Agent</div>
+          <div class="role-desc">Je suis agent immobilier</div>
+        </div>
+      </div>
+      <input type="hidden" id="selectedRole" value="proprietaire">
+      <div class="field"><label>Nom complet <span style="color:var(--orange)">*</span></label><input id="regName" type="text" placeholder="Jean Dupont" required></div>
+      <div class="field"><label>Téléphone</label><input id="regPhone" type="tel" placeholder="+237 6XX XXX XXX"></div>
+      <div class="field"><label>Adresse email <span style="color:var(--orange)">*</span></label><input id="regEmail" type="email" placeholder="votre@email.com" required></div>
+      <div class="field"><label>Mot de passe <span style="color:var(--orange)">*</span></label>
+        <div style="position:relative">
+          <input id="regPass" type="password" placeholder="8 caractères minimum" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <button type="button" onclick="togglePwd('regPass',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+      <div class="field"><label>Confirmer le mot de passe <span style="color:var(--orange)">*</span></label>
+        <div style="position:relative">
+          <input id="regPassConfirm" type="password" placeholder="Répétez votre mot de passe" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <button type="button" onclick="togglePwd('regPassConfirm',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+      <button class="btn-submit" id="registerBtn"><i class="fas fa-user-plus"></i> Créer mon compte</button>
+      <div class="error-msg"   id="registerError"></div>
+      <div class="success-msg" id="registerSuccess"></div>
+    </div>
+  </div>
+</main>
+<footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+/* ── Afficher/masquer mot de passe ── */
+function togglePwd(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+  btn.style.color = isHidden ? '#ff7a00' : '#aaa';
+}
+
+function selectRole(role) {
+  document.getElementById('selectedRole').value = role;
+  document.getElementById('roleProprietaire').classList.toggle('selected', role === 'proprietaire');
+  document.getElementById('roleAgent').classList.toggle('selected', role === 'agent_externe');
+}
+
+const tabSignin = document.getElementById('tabSignin');
+const tabRegister = document.getElementById('tabRegister');
+const panelSignin = document.getElementById('panelSignin');
+const panelReg = document.getElementById('panelRegister');
+
+tabSignin.addEventListener('click', () => {
+  tabSignin.classList.add('active'); tabRegister.classList.remove('active');
+  panelSignin.classList.add('active'); panelReg.classList.remove('active');
+});
+tabRegister.addEventListener('click', () => {
+  tabRegister.classList.add('active'); tabSignin.classList.remove('active');
+  panelReg.classList.add('active'); panelSignin.classList.remove('active');
+});
+
+/* ── Connexion ── */
+document.getElementById('signinBtn').addEventListener('click', async () => {
+  const email = document.getElementById('signinEmail').value.trim().toLowerCase();
+  const pass  = document.getElementById('signinPass').value;
+  const err   = document.getElementById('signinError');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Veuillez remplir tous les champs.'; return; }
+  const btn = document.getElementById('signinBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion…';
+  try {
+    const user = await SLCM.loginUser(email, pass);
+    if (!user) { err.textContent = 'Email ou mot de passe incorrect.'; return; }
+    let redirect = new URLSearchParams(window.location.search).get('redirect');
+    if (!redirect) {
+      if (SLCM.isAdmin(user)) {
+        redirect = '/admin';
+      } else if (SLCM.isAgent(user)) {
+        redirect = '/agent';
+      } else {
+        /* Lire le rôle dans profiles — attendre que le client soit prêt */
+        const client = await SLCM.waitForClient();
+        if (client) {
+          const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).single();
+          redirect = (profile?.role === 'agent_externe') ? '/agent-profile' : '/mon-espace';
+        } else {
+          /* Fallback : lire depuis les metadata Supabase Auth */
+          redirect = (user.user_metadata?.role === 'agent_externe') ? '/agent-profile' : '/mon-espace';
+        }
+      }
+    }
+    window.location.href = redirect;
+  } catch(e) {
+    err.textContent = 'Une erreur est survenue. Réessayez.';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
+  }
+});
+
+/* ── Inscription ── */
+document.getElementById('registerBtn').addEventListener('click', async () => {
+  const role    = document.getElementById('selectedRole').value;
+  const name    = document.getElementById('regName').value.trim();
+  const phone   = document.getElementById('regPhone').value.trim();
+  const email   = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass    = document.getElementById('regPass').value;
+  const confirm = document.getElementById('regPassConfirm').value;
+  const err     = document.getElementById('registerError');
+  const ok      = document.getElementById('registerSuccess');
+  err.textContent = ''; ok.textContent = '';
+  if (!name || !email || !pass || !confirm) { err.textContent = 'Veuillez remplir les champs obligatoires.'; return; }
+  if (pass.length < 8) { err.textContent = 'Le mot de passe doit contenir au moins 8 caractères.'; return; }
+  if (pass !== confirm) { err.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  if (phone && !/^[+0-9\s]{8,15}$/.test(phone)) { err.textContent = 'Numéro de téléphone invalide.'; return; }
+  const btn = document.getElementById('registerBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création…';
+  try {
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 30) {
+      await new Promise(r => setTimeout(r, 100)); tries++;
+    }
+    const client = window.SLCM_DB?.client;
+    if (!client) { err.textContent = 'Connexion impossible. Réessayez.'; return; }
+    const { data, error } = await client.auth.signUp({
+      email, password: pass,
+      options: { data: { name, role } }
+    });
+    if (error) { err.textContent = error.message; return; }
+    /* Supabase ne retourne pas d'erreur pour email dupliqué — détecter via identities vide */
+    if (!data.user || data.user.identities?.length === 0) {
+      err.textContent = 'Cette adresse email est déjà utilisée.';
+      return;
+    }
+
+    /* Vérifier si le téléphone est déjà utilisé */
+    if (phone) {
+      const { data: existing } = await client
+        .from('profiles')
+        .select('id')
+        .eq('phone', phone)
+        .maybeSingle();
+      if (existing) {
+        err.textContent = 'Ce numéro de téléphone est déjà associé à un compte.';
+        return;
+      }
+    }
+
+    /* Créer le profil */
+    await client.from('profiles').upsert({
+      id: data.user.id, name, phone: phone || null, role,
+      kyc_status: role === 'agent_externe' ? 'pending' : 'none'
+    });
+    ok.textContent = '✅ Compte créé ! Vérifiez votre email puis connectez-vous.';
+    setTimeout(() => { tabSignin.click(); document.getElementById('signinEmail').value = email; }, 2000);
+  } catch(e) {
+    err.textContent = 'Une erreur est survenue. Réessayez.';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Créer mon compte';
+  }
+});
+
+/* ── Mot de passe oublié ── */
+document.getElementById('forgotBtn').addEventListener('click', () => {
+  const panel = document.getElementById('resetPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') {
+    const email = document.getElementById('signinEmail').value;
+    if (email) document.getElementById('resetEmail').value = email;
+    document.getElementById('resetEmail').focus();
+  }
+});
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+  const errEl = document.getElementById('resetError');
+  const okEl  = document.getElementById('resetSuccess');
+  const btn   = document.getElementById('resetBtn');
+  errEl.textContent = ''; okEl.textContent = '';
+  if (!email) { errEl.textContent = 'Veuillez entrer votre adresse email.'; return; }
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+  try {
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 30) {
+      await new Promise(r => setTimeout(r, 100)); tries++;
+    }
+    const { error } = await window.SLCM_DB.client.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://selogercm.com/reset-password.html'
+    });
+    if (error) { errEl.textContent = 'Erreur : ' + error.message; }
+    else { okEl.textContent = '✅ Email envoyé ! Vérifiez votre boîte mail.'; document.getElementById('resetEmail').value = ''; }
+  } catch(e) { errEl.textContent = 'Une erreur est survenue. Réessayez.'; }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le lien'; }
+});
+</script>
+<script src="assets/js/lang.js" defer></script>
+<script src="assets/js/footer.js" defer></script>
+<script src="assets/js/nav.js" defer></script>
+</body>
+</html>

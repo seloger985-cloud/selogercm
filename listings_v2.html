@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Toutes les annonces — SE LOGER CM</title>
+  <meta name="description" content="Parcourez toutes les annonces immobilières à Douala et au Cameroun : appartements, maisons, villas et studios à louer ou à vendre.">
+  <meta property="og:title" content="Annonces immobilières — SE LOGER CM">
+  <meta property="og:description" content="Trouvez votre logement idéal à Douala. Location et vente d'appartements, maisons, villas et studios.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    #resultsGrid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+      gap: 1.2rem !important;
+    }
+    .listing-card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,.07);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .listing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+    }
+    .listing-badge {
+      position: absolute; top: 10px; left: 10px;
+      background: #111; color: #fff;
+      border-radius: 999px; padding: .25rem .65rem;
+      font-size: .75rem; font-weight: 800;
+    }
+    .listing-badge.premium { background: #ff7a00; }
+    .fav-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(255,255,255,.9); border: none;
+      border-radius: 50%; width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: .95rem; color: #ff7a00;
+      transition: transform .2s;
+    }
+    .fav-btn:hover { transform: scale(1.15); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: .4rem; margin: 2.5rem 0 1rem; flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 38px; height: 38px; padding: 0 .6rem;
+      border: 1.5px solid #e5e5e5; background: #fff;
+      border-radius: 10px; font-family: inherit; font-size: .85rem;
+      font-weight: 700; color: #555; cursor: pointer;
+      transition: all .2s; display: flex; align-items: center; justify-content: center;
+    }
+    .page-btn:hover { border-color: #ff7a00; color: #ff7a00; }
+    .page-btn.active { background: #ff7a00; border-color: #ff7a00; color: #fff; }
+    .page-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
+    .page-btn.prev-next { gap: .3rem; padding: 0 .9rem; }
+    .pagination-info {
+      text-align: center; font-size: .82rem; color: #aaa;
+      margin-bottom: .5rem;
+    }
+  </style>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="logo SE LOGER CM">
+        <span>SE LOGER CM</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container px pt pb">
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:1rem">Toutes les annonces</h1>
+
+    <form id="searchForm" class="controls" style="border-radius:20px">
+      <div class="seg">
+        <button type="button" class="seg-btn active" data-mode="rent">À LOUER</button>
+        <button type="button" class="seg-btn" data-mode="sale">À VENDRE</button>
+      </div>
+      <div class="search-grid">
+        <div class="field-black">
+          <select id="city"><option value="">Ville</option><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select>
+        </div>
+        <div class="field-black">
+          <select id="district"><option value="">Quartier</option></select>
+        </div>
+        <div class="field-black">
+          <select id="type">
+            <option value="">Type de bien</option>
+            <option value="apartment">Appartement</option>
+            <option value="house">Maison</option>
+            <option value="studio">Studio</option>
+            <option value="villa">Villa</option>
+            <option value="duplex">Duplex</option>
+            <option value="warehouse">Entrepôt</option>
+            <option value="plots-of-land">Terrain</option>
+          </select>
+        </div>
+        <div class="field-black">
+          <select id="bedrooms">
+            <option value="">Chambres</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4+</option>
+          </select>
+        </div>
+        <div class="field-black">
+          <select id="price"><option value="">Tous les prix</option></select>
+        </div>
+        <div class="search-btn-cell">
+          <button class="btn-primary" type="submit">Rechercher</button>
+        </div>
+      </div>
+    </form>
+
+    <section style="margin-top:3rem">
+      <p id="paginationInfo" class="pagination-info" style="display:none"></p>
+      <div id="resultsGrid" class="grid grid-3"></div>
+      <p id="emptyState" style="display:none;text-align:center;margin-top:2rem;color:#666">Aucune annonce trouvée.</p>
+      <div id="pagination" class="pagination" style="display:none"></div>
+    </section>
+  </main>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/listings.js"></script>
+  <script src="assets/js/lang.js" defer></script>
+  <script src="assets/js/footer.js" defer></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/favorites.js" defer></script>
+  <script src="assets/js/chatbot.js" defer></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const grid  = document.getElementById('resultsGrid');
+    const empty = document.getElementById('emptyState');
+    const form  = document.getElementById('searchForm');
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get('mode') || 'rent';
+
+    /* Onglets location/vente */
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === urlMode);
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        refreshPrices(btn.dataset.mode);
+      });
+    });
+
+    /* Quartiers selon ville */
+    const citySel = document.getElementById('city');
+    const distSel = document.getElementById('district');
+    function refreshDistricts() {
+      if (typeof SLCM_CONFIG !== 'undefined') SLCM_CONFIG.fillDistricts(distSel, citySel.value);
+    }
+    citySel.addEventListener('change', refreshDistricts);
+
+    /* Prix selon mode */
+    function refreshPrices(mode) {
+      const sel = document.getElementById('price');
+      if (!sel || typeof SLCM_CONFIG === 'undefined') return;
+      const ranges = SLCM_CONFIG.priceRanges[mode] || [];
+      sel.innerHTML = '<option value="">Tous les prix</option>' +
+        ranges.map(r => `<option value="${r.value}">${r.labelFR}</option>`).join('');
+    }
+
+    /* Pré-remplir depuis URL */
+    ['city','district','type','bedrooms','price'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el && params.get(k)) el.value = params.get(k);
+    });
+    refreshDistricts();
+    refreshPrices(urlMode);
+
+    /* ── Pagination ── */
+    const PER_PAGE = 12;
+    let _allListings = [];
+    let _currentPage = 1;
+
+    function renderPage(page) {
+      _currentPage = page;
+      const total = _allListings.length;
+      const totalPages = Math.ceil(total / PER_PAGE);
+      const start = (page - 1) * PER_PAGE;
+      const end   = Math.min(start + PER_PAGE, total);
+      const slice = _allListings.slice(start, end);
+
+      /* Grille */
+      grid.innerHTML = slice.map(l => SLCM_listings.renderCard(l)).join('');
+
+      /* Info */
+      const infoEl = document.getElementById('paginationInfo');
+      infoEl.style.display = 'block';
+      infoEl.textContent = `${start + 1}–${end} sur ${total} annonce${total > 1 ? 's' : ''}`;
+
+      /* Pagination */
+      const pag = document.getElementById('pagination');
+      if (totalPages <= 1) { pag.style.display = 'none'; return; }
+      pag.style.display = 'flex';
+
+      let html = `<button class="page-btn prev-next" onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i> Préc.
+      </button>`;
+
+      /* Pages numérotées avec ellipsis */
+      const range = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
+          range.push(i);
+        } else if (range[range.length - 1] !== '...') {
+          range.push('...');
+        }
+      }
+
+      range.forEach(p => {
+        if (p === '...') {
+          html += `<span class="page-btn" style="cursor:default;border:none;color:#ccc">…</span>`;
+        } else {
+          html += `<button class="page-btn ${p === page ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+        }
+      });
+
+      html += `<button class="page-btn prev-next" onclick="goToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>
+        Suiv. <i class="fas fa-chevron-right"></i>
+      </button>`;
+
+      pag.innerHTML = html;
+
+      /* Scroll vers le haut de la grille */
+      document.querySelector('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      /* Mettre à jour l'URL avec la page */
+      const url = new URL(window.location);
+      url.searchParams.set('page', page);
+      window.history.replaceState({}, '', url);
+    }
+
+    window.goToPage = function(page) {
+      const totalPages = Math.ceil(_allListings.length / PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      renderPage(page);
+    };
+
+    /* Charger et afficher */
+    async function loadAndRender(filters) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa">
+        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+        <p style="margin-top:.75rem">Chargement des annonces…</p></div>`;
+      empty.style.display = 'none';
+      document.getElementById('pagination').style.display = 'none';
+      document.getElementById('paginationInfo').style.display = 'none';
+
+      _allListings = await SLCM_listings.getListings(filters);
+
+      if (!_allListings.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      /* Lire la page depuis l'URL si présente */
+      const urlPage = parseInt(new URL(window.location).searchParams.get('page')) || 1;
+      renderPage(urlPage);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await loadAndRender({
+        mode:     document.querySelector('.seg-btn.active')?.dataset.mode || 'rent',
+        city:     citySel.value,
+        district: distSel.value,
+        type:     document.getElementById('type').value,
+        bedrooms: document.getElementById('bedrooms').value,
+        price:    document.getElementById('price').value,
+      });
+    });
+
+    /* Chargement initial */
+    await loadAndRender({
+      mode: urlMode,
+      city: params.get('city') || '', district: params.get('district') || '',
+      type: params.get('type') || '', bedrooms: params.get('bedrooms') || '',
+      price: params.get('price') || '',
+    });
+    /* Reset page à 1 lors d'une nouvelle recherche */
+    form.addEventListener('submit', () => {
+      const url = new URL(window.location);
+      url.searchParams.delete('page');
+      window.history.replaceState({}, '', url);
+    }, { capture: true });
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Article — SE LOGER CM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <style>
+    :root { --orange: #ff7a00; }
+    body { background: #f6f7f9; font-family: 'Poppins', sans-serif; }
+    main { padding-top: 90px; padding-bottom: 60px; }
+
+    .wrap { max-width: 760px; margin: auto; padding: 0 1.5rem; }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #555; font-weight: 600; font-size: .9rem;
+      text-decoration: none; margin: 2rem 0 1.5rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--orange); }
+
+    /* Header article */
+    .article-header { margin-bottom: 2rem; }
+
+    .cat-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .35rem .85rem; border-radius: 999px;
+      font-size: .78rem; font-weight: 800; color: #fff;
+      margin-bottom: 1rem;
+    }
+
+    .article-title {
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      font-weight: 900; color: #111; line-height: 1.25;
+      margin-bottom: .8rem;
+    }
+
+    .article-meta {
+      display: flex; align-items: center; gap: 1rem;
+      font-size: .82rem; color: #999; flex-wrap: wrap;
+    }
+    .article-meta span { display: flex; align-items: center; gap: .3rem; }
+
+    /* Cover image */
+    .article-cover {
+      width: 100%; height: 340px; border-radius: 18px; overflow: hidden;
+      background: #111; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .article-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .article-cover .no-cover { font-size: 5rem; opacity: .2; }
+
+    /* Corps de l'article */
+    .article-body {
+      font-size: 1rem; line-height: 1.85; color: #333;
+    }
+    .article-body h2 {
+      font-size: 1.3rem; font-weight: 800; color: #111;
+      margin: 2rem 0 .75rem;
+      padding-left: .8rem;
+      border-left: 4px solid var(--orange);
+    }
+    .article-body p  { margin-bottom: 1.1rem; }
+    .article-body ul { margin: 0 0 1.1rem 1.2rem; }
+    .article-body ul li { margin-bottom: .5rem; }
+    .article-body strong { color: #111; }
+
+    /* CTA fin article */
+    .article-cta {
+      margin-top: 3rem; padding: 2rem;
+      background: #111; border-radius: 18px; color: #fff;
+      text-align: center;
+    }
+    .article-cta h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: .5rem; }
+    .article-cta p  { opacity: .7; font-size: .93rem; margin-bottom: 1.3rem; }
+    .btn-orange {
+      background: var(--orange); color: #fff; border: none;
+      padding: .8rem 1.6rem; border-radius: 999px;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      text-decoration: none; display: inline-flex; align-items: center; gap: .4rem;
+      transition: opacity .2s, transform .2s;
+    }
+    .btn-orange:hover { opacity: .88; transform: translateY(-2px); }
+
+    /* Articles liés */
+    .related { margin-top: 3rem; }
+    .related h3 { font-size: 1.1rem; font-weight: 800; color: #111; margin-bottom: 1rem; }
+    .related-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .related-card {
+      background: #fff; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,.07);
+      text-decoration: none; color: inherit;
+      transition: transform .2s;
+    }
+    .related-card:hover { transform: translateY(-3px); }
+    .related-card .rc-cover {
+      height: 120px; background: #111;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; opacity: .4;
+    }
+    .related-card .rc-body { padding: .9rem 1rem; }
+    .related-card .rc-title { font-size: .88rem; font-weight: 700; color: #111; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .related-card .rc-date { font-size: .75rem; color: #aaa; margin-top: .3rem; }
+
+    /* Error state */
+    .error-state { text-align: center; padding: 4rem 2rem; color: #666; }
+
+    @media (max-width: 600px) {
+      .article-cover { height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+        <span>SE LOGER CM</span>
+      </a>
+      <div class="nav-right">
+        <a href="/blog" class="btn-primary" style="text-decoration:none;">← Blog</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <a href="/blog" class="back-link">
+        <i class="fas fa-arrow-left"></i> Retour au blog
+      </a>
+      <div id="articleContent"></div>
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/blog.js"></script>
+  <script src="assets/js/footer.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const id     = params.get('id');
+    const area   = document.getElementById('articleContent');
+
+    if (!id) {
+      area.innerHTML = '<div class="error-state"><h2>Article introuvable</h2><p><a href="/blog">Retour au blog</a></p></div>';
+      return;
+    }
+
+    const art = await SLCM_blog.getArticleById(id);
+    if (!art) {
+      area.innerHTML = '<div class="error-state"><h2>Article introuvable</h2><p><a href="/blog">Retour au blog</a></p></div>';
+      return;
+    }
+
+    // Mettre à jour le titre de la page
+    document.title = art.title + ' — SE LOGER CM';
+
+    const cat    = SLCM_blog.getCategoryInfo(art.category);
+    const cover  = art.cover
+      ? `<div class="article-cover"><img src="${art.cover}" alt="${art.title}"></div>`
+      : `<div class="article-cover"><span class="no-cover">${cat.icon}</span></div>`;
+
+    // Articles liés (même catégorie, sauf l'actuel)
+    const allArticles = await SLCM_blog.getAllArticles();
+    const related = allArticles
+      .filter(a => a.id !== art.id && a.category === art.category)
+      .slice(0, 3);
+
+    const relatedHtml = related.length > 0 ? `
+      <div class="related">
+        <h3>Articles similaires</h3>
+        <div class="related-grid">
+          ${related.map(r => `
+            <a href="article.html?id=${r.id}" class="related-card">
+              <div class="rc-cover">${SLCM_blog.getCategoryInfo(r.category).icon}</div>
+              <div class="rc-body">
+                <div class="rc-title">${r.title}</div>
+                <div class="rc-date">${SLCM_blog.formatDate(r.date)}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>` : '';
+
+    area.innerHTML = `
+      <div class="article-header">
+        <span class="cat-pill" style="background:${cat.color}">${cat.icon} ${cat.label}</span>
+        <h1 class="article-title">${art.title}</h1>
+        <div class="article-meta">
+          <span><i class="fas fa-user"></i> ${art.author || 'SE LOGER CM'}</span>
+          <span><i class="fas fa-calendar-alt"></i> ${SLCM_blog.formatDate(art.date)}</span>
+          <span><i class="fas fa-clock"></i> ${SLCM_blog.readingTime(art.content)} de lecture</span>
+        </div>
+      </div>
+
+      ${cover}
+
+      <div class="article-body">${art.content}</div>
+
+      <div class="article-cta">
+        <h3>Un projet immobilier à Douala ?</h3>
+        <p>Notre équipe est disponible pour vous accompagner — location, vente, gestion ou investissement.</p>
+        <a href="/rendez-vous" class="btn-orange">
+          <i class="fas fa-calendar-check"></i> Prendre rendez-vous
+        </a>
+      </div>
+
+      ${relatedHtml}
+    `;
+  });
+  </script>
+</body>
+</html>

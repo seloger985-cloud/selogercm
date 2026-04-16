@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Mes Favoris — SE LOGER CM</title>
+  <meta name="description" content="Retrouvez toutes les annonces immobilières que vous avez sauvegardées sur SE LOGER CM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header>
+    <div class="container px navbar"></div>
+  </header>
+
+  <!-- Hero -->
+  <div class="fav-hero">
+    <h1>Mes <span>Favoris</span></h1>
+    <p>Les annonces que vous avez sauvegardées, disponibles à tout moment.</p>
+  </div>
+
+  <main style="background:#f6f7f9;min-height:60vh;padding-bottom:4rem">
+    <div class="fav-page-wrap" style="padding-top:2rem">
+
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem">
+        <a href="/annonces" style="display:inline-flex;align-items:center;gap:.4rem;color:#555;font-weight:600;font-size:.9rem;text-decoration:none;transition:color .2s"
+           onmouseover="this.style.color='#ff7a00'" onmouseout="this.style.color='#555'">
+          <i class="fas fa-arrow-left"></i> Retour aux annonces
+        </a>
+      </div>
+
+      <div class="fav-toolbar">
+        <span class="fav-count-label" id="favCountLabel">Chargement...</span>
+        <button class="fav-clear-btn" id="favClearAll">
+          <i class="fas fa-trash-alt"></i> Tout effacer
+        </button>
+      </div>
+
+      <!-- Zone des favoris (injectée par favorites.js) -->
+      <div id="favoritesArea"></div>
+
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <style>
+    .fav-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.2rem; padding:1rem 0; }
+    .fav-card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.07); transition:transform .2s; }
+    .fav-card:hover { transform:translateY(-3px); }
+    .fav-thumb { position:relative; height:190px; background:#eee; overflow:hidden; }
+    .fav-thumb img { width:100%; height:100%; object-fit:cover; }
+    .fav-badge { position:absolute; top:10px; left:10px; background:#ff7a00; color:#fff; border-radius:999px; padding:.25rem .65rem; font-size:.75rem; font-weight:800; }
+    .fav-body { padding:12px 14px; }
+    .fav-title { font-weight:800; font-size:.95rem; color:#111; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fav-meta { font-size:.8rem; color:#888; margin-bottom:4px; }
+    .fav-price { font-weight:900; font-size:1rem; color:#ff7a00; }
+    .fav-actions { display:flex; gap:8px; padding:10px 14px; border-top:1px solid #f0f0f0; }
+    .fav-see-btn { flex:1; text-align:center; padding:.45rem; border-radius:8px; background:#ff7a00; color:#fff; text-decoration:none; font-size:.8rem; font-weight:700; }
+    .fav-remove-btn { padding:.45rem .8rem; border-radius:8px; border:none; background:#fee2e2; color:#c00; font-size:.8rem; font-weight:700; cursor:pointer; }
+    .fav-empty { text-align:center; padding:4rem 1rem; color:#888; }
+    .fav-empty h3 { color:#333; margin-bottom:.5rem; }
+    .fav-browse-btn { display:inline-flex; align-items:center; gap:.5rem; margin-top:1rem; padding:.7rem 1.4rem; background:#ff7a00; color:#fff; border-radius:999px; text-decoration:none; font-weight:700; font-size:.9rem; }
+  </style>
+  <script src="assets/js/footer.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/favorites.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('favClearAll')?.addEventListener('click', () => {
+      if (!confirm('Effacer tous vos favoris ?')) return;
+      localStorage.removeItem('selogercm_favorites');
+      window.SLCM_favorites && window.SLCM_favorites.save([]);
+      // Re-render
+      const area = document.getElementById('favoritesArea');
+      if (area) {
+        area.innerHTML = `
+          <div class="fav-empty">
+            <i class="far fa-heart"></i>
+            <h3>Aucun favori pour l'instant</h3>
+            <p>Sauvegardez des annonces en cliquant sur le ❤️ sur les annonces qui vous intéressent.</p>
+            <a href="/annonces"><i class="fas fa-search"></i> Parcourir les annonces</a>
+          </div>`;
+      }
+      const label = document.getElementById('favCountLabel');
+      if (label) label.textContent = '0 annonce sauvegardée';
+    });
+  });
+  </script>
+</body>
+</html>

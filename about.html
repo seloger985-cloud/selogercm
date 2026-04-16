@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>À Propos — SE LOGER CM</title>
+  <meta name="description" content="Découvrez SE LOGER CM, votre agence immobilière de confiance à Douala, Cameroun.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <style>
+    :root { --orange: #ff7a00; }
+    body  { background: #f6f7f9; font-family: 'Poppins', sans-serif; }
+    main  { padding-top: 90px; padding-bottom: 60px; }
+    .wrap { max-width: 960px; margin: auto; padding: 0 1.5rem; }
+
+    /* Hero about */
+    .about-hero {
+      background: #111;
+      color: #fff;
+      padding: 4rem 1.5rem;
+      text-align: center;
+      margin-top: 70px;
+    }
+    .about-hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      margin-bottom: .75rem;
+    }
+    .about-hero h1 span { color: var(--orange); }
+    .about-hero p {
+      font-size: 1.05rem;
+      opacity: .75;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--orange);
+      color: #fff;
+      text-align: center;
+    }
+    .stat-item { padding: 1.5rem 1rem; border-right: 1px solid rgba(255,255,255,.2); }
+    .stat-item:last-child { border-right: none; }
+    .stat-item .num { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+    .stat-item .lbl { font-size: .82rem; font-weight: 600; opacity: .85; margin-top: .3rem; }
+
+    /* Sections */
+    .section { padding: 3rem 0; }
+    .section + .section { border-top: 1px solid #eee; }
+
+    .section h2 {
+      font-size: 1.5rem; font-weight: 900; color: #111;
+      margin-bottom: .4rem;
+    }
+    .section h2 span { color: var(--orange); }
+    .section .lead {
+      color: #666; font-size: .95rem; margin-bottom: 1.8rem;
+      line-height: 1.7;
+    }
+
+    /* Mission */
+    .mission-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    .mission-text p {
+      font-size: .97rem; line-height: 1.8; color: #444;
+      margin-bottom: 1rem;
+    }
+    .mission-visual {
+      background: #111;
+      border-radius: 20px;
+      padding: 2rem;
+      color: #fff;
+    }
+    .mission-visual .quote {
+      font-size: 1.1rem;
+      font-style: italic;
+      line-height: 1.7;
+      opacity: .9;
+    }
+    .mission-visual .quote::before { content: '"'; color: var(--orange); font-size: 2rem; line-height: 0; vertical-align: -.4rem; margin-right: .2rem; }
+    .mission-visual .quote::after  { content: '"'; color: var(--orange); font-size: 2rem; line-height: 0; vertical-align: -.4rem; margin-left:  .2rem; }
+    .mission-visual .author { margin-top: 1rem; font-size: .85rem; opacity: .6; font-weight: 600; }
+
+    /* Valeurs */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .value-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.4rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,.06);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .value-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .value-card .icon {
+      font-size: 2rem; margin-bottom: .75rem; display: block;
+    }
+    .value-card h3 {
+      font-size: .97rem; font-weight: 800; color: #111; margin-bottom: .4rem;
+    }
+    .value-card p {
+      font-size: .85rem; color: #666; line-height: 1.6;
+    }
+
+    /* Équipe */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+    .team-card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,.06);
+      text-align: center;
+    }
+    .team-card .avatar {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(135deg, #111 0%, #333 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+    }
+    .team-card .team-info { padding: 1rem; }
+    .team-card .team-info h3 { font-size: .95rem; font-weight: 800; color: #111; }
+    .team-card .team-info p  { font-size: .82rem; color: var(--orange); font-weight: 600; margin-top: .2rem; }
+
+    /* CTA */
+    .cta-box {
+      background: #111;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: #fff;
+      margin-top: 2rem;
+    }
+    .cta-box h2 { font-size: 1.5rem; font-weight: 900; margin-bottom: .5rem; }
+    .cta-box p  { opacity: .7; margin-bottom: 1.5rem; }
+    .cta-box .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-orange {
+      background: var(--orange); color: #fff; border: none;
+      padding: .85rem 1.6rem; border-radius: 999px;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: opacity .2s, transform .2s;
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .btn-orange:hover { opacity: .88; transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent; color: #fff;
+      border: 1.5px solid rgba(255,255,255,.35);
+      padding: .85rem 1.6rem; border-radius: 999px;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: border-color .2s, transform .2s;
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .btn-outline:hover { border-color: #fff; transform: translateY(-2px); }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #555; font-weight: 600; font-size: .9rem;
+      text-decoration: none; margin-bottom: 1.5rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--orange); }
+
+    /* ── Témoignages ── */
+    .temoignages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.1rem;
+    }
+    .temoignage-card {
+      background: #fff; border-radius: 16px; padding: 1.4rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,.06);
+      position: relative; transition: transform .2s, box-shadow .2s;
+    }
+    .temoignage-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .temoignage-quote {
+      font-size: .92rem; color: #444; line-height: 1.7;
+      margin-bottom: 1rem; font-style: italic;
+    }
+    .temoignage-quote::before { content: '\201C'; color: var(--orange); font-size: 1.4rem; line-height: 0; vertical-align: -.3rem; margin-right: .15rem; }
+    .temoignage-quote::after  { content: '\201D'; color: var(--orange); font-size: 1.4rem; line-height: 0; vertical-align: -.3rem; margin-left: .15rem; }
+    .temoignage-footer { display: flex; align-items: center; gap: .75rem; }
+    .temoignage-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #111; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .88rem; font-weight: 800; flex-shrink: 0;
+    }
+    .temoignage-name { font-size: .88rem; font-weight: 800; color: #111; }
+    .temoignage-meta { font-size: .75rem; color: #999; margin-top: .1rem; }
+    .temoignage-stars { color: #f5a623; font-size: .85rem; letter-spacing: 1px; }
+    .temoignage-delete {
+      position: absolute; top: 10px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      color: #ddd; font-size: .85rem; transition: color .2s;
+      display: none;
+    }
+    .admin-mode .temoignage-delete { display: block; }
+    .temoignage-delete:hover { color: #e24b4a; }
+    .temoignage-placeholder {
+      grid-column: 1 / -1; text-align: center;
+      padding: 3rem; color: #bbb;
+    }
+    .temoignage-placeholder i { font-size: 2.5rem; display: block; margin-bottom: .75rem; color: #e5e5e5; }
+    .temoignage-placeholder p { font-size: .9rem; }
+
+    /* Formulaire admin */
+    .testimonial-form-card {
+      background: #fff; border-radius: 16px; padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08); max-width: 560px;
+    }
+    .testimonial-form-card h4 { font-size: 1rem; font-weight: 800; margin-bottom: 1rem; color: #111; }
+    .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .tf-field label { display: block; font-size: .75rem; font-weight: 700; color: #666; margin-bottom: .3rem; text-transform: uppercase; }
+    .tf-field input, .tf-field textarea {
+      width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px;
+      padding: .6rem .85rem; font-family: inherit; font-size: .88rem;
+      transition: border-color .2s;
+    }
+    .tf-field input:focus, .tf-field textarea:focus { outline: none; border-color: var(--orange); }
+    .star-select { display: flex; gap: .2rem; cursor: pointer; }
+    .star-select span { font-size: 1.4rem; color: #ddd; transition: color .15s; }
+    .star-select span.active, .star-select span.hover { color: #f5a623; }
+
+    @media (max-width: 768px) {
+      .stats-bar      { grid-template-columns: 1fr 1fr; }
+      .mission-grid   { grid-template-columns: 1fr; }
+      .tf-row         { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .stats-bar { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,.2); }
+    }
+  </style>
+</head>
+<body>
+  <!-- GTM noscript -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+        <span>SE LOGER CM</span>
+      </a>
+      <div class="nav-right">
+        <a href="/annonces" class="btn-primary" style="text-decoration:none;">Voir les annonces</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="about-hero">
+    <h1 data-i18n="about.title">À Propos de <span>SE LOGER CM</span></h1>
+    <p>Votre partenaire immobilier de confiance à Douala depuis plusieurs années. Nous connectons propriétaires et locataires avec expertise et transparence.</p>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="num">100+</div>
+      <div class="lbl">Annonces actives</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">500+</div>
+      <div class="lbl">Clients satisfaits</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">5+</div>
+      <div class="lbl">Années d'expérience</div>
+    </div>
+  </div>
+
+  <main>
+    <div class="wrap">
+      <a href="/" class="back-link" style="margin-top:2rem;display:inline-flex;">
+        <i class="fas fa-arrow-left"></i> Retour à l'accueil
+      </a>
+
+      <!-- Notre Mission -->
+      <div class="section">
+        <h2 data-i18n="about.mission">Notre <span>Mission</span></h2>
+        <p class="lead">Rendre l'immobilier simple, transparent et accessible à tous à Douala.</p>
+        <div class="mission-grid">
+          <div class="mission-text">
+            <p>
+<strong>SE LOGER CM</strong> <span data-fr="est née d'un constat simple : trouver un logement de qualité à Douala est souvent long, coûteux et peu transparent. Nous avons décidé de changer ça." data-en="was born from a simple observation: finding quality housing in Douala is often long, costly and opaque. We decided to change that.">est née d'un constat simple : trouver un logement de qualité à Douala est souvent long, coûteux et peu transparent. Nous avons décidé de changer ça.</span>
+            </p>
+            <p>
+<span data-fr="Notre plateforme met en relation directe propriétaires et personnes en recherche de logement, avec des annonces vérifiées, des photos authentiques et des prix clairs — sans mauvaises surprises." data-en="Our platform directly connects property owners with people looking for housing, with verified listings, authentic photos and clear prices — no bad surprises.">Notre plateforme met en relation directe propriétaires et personnes en recherche de logement, avec des annonces vérifiées, des photos authentiques et des prix clairs — sans mauvaises surprises.</span>
+            </p>
+            <p>
+<span data-fr="Que vous cherchiez un studio à Akwa, un appartement meublé à Bonamoussadi, ou une villa à Bonapriso — nous sommes là à chaque étape de votre projet immobilier." data-en="Whether you're looking for a studio in Akwa, a furnished apartment in Bonamoussadi, or a villa in Bonapriso — we're here at every step of your real estate journey.">Que vous cherchiez un studio à Akwa, un appartement meublé à Bonamoussadi, ou une villa à Bonapriso — nous sommes là à chaque étape de votre projet immobilier.</span>
+            </p>
+          </div>
+          <div class="mission-visual">
+<div class="quote" data-fr="Unique Solutions, Smart Living. Nous ne vendons pas seulement des biens, nous aidons les gens à trouver leur chez-soi." data-en="Unique Solutions, Smart Living. We don't just sell properties, we help people find their home.">Unique Solutions, Smart Living. Nous ne vendons pas seulement des biens, nous aidons les gens à trouver leur chez-soi.</div>
+            <div class="author">— L'équipe SE LOGER CM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nos Valeurs -->
+      <div class="section">
+        <h2 data-i18n="about.values">Nos <span>Valeurs</span></h2>
+<p class="lead" data-fr="Les principes qui guident chacune de nos actions." data-en="The principles that guide our every action.">Les principes qui guident chacune de nos actions.</p>
+        <div class="values-grid">
+          <div class="value-card">
+            <span class="icon">🏆</span>
+<h3 data-fr="Excellence" data-en="Excellence">Excellence</h3>
+<p data-fr="Nous sélectionnons rigoureusement chaque bien pour vous garantir une qualité irréprochable." data-en="We rigorously select every property to guarantee you impeccable quality.">Nous sélectionnons rigoureusement chaque bien pour vous garantir une qualité irréprochable.</p>
+          </div>
+          <div class="value-card">
+            <span class="icon">🤝</span>
+            <h3>Confiance</h3>
+            <p>Transparence totale dans toutes nos transactions. Aucune commission cachée, aucune mauvaise surprise.</p>
+          </div>
+          <div class="value-card">
+            <span class="icon">⚡</span>
+            <h3>Réactivité</h3>
+            <p>Réponse rapide à toutes vos demandes, 7j/7. Votre temps est précieux, nous le respectons.</p>
+          </div>
+          <div class="value-card">
+            <span class="icon">📍</span>
+            <h3>Expertise Locale</h3>
+            <p>Une connaissance approfondie du marché immobilier de Douala et de ses quartiers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notre Équipe -->
+      <div class="section">
+        <h2 data-i18n="about.team">Notre <span>Équipe</span></h2>
+        <p class="lead">Des professionnels passionnés à votre service.</p>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="avatar">👨🏾‍💼</div>
+            <div class="team-info">
+              <h3>Direction</h3>
+              <p>Fondateur & CEO</p>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="avatar">👩🏾‍💼</div>
+            <div class="team-info">
+              <h3>Commercial</h3>
+              <p>Responsable Ventes</p>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="avatar">👨🏾‍🏫</div>
+            <div class="team-info">
+              <h3>Formation</h3>
+              <p>Responsable Formation</p>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="avatar">👩🏾‍💻</div>
+            <div class="team-info">
+              <h3>Digital</h3>
+              <p>Responsable Plateforme</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Témoignages clients -->
+      <div class="section" id="temoignages">
+        <h2><span data-i18n="about.reviews.title">Ce que disent nos clients</span></h2>
+        <p class="lead" data-i18n="about.reviews.sub">Des témoignages authentiques de personnes que nous avons accompagnées.</p>
+
+        <div class="temoignages-grid" id="temoignagesGrid">
+          <!-- Témoignages injectés par testimonials.js -->
+          <!-- Placeholder visible si JS désactivé -->
+          <div class="temoignage-placeholder">
+            <i class="fas fa-quote-left"></i>
+            <p>Les témoignages de nos clients seront publiés ici prochainement.</p>
+          </div>
+        </div>
+
+        <!-- Bouton ajouter un avis (admin seulement, géré par testimonials.js) -->
+        <div id="adminTestimonialBtn" style="display:none;margin-top:1.5rem;text-align:center">
+          <button class="btn-orange" id="openTestimonialForm">
+            <i class="fas fa-plus"></i> Ajouter un témoignage
+          </button>
+        </div>
+
+        <!-- Formulaire admin (caché par défaut) -->
+        <div id="testimonialForm" style="display:none;margin-top:1.5rem">
+          <div class="testimonial-form-card">
+            <h4>Nouveau témoignage</h4>
+            <div class="tf-row">
+              <div class="tf-field">
+                <label>Nom du client</label>
+                <input type="text" id="tfName" placeholder="Marie K.">
+              </div>
+              <div class="tf-field">
+                <label>Service utilisé</label>
+                <input type="text" id="tfService" placeholder="Location résidentielle">
+              </div>
+            </div>
+            <div class="tf-field" style="margin-top:.8rem">
+              <label>Quartier / Ville</label>
+              <input type="text" id="tfLocation" placeholder="Bonamoussadi, Douala">
+            </div>
+            <div class="tf-field" style="margin-top:.8rem">
+              <label>Témoignage</label>
+              <textarea id="tfContent" rows="3" placeholder="Ce que le client a dit..."></textarea>
+            </div>
+            <div style="display:flex;gap:.8rem;align-items:center;margin-top:.8rem">
+              <label style="font-size:.82rem;font-weight:700;color:#555">Note :</label>
+              <div class="star-select" id="starSelect">
+                <span data-val="1">★</span><span data-val="2">★</span>
+                <span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+              <span id="starValue" style="font-size:.82rem;color:#888">5 / 5</span>
+            </div>
+            <div style="display:flex;gap:.6rem;margin-top:1rem">
+              <button class="btn-orange" id="tfSave" style="padding:.65rem 1.2rem;font-size:.88rem">
+                <i class="fas fa-save"></i> Enregistrer
+              </button>
+              <button id="tfCancel" style="padding:.65rem 1.2rem;font-size:.88rem;background:#f4f4f4;border:none;border-radius:999px;font-weight:700;cursor:pointer;font-family:inherit">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-box">
+        <h2>Prêt à nous rejoindre ?</h2>
+        <p>Que vous soyez propriétaire, locataire ou investisseur — nous avons la solution pour vous.</p>
+        <div class="cta-btns">
+          <a href="/rendez-vous" class="btn-orange"><i class="fas fa-calendar-check"></i> Prendre RDV</a>
+          <a href="/annonces" class="btn-outline"><i class="fas fa-search"></i> Voir les annonces</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer></footer>
+  <script src="assets/js/lang.js"></script>
+  <script src="assets/js/footer.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/testimonials.js"></script>
+</body>
+</html>

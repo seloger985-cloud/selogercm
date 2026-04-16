@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Tarifs — SE LOGER CM</title>
+  <meta name="description" content="Publiez vos annonces immobilières gratuitement ou boostez votre visibilité avec nos offres Pro.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root {
+      --orange: #ff7a00;
+      --dark: #0f0f0f;
+      --gray: #f7f7f5;
+      --border: #e8e8e4;
+      --text: #1a1a1a;
+      --muted: #888;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--gray); font-family: 'Poppins', sans-serif; color: var(--text); }
+    main { padding-top: 90px; }
+
+    /* ── Hero ── */
+    .pricing-hero {
+      background: var(--dark);
+      padding: 5rem 0 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,122,0,.15) 0%, transparent 70%);
+    }
+    .pricing-hero .tag {
+      display: inline-block;
+      background: rgba(255,122,0,.15);
+      color: var(--orange);
+      border: 1px solid rgba(255,122,0,.3);
+      border-radius: 999px;
+      padding: .35rem 1rem;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .pricing-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .pricing-hero h1 em {
+      color: var(--orange);
+      font-style: normal;
+    }
+    .pricing-hero p {
+      color: rgba(255,255,255,.6);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── Plans ── */
+    .plans-wrap {
+      max-width: 900px;
+      margin: -2rem auto 0;
+      padding: 0 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .plan-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      border: 1.5px solid var(--border);
+      transition: transform .25s, box-shadow .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.1);
+    }
+    .plan-card.featured {
+      background: var(--dark);
+      border-color: var(--orange);
+      color: #fff;
+    }
+    .plan-card.featured::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--orange);
+    }
+
+    .plan-badge {
+      display: inline-block;
+      background: var(--orange);
+      color: #fff;
+      border-radius: 999px;
+      padding: .2rem .75rem;
+      font-size: .72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 1.2rem;
+    }
+    .plan-free-badge {
+      display: inline-block;
+      background: #f0f0f0;
+      color: #555;
+      border-radius: 999px;
+      padding: .2rem .75rem;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 1.2rem;
+    }
+
+    .plan-name {
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin-bottom: .5rem;
+    }
+    .plan-card.featured .plan-name { color: #fff; }
+
+    .plan-desc {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: 1.8rem;
+      line-height: 1.6;
+    }
+    .plan-card.featured .plan-desc { color: rgba(255,255,255,.55); }
+
+    .plan-price {
+      margin-bottom: 2rem;
+      padding-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-card.featured .plan-price { border-bottom-color: rgba(255,255,255,.1); }
+
+    .plan-price .amount {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
+    }
+    .plan-card.featured .plan-price .amount { color: var(--orange); }
+    .plan-price .amount span {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .plan-price .period {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+    .plan-card.featured .plan-price .period { color: rgba(255,255,255,.4); }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+      margin-bottom: 2rem;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+    .plan-features li .icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .icon-yes { background: #e8f5e9; color: #2e7d32; }
+    .plan-card.featured .icon-yes { background: rgba(255,122,0,.15); color: var(--orange); }
+    .icon-no  { background: #f5f5f5; color: #bbb; }
+    .plan-card.featured .icon-no { background: rgba(255,255,255,.06); color: rgba(255,255,255,.2); }
+
+    .plan-features li .feat-text { color: var(--text); }
+    .plan-card.featured .plan-features li .feat-text { color: rgba(255,255,255,.8); }
+    .feat-text.no { color: var(--muted); }
+    .plan-card.featured .feat-text.no { color: rgba(255,255,255,.3); }
+
+    .btn-plan {
+      display: block;
+      width: 100%;
+      padding: .9rem;
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-size: .92rem;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .btn-plan:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-plan.outline {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-plan.primary {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    /* ── Boost section ── */
+    .boost-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+    .boost-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .boost-header .tag {
+      display: inline-block;
+      background: rgba(255,122,0,.1);
+      color: var(--orange);
+      border: 1px solid rgba(255,122,0,.2);
+      border-radius: 999px;
+      padding: .3rem .9rem;
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 1rem;
+    }
+    .boost-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: .5rem;
+    }
+    .boost-header p {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .boost-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+
+    .boost-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.8rem;
+      border: 1.5px solid var(--border);
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .boost-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.07); }
+
+    .boost-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .boost-icon.rent { background: #e8f5e9; }
+    .boost-icon.sale { background: #fff4e8; }
+
+    .boost-info h3 { font-size: 1rem; font-weight: 800; margin-bottom: .3rem; }
+    .boost-info p  { font-size: .82rem; color: var(--muted); line-height: 1.5; margin-bottom: .8rem; }
+    .boost-price {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--orange);
+    }
+    .boost-price span { font-size: .8rem; font-weight: 500; color: var(--muted); }
+
+    /* ── FAQ ── */
+    .faq-section {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+    .faq-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .faq-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 0;
+    }
+    .faq-q {
+      font-weight: 700;
+      font-size: .95rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .faq-q i { color: var(--orange); transition: transform .2s; flex-shrink: 0; }
+    .faq-q.open i { transform: rotate(45deg); }
+    .faq-a {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, padding .3s;
+    }
+    .faq-a.open { max-height: 200px; padding-top: .75rem; }
+
+    /* ── CTA bottom ── */
+    .cta-bottom {
+      background: var(--dark);
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+    .cta-bottom h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: .75rem;
+    }
+    .cta-bottom h2 em { color: var(--orange); font-style: normal; }
+    .cta-bottom p { color: rgba(255,255,255,.5); margin-bottom: 1.8rem; }
+    .cta-btns { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+    .btn-cta {
+      padding: .85rem 1.8rem;
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-size: .9rem;
+      font-weight: 800;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .btn-cta:hover { opacity: .88; transform: translateY(-2px); }
+    .btn-cta.primary { background: var(--orange); color: #fff; }
+    .btn-cta.outline { background: transparent; border: 1.5px solid rgba(255,255,255,.2); color: #fff; }
+
+    @media (max-width: 640px) {
+      .plans-wrap { grid-template-columns: 1fr; margin-top: -1rem; }
+      .boost-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container px navbar">
+    <a class="brand" href="/">
+      <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+      <span>SE LOGER CM</span>
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <section class="pricing-hero">
+    <div class="container px">
+      <div class="tag">Tarifs transparents</div>
+      <h1>Simple. Efficace.<br><em>Sans surprise.</em></h1>
+      <p>Publiez gratuitement ou passez Pro pour booster votre visibilité et décrocher plus de mandats.</p>
+    </div>
+  </section>
+
+  <!-- Plans -->
+  <div class="plans-wrap">
+
+    <!-- Plan Gratuit -->
+    <div class="plan-card">
+      <div class="plan-free-badge">Gratuit</div>
+      <div class="plan-name">Essentiel</div>
+      <div class="plan-desc">Pour les particuliers et propriétaires qui souhaitent publier leurs biens.</div>
+      <div class="plan-price">
+        <div class="amount">0 <span>FCFA</span></div>
+        <div class="period">Pour toujours gratuit</div>
+      </div>
+      <ul class="plan-features">
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Annonces illimitées</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Durée d'annonce 30 jours</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Photos HD (8 max)</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Contact par appel téléphonique</span>
+        </li>
+        <li>
+          <div class="icon icon-no"><i class="fas fa-times"></i></div>
+          <span class="feat-text no">Vitrine page d'accueil</span>
+        </li>
+        <li>
+          <div class="icon icon-no"><i class="fas fa-times"></i></div>
+          <span class="feat-text no">Badge Vérifié</span>
+        </li>
+        <li>
+          <div class="icon icon-no"><i class="fas fa-times"></i></div>
+          <span class="feat-text no">Page profil agent</span>
+        </li>
+        <li>
+          <div class="icon icon-no"><i class="fas fa-times"></i></div>
+          <span class="feat-text no">Contact WhatsApp</span>
+        </li>
+      </ul>
+      <a href="/publier" class="btn-plan outline">Publier gratuitement</a>
+    </div>
+
+    <!-- Plan Pro -->
+    <div class="plan-card featured">
+      <div class="plan-badge">⭐ Pro</div>
+      <div class="plan-name">Agent Pro</div>
+      <div class="plan-desc">Pour les agents immobiliers qui veulent se démarquer et convertir plus de clients.</div>
+      <div class="plan-price">
+        <div class="amount">10 000 <span>FCFA</span></div>
+        <div class="period">par mois · sans engagement</div>
+      </div>
+      <ul class="plan-features">
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Annonces illimitées</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Durée d'annonce 90 jours</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Photos HD (8 max)</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Vitrine page d'accueil</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Badge ✅ Vérifié</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Page profil agent complète</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Annonces liées sur les fiches</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Contact Appel + WhatsApp</span>
+        </li>
+        <li>
+          <div class="icon icon-yes"><i class="fas fa-check"></i></div>
+          <span class="feat-text">Support WhatsApp prioritaire</span>
+        </li>
+      </ul>
+      <a href="/rendez-vous" class="btn-plan primary">Devenir Agent Pro</a>
+    </div>
+
+  </div>
+
+  <!-- Boost Vitrine -->
+  <div class="boost-section">
+    <div class="boost-header">
+      <div class="tag">Sans abonnement · À la carte</div>
+      <h2>Boost Vitrine Premium</h2>
+      <p>Placez votre annonce en page d'accueil et multipliez vos contacts. Choisissez la durée qui vous convient.</p>
+    </div>
+
+    <div class="boost-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.2rem;max-width:900px;margin:0 auto">
+
+      <!-- Boost 7 jours -->
+      <div class="boost-card" style="border:2px solid #e8e8e4;position:relative">
+        <div class="boost-icon rent" style="font-size:1.6rem">⚡</div>
+        <div class="boost-info">
+          <h3>Boost Starter</h3>
+          <p>Idéal pour tester la vitrine. Votre annonce en page d'accueil pendant <strong>7 jours</strong>.</p>
+          <div class="boost-price">10 000 <span>FCFA / 7 jours</span></div>
+        </div>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem">
+          <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20un%20Boost%20Starter%207%20jours%20(10%20000%20FCFA)%20pour%20mon%20annonce%20r%C3%A9f%20%3A%20"
+             target="_blank"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#25d366;color:#fff;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;text-decoration:none;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fab fa-whatsapp"></i> Payer via WhatsApp
+          </a>
+          <button onclick="openFlutterwave(10000, 'Boost Starter 7 jours')"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fas fa-credit-card"></i> Payer en ligne
+          </button>
+        </div>
+      </div>
+
+      <!-- Boost 15 jours — Populaire -->
+      <div class="boost-card" style="border:2px solid #ff7a00;position:relative">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#ff7a00;color:#fff;border-radius:999px;padding:.2rem .9rem;font-size:.72rem;font-weight:800;white-space:nowrap">⭐ POPULAIRE</div>
+        <div class="boost-icon sale" style="font-size:1.6rem">🚀</div>
+        <div class="boost-info">
+          <h3>Boost Pro</h3>
+          <p>Le meilleur rapport qualité/prix. Votre annonce en vitrine pendant <strong>15 jours</strong>.</p>
+          <div class="boost-price" style="color:#ff7a00">15 000 <span>FCFA / 15 jours</span></div>
+        </div>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem">
+          <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20un%20Boost%20Pro%2015%20jours%20(15%20000%20FCFA)%20pour%20mon%20annonce%20r%C3%A9f%20%3A%20"
+             target="_blank"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#25d366;color:#fff;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;text-decoration:none;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fab fa-whatsapp"></i> Payer via WhatsApp
+          </a>
+          <button onclick="openFlutterwave(15000, 'Boost Pro 15 jours')"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fas fa-credit-card"></i> Payer en ligne
+          </button>
+        </div>
+      </div>
+
+      <!-- Boost 30 jours -->
+      <div class="boost-card" style="border:2px solid #1a1a1a;background:#0f0f0f;position:relative">
+        <div class="boost-icon" style="background:rgba(255,122,0,.15);font-size:1.6rem">👑</div>
+        <div class="boost-info">
+          <h3 style="color:#fff">Boost Max</h3>
+          <p style="color:rgba(255,255,255,.65)">Visibilité maximale. Votre annonce en vitrine pendant <strong style="color:#ff7a00">30 jours</strong>.</p>
+          <div class="boost-price" style="color:#ff7a00">20 000 <span style="color:rgba(255,255,255,.5)">FCFA / 30 jours</span></div>
+        </div>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem">
+          <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20un%20Boost%20Max%2030%20jours%20(20%20000%20FCFA)%20pour%20mon%20annonce%20r%C3%A9f%20%3A%20"
+             target="_blank"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#25d366;color:#fff;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;text-decoration:none;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fab fa-whatsapp"></i> Payer via WhatsApp
+          </a>
+          <button onclick="openFlutterwave(20000, 'Boost Max 30 jours')"
+             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
+             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fas fa-credit-card"></i> Payer en ligne
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Note paiement -->
+    <div style="text-align:center;margin-top:2rem;padding:1rem;background:#fff;border-radius:14px;max-width:600px;margin-left:auto;margin-right:auto;margin-top:2rem">
+      <p style="font-size:.82rem;color:#888;line-height:1.7">
+        <strong style="color:#111">💳 Paiements acceptés :</strong> MTN Mobile Money · Orange Money · Visa/Mastercard · Wave<br>
+        <span style="font-size:.78rem">Après paiement, envoyez la référence de votre annonce sur WhatsApp. Activation sous 2h.</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-header">
+      <h2>Questions fréquentes</h2>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Comment payer l'abonnement Pro ?
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="faq-a">
+        Deux options : paiement en ligne via Flutterwave (MTN Mobile Money, Orange Money, Visa/Mastercard, Wave) ou directement sur WhatsApp au +237 650 840 714. L'activation se fait sous 2h après confirmation du paiement.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Puis-je annuler mon abonnement à tout moment ?
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="faq-a">
+        Oui, sans engagement ni frais de résiliation. Votre abonnement reste actif jusqu'à la fin de la période payée.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Combien d'annonces puis-je publier gratuitement ?
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="faq-a">
+        Le plan gratuit permet des annonces illimitées, chacune visible pendant 30 jours. À l'expiration, vous pouvez les renouveler.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Qu'est-ce que le Badge Vérifié ?
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="faq-a">
+        Le Badge ✅ Vérifié indique que votre identité et votre activité d'agent ont été vérifiées par notre équipe. Il renforce la confiance des acheteurs et locataires.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Comment fonctionne le Boost Vitrine ?
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="faq-a">
+        Choisissez votre formule (Starter 7j, Pro 15j ou Max 30j) et payez en ligne ou via WhatsApp. Envoyez ensuite la référence de votre annonce — activation sous 2h. Votre annonce apparaît en section Premium de la page d'accueil.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA Bottom -->
+  <div class="cta-bottom">
+    <h2>Prêt à <em>décrocher plus de mandats</em> ?</h2>
+    <p>Rejoignez les agents qui font confiance à SE LOGER CM pour développer leur activité.</p>
+    <div class="cta-btns">
+      <a href="/publier" class="btn-cta primary">Publier gratuitement</a>
+      <a href="/rendez-vous" class="btn-cta outline">Devenir Agent Pro</a>
+    </div>
+  </div>
+
+</main>
+
+<footer></footer>
+
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script src="assets/js/footer.js"></script>
+<script src="assets/js/nav.js"></script>
+<script>
+function openFlutterwave(amount, planName) {
+  /* Récupérer l'email de l'utilisateur connecté si possible */
+  const userEmail = window.SLCM?.getCurrentUser ? '' : '';
+
+  FlutterwaveCheckout({
+    public_key: "FLWPUBK-VOTRE-CLE-PUBLIQUE-ICI", /* ← Remplacer par votre clé Flutterwave */
+    tx_ref: "SLCM-BOOST-" + Date.now(),
+    amount: amount,
+    currency: "XAF",
+    payment_options: "mobilemoney, card",
+    customer: {
+      email: userEmail || "client@selogercm.com",
+      name:  "Client SE LOGER CM",
+    },
+    customizations: {
+      title:       "SE LOGER CM — " + planName,
+      description: planName + " · Boost Vitrine annonce immobilière",
+      logo:        "https://selogercm.com/assets/img/logo.png",
+    },
+    callback: function(data) {
+      if (data.status === "successful") {
+        /* Paiement réussi — rediriger vers WhatsApp pour envoyer la ref annonce */
+        const msg = encodeURIComponent(
+          "✅ Paiement confirmé !\n" +
+          "Formule : " + planName + "\n" +
+          "Référence paiement : " + data.transaction_id + "\n\n" +
+          "Référence de l'annonce à booster : [À COMPLÉTER]"
+        );
+        window.open("https://wa.me/237650840714?text=" + msg, "_blank");
+        alert("✅ Paiement réussi ! Redirigé vers WhatsApp pour finaliser l'activation.");
+      }
+    },
+    onclose: function() {}
+  });
+}
+
+function toggleFaq(el) {
+  const answer = el.nextElementSibling;
+  const isOpen = answer.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.faq-q').forEach(q => q.classList.remove('open'));
+  if (!isOpen) {
+    answer.classList.add('open');
+    el.classList.add('open');
+  }
+}
+</script>
+
+</body>
+</html>

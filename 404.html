@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Page introuvable — SE LOGER CM</title>
+  <meta name="description" content="Cette page n'existe pas ou a été déplacée. Retournez à l'accueil de SE LOGER CM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root { --orange: #ff7a00; }
+    body {
+      min-height: 100vh; display: flex; flex-direction: column;
+      background: #f6f7f9; font-family: 'Poppins', sans-serif;
+    }
+    main {
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; padding: 6rem 1.5rem 3rem; text-align: center;
+    }
+    .notfound { max-width: 480px; }
+
+    .big404 {
+      font-size: clamp(5rem, 20vw, 9rem); font-weight: 900;
+      line-height: 1; color: #111; letter-spacing: -4px;
+      position: relative; display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+    .big404 span { color: var(--orange); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .house-icon {
+      font-size: 3rem; margin-bottom: 1rem; display: block;
+      animation: wobble 2s ease-in-out infinite;
+    }
+    @keyframes wobble {
+      0%, 100% { transform: rotate(0deg); }
+      20%       { transform: rotate(-8deg); }
+      40%       { transform: rotate(8deg); }
+      60%       { transform: rotate(-4deg); }
+      80%       { transform: rotate(4deg); }
+    }
+
+    .notfound h1 { font-size: 1.5rem; font-weight: 800; margin: 1rem 0 .5rem; color: #111; }
+    .notfound p  { color: #777; font-size: .97rem; line-height: 1.6; margin-bottom: 2rem; }
+
+    .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-home {
+      background: var(--orange); color: #fff; border: none;
+      padding: .85rem 1.6rem; border-radius: 999px; font-family: inherit;
+      font-size: .95rem; font-weight: 700; cursor: pointer; text-decoration: none;
+      transition: transform .2s, opacity .2s; display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-home:hover { transform: translateY(-2px); opacity: .9; }
+    .btn-back {
+      background: #fff; color: #333; border: 1.5px solid #ddd;
+      padding: .85rem 1.6rem; border-radius: 999px; font-family: inherit;
+      font-size: .95rem; font-weight: 700; cursor: pointer; text-decoration: none;
+      transition: transform .2s, border-color .2s; display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-back:hover { transform: translateY(-2px); border-color: var(--orange); color: var(--orange); }
+
+    .quick-links { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e5e5; }
+    .quick-links p { font-size: .85rem; color: #aaa; margin-bottom: .75rem; }
+    .quick-links .links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .quick-links a { color: #555; text-decoration: none; font-size: .88rem; font-weight: 600; transition: color .2s; }
+    .quick-links a:hover { color: var(--orange); }
+  </style>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <!-- End Google Tag Manager -->
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+        <span>SE LOGER CM</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="notfound">
+      <span class="house-icon">🏠</span>
+      <div class="big404">4<span>0</span>4</div>
+      <h1 data-i18n="404.title">Page introuvable</h1>
+      <p>
+        Oups ! La page que vous cherchez n'existe pas ou a été déplacée.<br>
+        Nous allons vous remettre sur la bonne voie.
+      </p>
+      <div class="btn-group">
+        <a href="/" class="btn-home">
+          <i class="fas fa-home"></i> Retour à l'accueil
+        </a>
+        <a href="javascript:history.back()" class="btn-back">
+          <i class="fas fa-arrow-left"></i> <span data-i18n="404.back">Page précédente</span>
+        </a>
+      </div>
+      <div class="quick-links">
+        <p>Ou accédez directement à :</p>
+        <div class="links">
+          <a href="/annonces"><i class="fas fa-search"></i> Voir les annonces</a>
+          <a href="/publier"><i class="fas fa-plus"></i> Publier une annonce</a>
+          <a href="/#contact"><i class="fas fa-envelope"></i> Nous contacter</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <script src="assets/js/lang.js"></script>
+  <script src="assets/js/footer.js"></script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

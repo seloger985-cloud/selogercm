@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Nos Services — SE LOGER CM</title>
+  <meta name="description" content="Découvrez tous les services immobiliers de SE LOGER CM à Douala : location, vente, gestion locative, formation et plus.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <style>
+    :root { --orange: #ff7a00; }
+    body  { background: #f6f7f9; font-family: 'Poppins', sans-serif; }
+    main  { padding-top: 90px; padding-bottom: 60px; }
+    .wrap { max-width: 960px; margin: auto; padding: 0 1.5rem; }
+
+    /* Hero */
+    .services-hero {
+      background: linear-gradient(135deg, #111 0%, #1a1a2e 100%);
+      color: #fff;
+      padding: 4rem 1.5rem;
+      text-align: center;
+      margin-top: 70px;
+    }
+    .services-hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: .75rem; }
+    .services-hero h1 span { color: var(--orange); }
+    .services-hero p { font-size: 1rem; opacity: .75; max-width: 500px; margin: 0 auto; line-height: 1.7; }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #555; font-weight: 600; font-size: .9rem;
+      text-decoration: none; margin: 2rem 0 1rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--orange); }
+
+    /* Intro */
+    .intro { text-align: center; padding: 2.5rem 0 1rem; }
+    .intro h2 { font-size: 1.6rem; font-weight: 900; color: #111; margin-bottom: .5rem; }
+    .intro h2 span { color: var(--orange); }
+    .intro p { color: #666; max-width: 500px; margin: 0 auto; line-height: 1.7; }
+
+    /* Grille services */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin: 2rem 0;
+    }
+
+    .service-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 1.8rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.07);
+      transition: transform .25s, box-shadow .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--orange);
+      transform: scaleY(0);
+      transition: transform .25s;
+      transform-origin: bottom;
+    }
+    .service-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+    .service-card:hover::before { transform: scaleY(1); }
+
+    .service-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .service-card h3 {
+      font-size: 1.05rem; font-weight: 800; color: #111; margin-bottom: .6rem;
+    }
+    .service-card p {
+      font-size: .88rem; color: #666; line-height: 1.7; margin-bottom: 1rem;
+    }
+    .service-card ul {
+      list-style: none; padding: 0; margin: 0;
+    }
+    .service-card ul li {
+      font-size: .84rem; color: #444; padding: .3rem 0;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .service-card ul li::before {
+      content: '✓';
+      color: var(--orange);
+      font-weight: 800;
+      font-size: .8rem;
+    }
+
+    /* Badge NEW */
+    .badge-new {
+      background: var(--orange); color: #fff;
+      font-size: .7rem; font-weight: 800;
+      padding: .2rem .55rem; border-radius: 999px;
+      margin-left: .5rem; vertical-align: middle;
+    }
+
+    /* Card formation (spéciale) */
+    .service-card.featured {
+      background: #111;
+      color: #fff;
+    }
+    .service-card.featured h3 { color: #fff; }
+    .service-card.featured p  { color: rgba(255,255,255,.7); }
+    .service-card.featured ul li { color: rgba(255,255,255,.8); }
+    .service-card.featured::before { background: var(--orange); }
+
+    /* CTA bas de page */
+    .cta-box {
+      background: var(--orange);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: #fff;
+      margin: 2rem 0;
+    }
+    .cta-box h2 { font-size: 1.4rem; font-weight: 900; margin-bottom: .5rem; }
+    .cta-box p  { opacity: .85; margin-bottom: 1.5rem; font-size: .97rem; }
+    .btn-white {
+      background: #fff; color: var(--orange); border: none;
+      padding: .85rem 1.8rem; border-radius: 999px;
+      font-family: inherit; font-size: .95rem; font-weight: 800;
+      cursor: pointer; text-decoration: none;
+      transition: transform .2s, opacity .2s;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-white:hover { transform: translateY(-2px); opacity: .9; }
+    .btn-white-outline {
+      background: transparent; color: #fff;
+      border: 2px solid rgba(255,255,255,.6);
+      padding: .85rem 1.8rem; border-radius: 999px;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: border-color .2s, transform .2s;
+      display: inline-flex; align-items: center; gap: .5rem;
+      margin-left: .75rem;
+    }
+    .btn-white-outline:hover { border-color: #fff; transform: translateY(-2px); }
+
+    @media (max-width: 600px) {
+      .btn-white-outline { margin: .5rem 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+        <span>SE LOGER CM</span>
+      </a>
+      <div class="nav-right">
+        <a href="/rendez-vous" class="btn-primary" style="text-decoration:none;">Prendre RDV</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="services-hero">
+    <h1>Nos <span>Services</span></h1>
+    <p>Tout ce dont vous avez besoin pour votre projet immobilier à Douala, en un seul endroit.</p>
+  </div>
+
+  <main>
+    <div class="wrap">
+      <a href="/" class="back-link">
+        <i class="fas fa-arrow-left"></i> Retour à l'accueil
+      </a>
+
+      <div class="intro">
+        <h2>Ce que nous <span>faisons</span></h2>
+        <p>De la recherche de votre logement idéal à la gestion complète de vos biens, SE LOGER CM vous accompagne à chaque étape.</p>
+      </div>
+
+      <div class="services-grid">
+
+        <!-- Location résidentielle -->
+        <div class="service-card">
+          <span class="icon">🏠</span>
+          <h3>Location Résidentielle</h3>
+          <p>Trouvez l'appartement, la maison ou le studio qui correspond à vos besoins et votre budget à Douala.</p>
+          <ul>
+            <li>Appartements & studios meublés / non meublés</li>
+            <li>Maisons & villas de standing</li>
+            <li>Tous les quartiers de Douala</li>
+            <li>Annonces vérifiées et photos authentiques</li>
+          </ul>
+        </div>
+
+        <!-- Vente immobilière -->
+        <div class="service-card">
+          <span class="icon">🔑</span>
+          <h3>Vente Immobilière</h3>
+          <p>Achetez ou vendez votre bien en toute sérénité avec l'accompagnement de nos experts locaux.</p>
+          <ul>
+            <li>Évaluation gratuite de votre bien</li>
+            <li>Mise en valeur et diffusion de l'annonce</li>
+            <li>Accompagnement jusqu'à la signature</li>
+            <li>Conseil juridique et administratif</li>
+          </ul>
+        </div>
+
+        <!-- Gestion locative -->
+        <div class="service-card">
+          <span class="icon">📋</span>
+          <h3>Gestion Locative</h3>
+          <p>Confiez-nous la gestion complète de votre bien et profitez de vos revenus locatifs sans contrainte.</p>
+          <ul>
+            <li>Recherche et sélection des locataires</li>
+            <li>Encaissement des loyers</li>
+            <li>Gestion des travaux et réparations</li>
+            <li>Suivi administratif complet</li>
+          </ul>
+        </div>
+
+        <!-- Estimation -->
+        <div class="service-card">
+          <span class="icon">📊</span>
+          <h3>Estimation de Biens</h3>
+          <p>Obtenez une estimation gratuite et précise de votre bien immobilier basée sur le marché actuel à Douala.</p>
+          <ul>
+            <li>Estimation gratuite sous 48h</li>
+            <li>Analyse comparative du marché local</li>
+            <li>Rapport détaillé remis en main propre</li>
+            <li>Conseils pour valoriser votre bien</li>
+          </ul>
+        </div>
+
+        <!-- Conseil en investissement -->
+        <div class="service-card">
+          <span class="icon">💡</span>
+          <h3>Conseil en Investissement</h3>
+          <p>Identifiez les meilleures opportunités d'investissement immobilier à Douala avec nos experts.</p>
+          <ul>
+            <li>Analyse des quartiers à fort potentiel</li>
+            <li>Étude de rentabilité locative</li>
+            <li>Accompagnement premier achat</li>
+            <li>Stratégie patrimoniale personnalisée</li>
+          </ul>
+        </div>
+
+        <!-- Immobilier commercial -->
+        <div class="service-card">
+          <span class="icon">🏢</span>
+          <h3>Immobilier Commercial</h3>
+          <p>Bureaux, entrepôts et locaux commerciaux pour développer votre activité professionnelle à Douala.</p>
+          <ul>
+            <li>Bureaux et open spaces</li>
+            <li>Entrepôts & locaux industriels</li>
+            <li>Boutiques & espaces commerciaux</li>
+            <li>Bail commercial et négociation</li>
+          </ul>
+        </div>
+
+        <!-- Formation (featured) -->
+        <div class="service-card featured">
+          <span class="icon">🎓</span>
+          <h3>Formation Agents Immobiliers <span class="badge-new">NEW</span></h3>
+          <p>Programme de formation complet pour devenir un agent immobilier professionnel et certifié au Cameroun.</p>
+          <ul>
+            <li>Techniques de vente et négociation</li>
+            <li>Droit immobilier camerounais</li>
+            <li>Gestion de portefeuille clients</li>
+            <li>Marketing digital immobilier</li>
+            <li>Certification à l'issue de la formation</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-box">
+        <h2>Prêt à démarrer votre projet ?</h2>
+        <p>Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner.</p>
+        <a href="/rendez-vous" class="btn-white">
+          <i class="fas fa-calendar-check"></i> Prendre rendez-vous
+        </a>
+        <a href="/annonces" class="btn-white-outline">
+          <i class="fas fa-search"></i> Voir les annonces
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <script src="assets/js/footer.js"></script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

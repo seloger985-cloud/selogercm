@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin Dashboard — SE LOGER CM</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root{ --orange:#ff7a00; }
+
+    body { background:#f6f7f9; }
+    main { padding-top:110px; padding-bottom:40px; }
+
+    .wrap{ width:100%; }
+    .panel{
+      background:#fff; border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,.06);
+      padding:18px; margin-bottom:16px;
+    }
+    .panel h2{ margin:0 0 12px; font-size:20px; font-weight:800; }
+
+    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .toolbar .input, .toolbar .select{
+      padding:.6rem .75rem; border:1px solid #ddd; border-radius:10px; background:#fff; font:inherit;
+    }
+    .toolbar .tag{
+      display:inline-flex; align-items:center; gap:6px; padding:.35rem .6rem; border-radius:999px;
+      background:#111; color:#fff; font-size:.85rem;
+    }
+    .toolbar .btn{ border:none; padding:.6rem .9rem; border-radius:10px; cursor:pointer; }
+    .btn-primary{ background:var(--orange); color:#fff; font-weight:700; }
+    .btn-ghost{ background:#fff; border:1px solid #ddd; }
+
+    /* ── KYC ── */
+    .kyc-card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); padding:1rem 1.2rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:8px; }
+    .kyc-avatar { width:48px; height:48px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:900; color:#888; flex-shrink:0; overflow:hidden; }
+    .kyc-avatar img { width:100%; height:100%; object-fit:cover; }
+    .kyc-info { flex:1; min-width:0; }
+    .kyc-info .name  { font-weight:800; font-size:.95rem; color:#111; }
+    .kyc-info .email { font-size:.78rem; color:#888; }
+    .kyc-info .meta  { font-size:.75rem; color:#aaa; margin-top:.2rem; }
+    .kyc-doc-link { font-size:.82rem; color:var(--orange); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-top:.3rem; }
+    .kyc-doc-link:hover { text-decoration:underline; }
+    .kyc-actions { display:flex; gap:8px; flex-shrink:0; }
+    .btn-approve { background:#e8f5e9; color:#2e7d32; border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
+    .btn-approve:hover { opacity:.82; }
+    .btn-reject  { background:#fee2e2; color:#c00;    border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
+    .btn-reject:hover  { opacity:.82; }
+    .badge-pending  { background:#fff8e1; color:#f59e0b; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
+    .badge-verified { background:#e8f5e9; color:#2e7d32; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
+    .badge-rejected { background:#fee2e2; color:#c00;    border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
+
+    .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .stat{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.05); }
+    .stat .k{ font-size:22px; font-weight:900; }
+    .stat .l{ color:#666; font-size:.9rem; }
+
+    .grid{ display:flex; flex-direction:column; gap:10px; }
+
+    .card{
+      background:#fff; border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
+      display:flex; flex-direction:row; align-items:center;
+      width:100%;
+    }
+    .thumb{
+      width:100px; min-width:100px; height:auto; min-height:80px;
+      background:#eee; position:relative; flex-shrink:0;
+      border-radius:12px 0 0 12px; overflow:hidden;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .badge{
+      position:absolute; top:6px; left:6px;
+      background:#111; color:#fff; border-radius:999px;
+      padding:.2rem .45rem; font-size:.72rem; font-weight:800;
+    }
+    .badge.premium{ background:var(--orange); }
+    .body{
+      padding:10px 14px; display:flex; flex-direction:column;
+      gap:3px; flex:1; min-width:0; justify-content:center;
+    }
+    .title{ font-weight:800; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta{ color:#666; font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .price{ font-weight:800; color:var(--orange); font-size:.88rem; }
+    .actions{
+      display:flex; gap:6px; margin-top:6px;
+      align-items:center; flex-wrap:wrap;
+    }
+    .actions button{
+      border:none; padding:.35rem .7rem; border-radius:8px;
+      cursor:pointer; font-weight:700; font-size:.78rem; white-space:nowrap;
+    }
+    .b-outline{ background:#f5f5f5; border:1px solid #ddd; color:#333; }
+    .b-danger{ background:#fee2e2; color:#c00; }
+    .b-dark{ background:#111; color:#fff; }
+
+    .empty{ padding:24px; text-align:center; color:#666; border:1px dashed #ddd; border-radius:12px; }
+  </style>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <!-- End Google Tag Manager -->
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <!-- Header -->
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+        <span>SE LOGER CM</span>
+      </a>
+      <div class="nav-right">
+        <button id="signOutBtn" class="seg-btn inactive">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container px">
+    <div class="wrap">
+
+      <!-- Filters / Tools -->
+      <div class="panel">
+        <h2>Admin tools</h2>
+        <div class="toolbar">
+          <input id="q" class="input" placeholder="Search (title, city, district, type)">
+          <select id="fMode" class="select">
+            <option value="">Mode (any)</option>
+            <option value="rent">To Rent</option>
+            <option value="sale">For Sale</option>
+          </select>
+          <select id="fCity" class="select">
+            <option value="">City (any)</option>
+            <option>Douala</option><option>Yaoundé</option><option>Bafoussam</option>
+          </select>
+          <select id="fFurn" class="select">
+            <option value="">Furnished (any)</option>
+            <option value="true">Furnished</option>
+            <option value="false">Unfurnished</option>
+          </select>
+          <select id="fPremium" class="select">
+            <option value="">Premium (any)</option>
+            <option value="true">Premium only</option>
+            <option value="false">Non-premium</option>
+          </select>
+          <button id="resetFilters" class="btn btn-ghost">Reset</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats" id="stats">
+        <div class="stat"><div class="k" id="sTotal">0</div><div class="l">Total listings</div></div>
+        <div class="stat"><div class="k" id="sPremium">0</div><div class="l">Premium</div></div>
+        <div class="stat"><div class="k" id="sRent">0</div><div class="l">To Rent</div></div>
+        <div class="stat"><div class="k" id="sSale">0</div><div class="l">For Sale</div></div>
+      </div>
+
+      <!-- Listings -->
+      <div class="panel">
+        <h2>All listings</h2>
+        <div id="results" class="grid"></div>
+        <div id="empty" class="empty" style="display:none">No listing matches your filters.</div>
+      </div>
+
+
+      <!-- ═══ KYC AGENTS ═══ -->
+      <div class="panel" style="margin-top:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
+          <h2 style="margin:0;">🪪 Vérification Agents (KYC)</h2>
+          <div style="display:flex;gap:8px;">
+            <button onclick="loadKyc('pending')"  id="kycTabPending"  style="padding:.4rem .9rem;border-radius:8px;border:none;background:#fff8e1;color:#f59e0b;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">⏳ En attente</button>
+            <button onclick="loadKyc('verified')" id="kycTabVerified" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">✅ Vérifiés</button>
+            <button onclick="loadKyc('rejected')" id="kycTabRejected" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">❌ Rejetés</button>
+          </div>
+        </div>
+        <div id="kycList"><div style="text-align:center;color:#aaa;padding:2rem;">Chargement…</div></div>
+        <div id="kycEmpty" style="display:none;text-align:center;color:#aaa;padding:2rem;">Aucun agent dans cette catégorie.</div>
+      </div>
+
+      <!-- ═══ BLOG MANAGEMENT ═══ -->
+      <div class="panel" style="margin-top:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
+          <h2 style="margin:0;">📝 Blog Articles</h2>
+          <button id="newArticleBtn" class="btn btn-primary" style="background:#ff7a00;color:#fff;border:none;padding:.6rem 1.2rem;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;">
+            + New Article
+          </button>
+        </div>
+        <div id="blogList"></div>
+        <div id="blogEmpty" style="display:none;text-align:center;color:#aaa;padding:2rem;">
+          No articles yet. Create your first one!
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══ BLOG ARTICLE MODAL ═══ -->
+  <div id="blogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+        <h3 id="blogModalTitle" style="font-size:1.1rem;font-weight:800;">New Article</h3>
+        <button id="blogModalClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#888;">✕</button>
+      </div>
+      <input type="hidden" id="blogId">
+      <div style="display:flex;flex-direction:column;gap:.8rem;">
+        <div>
+          <label style="font-size:.78rem;font-weight:700;color:#555;display:block;margin-bottom:.3rem;text-transform:uppercase;">Title *</label>
+          <input id="blogTitle" type="text" placeholder="Article title..." style="width:100%;border:1.5px solid #ddd;border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.92rem;">
+        </div>
+        <div>
+          <label style="font-size:.78rem;font-weight:700;color:#555;display:block;margin-bottom:.3rem;text-transform:uppercase;">Category *</label>
+          <select id="blogCategory" style="width:100%;border:1.5px solid #ddd;border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.92rem;">
+            <option value="marche">📈 Marché Immobilier</option>
+            <option value="locataires">🏠 Conseils Locataires</option>
+            <option value="proprietaires">🔑 Conseils Propriétaires</option>
+            <option value="tendances">📍 Tendances Douala</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.78rem;font-weight:700;color:#555;display:block;margin-bottom:.3rem;text-transform:uppercase;">Excerpt (résumé) *</label>
+          <textarea id="blogExcerpt" rows="2" placeholder="Short summary shown on the blog list..." style="width:100%;border:1.5px solid #ddd;border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.92rem;resize:vertical;"></textarea>
+        </div>
+        <div>
+          <label style="font-size:.78rem;font-weight:700;color:#555;display:block;margin-bottom:.3rem;text-transform:uppercase;">Content (HTML accepted) *</label>
+          <textarea id="blogContent" rows="10" placeholder="Write your article here. HTML tags like &lt;p&gt;, &lt;h2&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt; are supported." style="width:100%;border:1.5px solid #ddd;border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.88rem;resize:vertical;font-family:monospace;"></textarea>
+        </div>
+        <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:.5rem;">
+          <button id="blogCancel" style="padding:.7rem 1.2rem;border-radius:10px;border:1px solid #ddd;background:#fff;font-family:inherit;font-weight:700;cursor:pointer;">Cancel</button>
+          <button id="blogSave" style="padding:.7rem 1.4rem;border-radius:10px;border:none;background:#ff7a00;color:#fff;font-family:inherit;font-weight:700;cursor:pointer;">Save Article</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container px inner">
+      <div class="footer-brand">
+        <img src="./assets/img/logo.png" alt="logo small" class="footer-logo">
+        <span class="footer-name">SE LOGER CM</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="/">Home</a>
+        <a href="/publier">Publish</a>
+        <a href="#top">Top</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // ===== Guard: admin only =====
+    document.addEventListener('DOMContentLoaded', async () => {
+      await SLCM.requireAdmin();
+    });
+
+    // ===== Helpers =====
+    const fmt = n => (n||0).toLocaleString('fr-FR');
+    async function load() {
+      let tries = 0;
+      while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+        await new Promise(r => setTimeout(r, 100)); tries++;
+      }
+      if (!window.SLCM_DB || !window.SLCM_DB.client) return [];
+      const { data, error } = await window.SLCM_DB.client
+        .from('listings').select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error('load listings:', error); return []; }
+      return (data || []).map(ad => ({
+        ...ad,
+        title_en:  ad.title_en  || ad.title || '',
+        title_fr:  ad.title_fr  || ad.title || '',
+        rentSale:  ad.rentSale  || ad.rent_sale || 'rent',
+      }));
+    }
+    async function save(arr) { /* non utilisé — édition via Supabase direct */ }
+
+    // ===== UI Refs =====
+    const resultsEl = document.getElementById('results');
+    const emptyEl   = document.getElementById('empty');
+
+    const qEl       = document.getElementById('q');
+    const fModeEl   = document.getElementById('fMode');
+    const fCityEl   = document.getElementById('fCity');
+    const fFurnEl   = document.getElementById('fFurn');
+    const fPremEl   = document.getElementById('fPremium');
+    const resetBtn  = document.getElementById('resetFilters');
+
+    const sTotalEl  = document.getElementById('sTotal');
+    const sPremEl   = document.getElementById('sPremium');
+    const sRentEl   = document.getElementById('sRent');
+    const sSaleEl   = document.getElementById('sSale');
+
+    // signOut géré par auth.js (bind automatique sur #signOutBtn)
+
+    // ===== Filtering logic =====
+    function match(ad){
+      const q = (qEl.value||'').toLowerCase();
+      const m = fModeEl.value; // 'rent'|'sale'|''
+      const c = fCityEl.value;
+      const f = fFurnEl.value; // 'true'|'false'|''
+      const p = fPremEl.value; // 'true'|'false'|''
+
+      if (q) {
+        const hay = [
+          ad.title_en, ad.title_fr, ad.city, ad.district, ad.type,
+          String(ad.price), ad.rentSale, ad.bedrooms
+        ].map(x => (x||'').toString().toLowerCase()).join(' ');
+        if (!hay.includes(q)) return false;
+      }
+      if (m && ad.rentSale !== m) return false;
+      if (c && ad.city !== c) return false;
+      if (f && String(!!ad.furnished) !== f) return false;
+      if (p && String(!!ad.premium) !== p) return false;
+
+      return true;
+    }
+
+    async function render(){
+      const data = await load();
+
+      // Stats globales
+      sTotalEl.textContent = fmt(data.length);
+      sPremEl.textContent  = fmt(data.filter(a=>a.premium).length);
+      sRentEl.textContent  = fmt(data.filter(a=>a.rentSale==='rent').length);
+      sSaleEl.textContent  = fmt(data.filter(a=>a.rentSale==='sale').length);
+
+      // Filtrage
+      const arr = data.filter(match);
+
+      if (arr.length === 0){
+        resultsEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+      }
+      emptyEl.style.display = 'none';
+
+      resultsEl.innerHTML = arr.map(ad => card(ad)).join('');
+
+      // Bind actions via délégation
+      arr.forEach(ad => bindActions(ad));
+
+      // Délégation de secours sur le container
+      resultsEl.onclick = null;
+      resultsEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const card = btn.closest('[data-id]');
+        if (!card) return;
+        const id = card.dataset.id;
+        const ad = data.find(a => a.id === id);
+        if (!ad) return;
+
+        if (!window.SLCM_DB?.client) { alert('Connexion Supabase non disponible'); return; }
+
+        if (btn.classList.contains('b-boost')) {
+          openBoostModal(id);
+          return;
+        }
+        if (btn.classList.contains('toggle-premium')) {
+          const { error } = await window.SLCM_DB.client.from('listings')
+            .update({ premium: !ad.premium }).eq('id', id);
+          if (error) { alert('Erreur: ' + error.message); return; }
+          await render();
+        }
+        if (btn.classList.contains('toggle-furn')) {
+          const { error } = await window.SLCM_DB.client.from('listings')
+            .update({ furnished: !ad.furnished }).eq('id', id);
+          if (error) { alert('Erreur: ' + error.message); return; }
+          await render();
+        }
+        if (btn.classList.contains('delete')) {
+          if (!confirm('Delete this listing?')) return;
+          const { error } = await window.SLCM_DB.client.from('listings').delete().eq('id', id);
+          if (error) { alert('Erreur: ' + error.message); return; }
+          await render();
+        }
+      }, { once: false });
+    }
+
+    function card(ad){
+      const img = (ad.images && ad.images[0]) ? ad.images[0] : 'assets/img/no-image.png';
+      const title = ad.title_en || ad.title_fr || 'Listing';
+      const meta = [
+        ad.city, ad.district,
+        (ad.type||'').toUpperCase(),
+        (ad.bedrooms||'?') + ' BR',
+        (ad.rentSale === 'sale' ? 'For Sale' : 'To Rent')
+      ].filter(Boolean).join(' • ');
+      const badge = ad.premium ? '<div class="badge premium">PREMIUM</div>' : (ad.furnished ? '<div class="badge">Furnished</div>' : '<div class="badge">Standard</div>');
+
+      return `
+        <article class="card" data-id="${ad.id}">
+          <div class="thumb">
+            ${badge}
+            <img src="${img}" alt="${title}">
+          </div>
+          <div class="body">
+            <div class="title">${title}</div>
+            <div class="meta">${meta}</div>
+            <div class="price">${fmt(ad.price)} FCFA</div>
+            <div class="actions">
+              <button class="b-outline toggle-premium">${ad.premium ? 'Remove Premium' : 'Make Premium'}</button>
+              <button class="b-outline toggle-furn">${ad.furnished ? 'Set Unfurnished' : 'Set Furnished'}</button>
+              <button class="b-boost" style="background:#fff4e8;color:#ff7a00;border:1px solid #ffd4a8">
+                ${ad.boost_expires_at && new Date(ad.boost_expires_at) > new Date() ? '🔥 Boosté' : '⚡ Boost'}
+              </button>
+              <button class="b-danger delete">Delete</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function bindActions(ad){
+      const el = resultsEl.querySelector(`[data-id="${ad.id}"]`);
+      if (!el) return;
+
+      const tPrem = el.querySelector('.toggle-premium');
+      const tFurn = el.querySelector('.toggle-furn');
+      const del   = el.querySelector('.delete');
+
+      tPrem.addEventListener('click', async ()=>{
+        if (!window.SLCM_DB?.client) { alert('Connexion Supabase non disponible'); return; }
+        const { error } = await window.SLCM_DB.client.from('listings')
+          .update({ premium: !ad.premium })
+          .eq('id', ad.id);
+        if (error) { alert('Erreur: ' + error.message); return; }
+        await render();
+      });
+
+      tFurn.addEventListener('click', async ()=>{
+        if (!window.SLCM_DB?.client) { alert('Connexion Supabase non disponible'); return; }
+        const { error } = await window.SLCM_DB.client.from('listings')
+          .update({ furnished: !ad.furnished })
+          .eq('id', ad.id);
+        if (error) { alert('Erreur: ' + error.message); return; }
+        await render();
+      });
+
+      del.addEventListener('click', async ()=>{
+        if (!confirm('Delete this listing?')) return;
+        await window.SLCM_DB.client.from('listings').delete().eq('id', ad.id);
+        render();
+      });
+    }
+
+    // Filters events
+    [qEl, fModeEl, fCityEl, fFurnEl, fPremEl].forEach(el => el.addEventListener('input', () => render()));
+    document.getElementById('resetFilters').addEventListener('click', async ()=>{
+      qEl.value=''; fModeEl.value=''; fCityEl.value=''; fFurnEl.value=''; fPremEl.value='';
+      await render();
+    });
+
+    (async () => { await render(); })();
+
+    /* ══ Boost Vitrine ══ */
+    let selectedBoostType = null;
+
+    function openBoostModal(id) {
+      document.getElementById('boostListingId').value = id;
+      document.getElementById('boostOverlay').style.display = 'flex';
+      selectedBoostType = null;
+      document.getElementById('boostSelected').style.display = 'none';
+      document.getElementById('boostConfirmBtn').disabled = true;
+      document.getElementById('boostConfirmBtn').style.opacity = '.5';
+      document.getElementById('boostRent').style.borderColor = '#eee';
+      document.getElementById('boostSale').style.borderColor = '#eee';
+    }
+
+    function closeBoostModal() {
+      document.getElementById('boostOverlay').style.display = 'none';
+    }
+
+    function selectBoost(type) {
+      selectedBoostType = type;
+      const rentEl = document.getElementById('boostRent');
+      const saleEl = document.getElementById('boostSale');
+      const selectedEl = document.getElementById('boostSelected');
+      const confirmBtn = document.getElementById('boostConfirmBtn');
+
+      rentEl.style.borderColor = type === 'rent' ? '#ff7a00' : '#eee';
+      saleEl.style.borderColor = type === 'sale' ? '#ff7a00' : '#eee';
+
+      const days = type === 'rent' ? 5 : 15;
+      const price = type === 'rent' ? '5 000' : '10 000';
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + days);
+
+      selectedEl.style.display = 'block';
+      selectedEl.innerHTML = `✅ Boost ${type === 'rent' ? 'Location' : 'Vente'} — ${price} FCFA — expire le ${expiry.toLocaleDateString('fr-FR')}`;
+
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+    }
+
+    async function confirmBoost() {
+      const id = document.getElementById('boostListingId').value;
+      if (!selectedBoostType || !id) return;
+
+      const days = selectedBoostType === 'rent' ? 5 : 15;
+      const boostExpires = new Date();
+      boostExpires.setDate(boostExpires.getDate() + days);
+
+      const { error } = await window.SLCM_DB.client
+        .from('listings')
+        .update({
+          premium: true,
+          boost_expires_at: boostExpires.toISOString()
+        })
+        .eq('id', id);
+
+      if (error) { alert('Erreur : ' + error.message); return; }
+
+      closeBoostModal();
+      await render();
+    }
+
+    /* Fermer modal en cliquant dehors */
+    document.getElementById('boostOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('boostOverlay')) closeBoostModal();
+    });
+  </script>
+  <!-- Modal Boost Vitrine -->
+  <div id="boostOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:460px;padding:2rem">
+      <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:.5rem">⚡ Boost Vitrine</h2>
+      <p style="font-size:.85rem;color:#666;margin-bottom:1.5rem">Mettez cette annonce en vitrine sur la page d'accueil.</p>
+
+      <input type="hidden" id="boostListingId">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <!-- Boost Location -->
+        <div id="boostRent" onclick="selectBoost('rent')" style="border:2px solid #eee;border-radius:14px;padding:1.2rem;cursor:pointer;transition:all .2s;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">🏠</div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:.3rem">Boost Location</div>
+          <div style="font-size:.8rem;color:#888;margin-bottom:.75rem">5 jours en vitrine</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#ff7a00">5 000 FCFA</div>
+        </div>
+        <!-- Boost Vente -->
+        <div id="boostSale" onclick="selectBoost('sale')" style="border:2px solid #eee;border-radius:14px;padding:1.2rem;cursor:pointer;transition:all .2s;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">🏡</div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:.3rem">Boost Vente</div>
+          <div style="font-size:.8rem;color:#888;margin-bottom:.75rem">15 jours en vitrine</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#ff7a00">10 000 FCFA</div>
+        </div>
+      </div>
+
+      <div id="boostSelected" style="display:none;background:#fff4e8;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.2rem;font-size:.85rem;color:#e65100;font-weight:600"></div>
+
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button onclick="closeBoostModal()" style="padding:.65rem 1.2rem;border-radius:10px;border:1.5px solid #ddd;background:#fff;font-family:inherit;font-weight:700;cursor:pointer">Annuler</button>
+        <button id="boostConfirmBtn" onclick="confirmBoost()" disabled style="padding:.65rem 1.4rem;border-radius:10px;border:none;background:#ff7a00;color:#fff;font-family:inherit;font-weight:800;cursor:pointer;opacity:.5">Activer le Boost</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/blog.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script>
+  // ── Blog Management ──
+  document.addEventListener('DOMContentLoaded', async () => {
+    const modal     = document.getElementById('blogModal');
+    const blogList  = document.getElementById('blogList');
+    const blogEmpty = document.getElementById('blogEmpty');
+
+    async function renderBlogList() {
+      const articles = await SLCM_blog.loadAdminArticles();
+      blogList.innerHTML = '';
+      if (articles.length === 0) {
+        blogList.style.display = 'none';
+        blogEmpty.style.display = 'block';
+        return;
+      }
+      blogList.style.display = 'block';
+      blogEmpty.style.display = 'none';
+
+      articles.forEach(art => {
+        const cat  = SLCM_blog.getCategoryInfo(art.category);
+        const row  = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:.9rem 0;border-bottom:1px solid #f0f0f0;gap:1rem;flex-wrap:wrap;';
+        row.innerHTML = `
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:.93rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${art.title}</div>
+            <div style="font-size:.78rem;color:#aaa;margin-top:.2rem;">
+              <span style="background:${cat.color};color:#fff;padding:.15rem .5rem;border-radius:999px;font-size:.7rem;font-weight:700;">${cat.icon} ${cat.label}</span>
+              &nbsp;${SLCM_blog.formatDate(art.date)}
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-shrink:0;">
+            <a href="article.html?id=${art.id}" target="_blank" style="padding:.4rem .75rem;border-radius:8px;background:#f0f0f0;color:#333;font-size:.8rem;font-weight:700;text-decoration:none;">View</a>
+            <button class="edit-art-btn" data-id="${art.id}" style="padding:.4rem .75rem;border-radius:8px;background:#ff7a00;color:#fff;border:none;font-size:.8rem;font-weight:700;cursor:pointer;">Edit</button>
+            <button class="del-art-btn" data-id="${art.id}" style="padding:.4rem .75rem;border-radius:8px;background:#fee2e2;color:#c00;border:none;font-size:.8rem;font-weight:700;cursor:pointer;">Delete</button>
+          </div>
+        `;
+
+        row.querySelector('.edit-art-btn').addEventListener('click', () => openBlogModal(art));
+        row.querySelector('.del-art-btn').addEventListener('click', async () => {
+          if (!confirm('Delete this article?')) return;
+          await SLCM_blog.deleteAdminArticle(art.id);
+          await renderBlogList();
+        });
+
+        blogList.appendChild(row);
+      });
+    }
+
+    function openBlogModal(art = null) {
+      document.getElementById('blogModalTitle').textContent = art ? 'Edit Article' : 'New Article';
+      document.getElementById('blogId').value       = art ? art.id : 'ART' + Date.now();
+      document.getElementById('blogTitle').value    = art ? art.title : '';
+      document.getElementById('blogCategory').value = art ? art.category : 'marche';
+      document.getElementById('blogExcerpt').value  = art ? art.excerpt : '';
+      document.getElementById('blogContent').value  = art ? art.content : '';
+      modal.style.display = 'flex';
+    }
+
+    document.getElementById('newArticleBtn').addEventListener('click', () => openBlogModal());
+    document.getElementById('blogModalClose').addEventListener('click', () => { modal.style.display = 'none'; });
+    document.getElementById('blogCancel').addEventListener('click',     () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+
+    document.getElementById('blogSave').addEventListener('click', async () => {
+      const title    = document.getElementById('blogTitle').value.trim();
+      const excerpt  = document.getElementById('blogExcerpt').value.trim();
+      const content  = document.getElementById('blogContent').value.trim();
+      const category = document.getElementById('blogCategory').value;
+
+      if (!title || !excerpt || !content) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const cat = SLCM_blog.getCategoryInfo(category);
+      SLCM_blog.saveAdminArticle({
+        id            : document.getElementById('blogId').value,
+        title,
+        category,
+        categoryLabel : cat.label,
+        excerpt,
+        content,
+        date          : new Date().toISOString().split('T')[0],
+        author        : 'SE LOGER CM',
+        cover         : '',
+        static        : false,
+      });
+
+      modal.style.display = 'none';
+      await renderBlogList();
+    });
+
+    await renderBlogList();
+
+
+    /* ═══ KYC MANAGEMENT ═══ */
+    let _kycCurrentFilter = 'pending';
+
+    async function loadKyc(status = 'pending') {
+      _kycCurrentFilter = status;
+
+      /* Highlight tab actif */
+      ['pending','verified','rejected'].forEach(s => {
+        const btn = document.getElementById('kycTab' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (!btn) return;
+        if (s === status) {
+          btn.style.background = s === 'pending' ? '#fff8e1' : s === 'verified' ? '#e8f5e9' : '#fee2e2';
+          btn.style.color = s === 'pending' ? '#f59e0b' : s === 'verified' ? '#2e7d32' : '#c00';
+        } else {
+          btn.style.background = '#f0f0f0';
+          btn.style.color = '#666';
+        }
+      });
+
+      const list  = document.getElementById('kycList');
+      const empty = document.getElementById('kycEmpty');
+      list.innerHTML = '<div style="text-align:center;color:#aaa;padding:2rem"><i class="fas fa-spinner fa-spin"></i></div>';
+      empty.style.display = 'none';
+
+      const client = window.SLCM_DB?.client;
+      if (!client) return;
+
+      const { data: agents, error } = await client
+        .from('profiles')
+        .select('id, name, phone, agent_bio, zone, kyc_status, kyc_doc_url, created_at')
+        .eq('role', 'agent_externe')
+        .eq('kyc_status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) { list.innerHTML = '<p style="color:#c00">Erreur : ' + error.message + '</p>'; return; }
+      if (!agents || !agents.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+
+      list.innerHTML = '';
+      agents.forEach(agent => {
+        const card = document.createElement('div');
+        card.className = 'kyc-card';
+        const initials = (agent.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const badgeClass = { pending: 'badge-pending', verified: 'badge-verified', rejected: 'badge-rejected' }[agent.kyc_status] || '';
+        const badgeLabel = { pending: '⏳ En attente', verified: '✅ Vérifié', rejected: '❌ Rejeté' }[agent.kyc_status] || '';
+        const docLink = agent.kyc_doc_url
+          ? `<a href="${agent.kyc_doc_url}" target="_blank" class="kyc-doc-link"><i class="fas fa-id-card"></i> Voir la CNI</a>`
+          : '<span style="font-size:.78rem;color:#bbb">Aucun document</span>';
+
+        card.innerHTML = `
+          <div class="kyc-avatar">${initials}</div>
+          <div class="kyc-info">
+            <div class="name">${agent.name || '—'} <span class="${badgeClass}">${badgeLabel}</span></div>
+            <div class="email">${agent.phone || 'Pas de téléphone'}</div>
+            <div class="meta">${agent.zone || 'Zone non renseignée'} · Inscrit le ${new Date(agent.created_at).toLocaleDateString('fr-FR')}</div>
+            <div>${docLink}</div>
+          </div>
+          <div class="kyc-actions">
+            ${status !== 'verified' ? `<button class="btn-approve" onclick="updateKyc('${agent.id}', 'verified')">✅ Approuver</button>` : ''}
+            ${status !== 'rejected' ? `<button class="btn-reject"  onclick="updateKyc('${agent.id}', 'rejected')">❌ Rejeter</button>`  : ''}
+          </div>`;
+        list.appendChild(card);
+      });
+    }
+
+    async function updateKyc(agentId, newStatus) {
+      const labels = { verified: 'approuver', rejected: 'rejeter' };
+      if (!confirm('Voulez-vous ' + (labels[newStatus] || newStatus) + ' cet agent ?')) return;
+      const client = window.SLCM_DB?.client;
+      if (!client) return;
+      const updates = { kyc_status: newStatus };
+      if (newStatus === 'verified') updates.verified_at = new Date().toISOString();
+      const { error } = await client.from('profiles').update(updates).eq('id', agentId);
+      if (error) { alert('Erreur : ' + error.message); return; }
+      loadKyc(_kycCurrentFilter);
+    }
+
+    /* Charger KYC au démarrage */
+    loadKyc('pending');
+
+  });
+  </script>
+</body>
+</html>

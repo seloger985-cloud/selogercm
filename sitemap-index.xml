@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Pages statiques -->
+  <sitemap>
+    <loc>https://www.selogercm.com/sitemap.xml</loc>
+    <lastmod>2026-04-15</lastmod>
+  </sitemap>
+
+  <!-- Annonces dynamiques (via Netlify Function) -->
+  <sitemap>
+    <loc>https://www.selogercm.com/.netlify/functions/sitemap-listings</loc>
+  </sitemap>
+
+</sitemapindex>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin_dashboard.html
+Disallow: /agent.html
+Disallow: /dashboard.html
+
+Sitemap: https://www.selogercm.com/sitemap.xml

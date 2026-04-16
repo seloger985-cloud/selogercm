@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Espace Agent Externe — SE LOGER CM</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
+    * { box-sizing: border-box; }
+    body { background: var(--gray); font-family: 'Poppins', sans-serif; }
+
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+    .login-box { background: #fff; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.12); padding: 2.5rem 2rem; width: 100%; max-width: 400px; }
+    .login-logo { text-align: center; margin-bottom: 1.8rem; }
+    .login-logo img { height: 48px; }
+    .login-logo p { font-size: .82rem; color: #888; margin-top: .4rem; }
+    .login-title { font-size: 1.2rem; font-weight: 900; color: var(--dark); margin-bottom: 1.5rem; text-align: center; }
+    .login-field { margin-bottom: 1rem; }
+    .login-field label { display: block; font-size: .78rem; font-weight: 700; color: #555; margin-bottom: .3rem; }
+    .login-field input { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 12px; padding: .8rem 1rem; font-family: inherit; font-size: .95rem; background: #fafafa; transition: border-color .2s; }
+    .login-field input:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .login-btn { width: 100%; padding: .9rem; border: none; border-radius: 12px; background: var(--orange); color: #fff; font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; transition: opacity .2s; margin-top: .5rem; }
+    .login-btn:hover { opacity: .88; }
+    .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .login-error { background: #fff0f0; border: 1px solid #fca5a5; border-radius: 10px; padding: .65rem 1rem; font-size: .82rem; color: #c00; font-weight: 600; margin-top: .75rem; display: none; }
+    .login-error.show { display: block; }
+    .login-note { text-align: center; font-size: .75rem; color: #bbb; margin-top: 1.2rem; }
+
+    .dashboard { display: none; }
+    .dash-header { background: var(--dark); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
+    .dash-header-inner { max-width: 1100px; margin: auto; padding: .9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .dash-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .dash-brand img { height: 32px; }
+    .dash-brand span { color: #fff; font-weight: 800; font-size: 1rem; }
+    .dash-user { display: flex; align-items: center; gap: .75rem; }
+    .dash-user-name { font-size: .85rem; color: rgba(255,255,255,.7); font-weight: 600; }
+    .dash-signout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; border-radius: 999px; padding: .4rem .9rem; font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .dash-signout:hover { background: rgba(255,255,255,.2); }
+    .dash-wrap { max-width: 1100px; margin: auto; padding: 1.5rem 1.2rem 4rem; }
+
+    .profile-hero { background: #fff; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.07); padding: 1.6rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: #eee; border: 3px solid var(--orange); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: #888; }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1.3rem; font-weight: 900; color: var(--dark); }
+    .profile-email { font-size: .82rem; color: #888; margin-top: .15rem; }
+    .profile-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .profile-btn { border: none; border-radius: 999px; padding: .5rem 1.1rem; font-family: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; transition: opacity .2s; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+    .profile-btn:hover { opacity: .88; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-dark   { background: #111; color: #fff; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 4px 14px rgba(0,0,0,.05); border-left: 4px solid #eee; }
+    .stat-card.orange { border-left-color: var(--orange); }
+    .stat-card.green  { border-left-color: #22c55e; }
+    .stat-card.red    { border-left-color: #ef4444; }
+    .stat-card.blue   { border-left-color: #3b82f6; }
+    .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--dark); }
+    .stat-card.orange .stat-num { color: var(--orange); }
+    .stat-card.green  .stat-num { color: #22c55e; }
+    .stat-card.red    .stat-num { color: #ef4444; }
+    .stat-card.blue   .stat-num { color: #3b82f6; }
+    .stat-lbl { font-size: .75rem; color: #888; font-weight: 600; margin-top: 2px; }
+
+    .section-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-bar h2 { font-size: 1rem; font-weight: 800; color: var(--dark); }
+    .section-bar a { font-size: .82rem; color: var(--orange); font-weight: 700; text-decoration: none; }
+
+    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .dash-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.07); transition: transform .2s, box-shadow .2s; }
+    .dash-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,.11); }
+    .dash-card .thumb { position: relative; height: 170px; background: #eee; overflow: hidden; }
+    .dash-card .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .dash-card:hover .thumb img { transform: scale(1.04); }
+    .status-pill-card { position: absolute; top: 10px; left: 10px; border-radius: 999px; padding: .2rem .6rem; font-size: .7rem; font-weight: 800; color: #fff; }
+    .pill-active { background: #22c55e; }
+    .pill-expired { background: #ef4444; }
+    .pill-draft { background: #888; }
+    .expire-badge { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,.6); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: .7rem; font-weight: 700; }
+    .dash-card .info { padding: 12px 14px; }
+    .dash-card .info h3 { font-size: .92rem; font-weight: 800; color: var(--dark); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-card .info .meta { font-size: .76rem; color: #888; margin-bottom: 4px; }
+    .dash-card .info .price { font-size: .98rem; font-weight: 900; color: var(--orange); }
+    .card-actions { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .card-actions button, .card-actions a { flex: 1; padding: .42rem; border-radius: 8px; border: none; font-family: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; transition: opacity .2s; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .3rem; }
+    .card-actions button:hover, .card-actions a:hover { opacity: .82; }
+    .btn-view   { background: #f0f0f0; color: #333; }
+    .btn-edit   { background: var(--orange); color: #fff; }
+    .btn-delete { background: #fee2e2; color: #c00; }
+    .btn-renew  { background: #e0f2fe; color: #0369a1; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+    .empty-state i { font-size: 2.5rem; color: #ddd; margin-bottom: 1rem; display: block; }
+    .empty-state p { color: #888; margin-bottom: 1.2rem; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 1.8rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+    .modal-box h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-grid .full { grid-column: 1/-1; }
+    .modal-field label { display: block; font-size: .76rem; font-weight: 700; color: #555; margin-bottom: .3rem; }
+    .modal-field input, .modal-field select, .modal-field textarea { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .65rem .9rem; font-family: inherit; font-size: .9rem; background: #fafafa; transition: border-color .2s; }
+    .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.2rem; }
+    .btn-cancel { padding: .7rem 1.2rem; border-radius: 10px; border: 1.5px solid #ddd; background: #fff; font-family: inherit; font-weight: 700; cursor: pointer; }
+    .btn-save { padding: .7rem 1.4rem; border-radius: 10px; border: none; background: var(--orange); color: #fff; font-family: inherit; font-weight: 800; cursor: pointer; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #111; color: #fff; border-radius: 999px; padding: .7rem 1.6rem; font-size: .88rem; font-weight: 700; z-index: 9999; transition: transform .3s ease, opacity .3s; opacity: 0; pointer-events: none; white-space: nowrap; display: flex; align-items: center; gap: .5rem; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 700px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .modal-grid { grid-template-columns: 1fr; }
+      .modal-grid .full { grid-column: 1; }
+      .profile-hero { flex-direction: column; text-align: center; }
+    }
+
+    /* ── KYC ── */
+    .kyc-banner { background: #fff8e1; border: 2px solid #ffc107; border-radius: 16px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .kyc-banner.pending { background: #e3f2fd; border-color: #2196f3; }
+    .kyc-banner.verified { background: #e8f5e9; border-color: #4caf50; }
+    .kyc-icon { font-size: 2rem; flex-shrink: 0; }
+    .kyc-text h3 { font-size: .95rem; font-weight: 800; color: #111; margin-bottom: .2rem; }
+    .kyc-text p  { font-size: .82rem; color: #666; line-height: 1.5; }
+    .kyc-btn { border: none; border-radius: 10px; padding: .6rem 1.2rem; font-family: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; transition: opacity .2s; white-space: nowrap; }
+    .kyc-btn.yellow { background: #ffc107; color: #111; }
+    .kyc-btn.blue   { background: #2196f3; color: #fff; }
+    .kyc-btn.green  { background: #4caf50; color: #fff; cursor: default; }
+
+    /* Upload zone KYC */
+    .upload-zone { border: 2px dashed #e5e5e5; border-radius: 14px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all .2s; background: #fafafa; }
+    .upload-zone:hover { border-color: var(--orange); background: #fff8f0; }
+    .upload-zone.has-file { border-color: #4caf50; background: #e8f5e9; }
+    .upload-zone i { font-size: 1.8rem; color: #ccc; margin-bottom: .5rem; display: block; }
+    .upload-zone p { font-size: .82rem; color: #888; margin: 0; }
+    .upload-zone input[type="file"] { display: none; }
+
+    /* Profil complet */
+    .profile-section { background: #fff; border-radius: 16px; padding: 1.4rem; box-shadow: 0 4px 14px rgba(0,0,0,.05); margin-bottom: 1.5rem; }
+    .profile-section h3 { font-size: .95rem; font-weight: 800; color: #111; margin-bottom: 1rem; display: flex; align-items: center; gap: .4rem; }
+    .profile-section h3 i { color: var(--orange); }
+    .profile-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .profile-fields .full { grid-column: 1/-1; }
+    .pf-label { font-size: .75rem; font-weight: 700; color: #666; margin-bottom: .3rem; display: block; }
+    .pf-input { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .65rem .9rem; font-family: inherit; font-size: .88rem; background: #fafafa; transition: border-color .2s; }
+    .pf-input:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .pf-save { background: var(--orange); color: #fff; border: none; border-radius: 10px; padding: .7rem 1.4rem; font-family: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; margin-top: .5rem; transition: opacity .2s; }
+    .pf-save:hover { opacity: .88; }
+    .verified-badge { display: inline-flex; align-items: center; gap: .3rem; background: #e8f5e9; color: #2e7d32; border-radius: 999px; padding: .25rem .8rem; font-size: .78rem; font-weight: 800; }
+    @media (max-width: 600px) { .profile-fields { grid-template-columns: 1fr; } .profile-fields .full { grid-column: 1; } }
+  </style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="./assets/img/logo.png" alt="SE LOGER CM">
+      <p>Espace Agent Externe</p>
+    </div>
+    <div class="login-title">Connexion à votre espace</div>
+    <div class="login-field">
+      <label>Adresse email</label>
+      <input type="email" id="loginEmail" placeholder="votre@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> Se connecter
+    </button>
+    <div class="login-error" id="loginError"></div>
+    <p class="login-note">Compte fourni par SE LOGER CM · <a href="/" style="color:var(--orange)">Retour au site</a></p>
+  </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <div class="dash-header-inner">
+      <a class="dash-brand" href="/"><img src="./assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
+      <div class="dash-user">
+        <span class="dash-user-name" id="dashUserName"></span>
+        <button class="dash-signout" onclick="doSignOut()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-wrap">
+    <div class="profile-hero">
+      <div class="profile-avatar" id="dashAvatar"><i class="fas fa-user"></i></div>
+      <div class="profile-info">
+        <div class="profile-name" id="dashName">—</div>
+        <div class="profile-email" id="dashEmail">—</div>
+      </div>
+      <div class="profile-actions">
+        <button class="profile-btn btn-orange" onclick="openProfileEdit()"><i class="fas fa-edit"></i> Mon profil</button>
+        <a href="/publier" class="profile-btn btn-dark"><i class="fas fa-plus"></i> Nouvelle annonce</a>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card orange"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total annonces</div></div>
+      <div class="stat-card green"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">En ligne</div></div>
+      <div class="stat-card red"><div class="stat-num" id="statExpired">0</div><div class="stat-lbl">Expirées</div></div>
+      <div class="stat-card blue"><div class="stat-num" id="statDraft">0</div><div class="stat-lbl">Brouillons</div></div>
+    </div>
+
+
+    <!-- ── Bannière KYC ── -->
+    <div id="kycBanner" style="display:none"></div>
+
+    <!-- ── Profil Agent ── -->
+    <div class="profile-section">
+      <h3><i class="fas fa-user-circle"></i> Mon Profil Professionnel
+        <span id="verifiedBadge" style="display:none" class="verified-badge"><i class="fas fa-check-circle"></i> Vérifié</span>
+      </h3>
+      <div class="profile-fields">
+        <div>
+          <label class="pf-label">Nom complet</label>
+          <input id="pfName" class="pf-input" type="text" placeholder="Votre nom">
+        </div>
+        <div>
+          <label class="pf-label">Téléphone</label>
+          <input id="pfPhone" class="pf-input" type="tel" placeholder="+237 6XX XXX XXX">
+        </div>
+        <div class="full">
+          <label class="pf-label">Zone géographique couverte</label>
+          <input id="pfZone" class="pf-input" type="text" placeholder="Ex: Douala — Bonanjo, Bonapriso, Akwa">
+        </div>
+        <div class="full">
+          <label class="pf-label">Bio professionnelle</label>
+          <textarea id="pfBio" class="pf-input" rows="3" placeholder="Décrivez votre expérience, vos spécialités..."></textarea>
+        </div>
+      </div>
+      <button class="pf-save" onclick="saveProfile()"><i class="fas fa-save"></i> Enregistrer le profil</button>
+    </div>
+
+    <div class="section-bar">
+      <h2>Mes annonces</h2>
+      <a href="/publier">+ Publier</a>
+    </div>
+    <div id="listingsGrid" class="listing-grid"></div>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <i class="fas fa-home"></i>
+      <p>Vous n'avez pas encore d'annonces.</p>
+      <a href="/publier" style="display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;background:var(--orange);color:#fff;border-radius:12px;text-decoration:none;font-weight:700">
+        <i class="fas fa-plus"></i> Publier ma première annonce
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal-box">
+    <h2><i class="fas fa-edit" style="color:var(--orange);margin-right:.4rem"></i> Modifier l'annonce</h2>
+    <input type="hidden" id="editId">
+    <div class="modal-grid">
+      <div class="modal-field full"><label>Titre</label><input id="editTitle" type="text"></div>
+      <div class="modal-field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
+      <div class="modal-field"><label>Ville</label><select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select></div>
+      <div class="modal-field"><label>Type</label>
+        <select id="editType"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="villa">Villa</option><option value="studio">Studio</option><option value="duplex">Duplex</option></select>
+      </div>
+      <div class="modal-field"><label>Opération</label>
+        <select id="editMode"><option value="rent">À louer</option><option value="sale">À vendre</option></select>
+      </div>
+      <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Annuler</button>
+      <button class="btn-save" onclick="saveEdit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="profileEditOverlay">
+  <div class="modal-box">
+    <h2><i class="fas fa-user" style="color:var(--orange);margin-right:.4rem"></i> Mon profil agent</h2>
+    <div class="modal-grid">
+      <div class="modal-field full"><label>Nom complet</label><input id="profileName" type="text"></div>
+      <div class="modal-field full"><label>Téléphone (WhatsApp)</label><input id="profilePhone" type="tel" placeholder="+237 6XX XXX XXX"></div>
+      <div class="modal-field full"><label>Bio / Présentation</label><textarea id="profileBio" rows="3" placeholder="Décrivez votre activité, spécialisations..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeProfileEdit()">Annuler</button>
+      <button class="btn-save" onclick="saveProfile()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal KYC -->
+<div class="modal-overlay" id="kycOverlay">
+  <div class="modal-box" style="max-width:460px">
+    <h2><i class="fas fa-id-card" style="color:var(--orange);margin-right:.4rem"></i> Vérification d'identité</h2>
+    <p style="font-size:.85rem;color:#666;margin-bottom:1.2rem;line-height:1.6">
+      Importez une photo de votre CNI (recto). Votre document sera examiné par notre équipe sous 24-48h.
+    </p>
+    <div class="upload-zone" id="kycDropZone">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p>Cliquez pour sélectionner votre CNI (JPG, PNG, PDF)</p>
+      <input type="file" id="kycFileInput" accept="image/*,.pdf">
+    </div>
+    <p style="font-size:.75rem;color:#aaa;margin-top:.5rem">Document sécurisé — visible uniquement par l'équipe SE LOGER CM</p>
+    <div class="modal-actions" style="margin-top:1.2rem">
+      <button class="btn-cancel" onclick="closeKycUpload()">Annuler</button>
+      <button class="btn-save" id="kycSubmitBtn" onclick="submitKyc()"><i class="fas fa-paper-plane"></i> Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--orange)"></i> <span id="toastMsg"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
+<script>
+  async function waitSB(ms=5000){const s=100;let e=0;while((!window.SLCM_DB||!window.SLCM_DB.client)&&e<ms){await new Promise(r=>setTimeout(r,s));e+=s;}return window.SLCM_DB?.client||null;}
+  let _client=null,_user=null,_profile=null,_listings=[];
+
+  async function doLogin(){
+    const email=document.getElementById('loginEmail').value.trim();
+    const password=document.getElementById('loginPassword').value;
+    const btn=document.getElementById('loginBtn');
+    const errEl=document.getElementById('loginError');
+    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs.';errEl.classList.add('show');return;}
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Connexion…';errEl.classList.remove('show');
+    _client=await waitSB();
+    if(!_client){errEl.textContent='Connexion impossible.';errEl.classList.add('show');btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Se connecter';return;}
+    const{data,error}=await _client.auth.signInWithPassword({email,password});
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Se connecter';
+    if(error||!data.user){errEl.textContent='Email ou mot de passe incorrect.';errEl.classList.add('show');return;}
+    _user=data.user;initDashboard();
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    ['loginEmail','loginPassword'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
+    (async()=>{_client=await waitSB();if(!_client)return;const{data:{session}}=await _client.auth.getSession();if(session?.user){_user=session.user;initDashboard();}})();
+  });
+
+  async function doSignOut(){if(_client)await _client.auth.signOut();_user=null;_profile=null;_listings=[];document.getElementById('dashboard').style.display='none';document.getElementById('loginScreen').style.display='flex';}
+
+  async function initDashboard(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    const{data:profile}=await _client.from('profiles').select('*').eq('id',_user.id).single();
+    _profile=profile||{};
+    const name=_profile.name||_user.user_metadata?.name||_user.email;
+    document.getElementById('dashName').textContent=name;
+    document.getElementById('dashEmail').textContent=_user.email;
+    document.getElementById('dashUserName').textContent=name;
+    const avatar=document.getElementById('dashAvatar');
+    if(_profile.agent_photo)avatar.innerHTML=`<img src="${_profile.agent_photo}" alt="${name}">`;
+    else avatar.innerHTML=`<span>${name.charAt(0).toUpperCase()}</span>`;
+
+    /* Pré-remplir les champs profil */
+    document.getElementById('pfName').value  = _profile.name || '';
+    document.getElementById('pfPhone').value = _profile.agent_phone || _profile.phone || '';
+    document.getElementById('pfBio').value   = _profile.agent_bio || '';
+    document.getElementById('pfZone').value  = _profile.zone || '';
+
+    /* Badge vérifié */
+    if(_profile.kyc_status === 'verified') {
+      document.getElementById('verifiedBadge').style.display = 'inline-flex';
+    }
+
+    /* Bannière KYC */
+    renderKycBanner(_profile.kyc_status || 'none');
+
+    loadListings();
+  }
+
+  function renderKycBanner(status) {
+    const banner = document.getElementById('kycBanner');
+    if(status === 'verified') {
+      banner.style.display = 'none';
+      return;
+    }
+    banner.style.display = 'flex';
+    if(status === 'pending') {
+      banner.className = 'kyc-banner pending';
+      banner.innerHTML = `
+        <div class="kyc-icon">🕐</div>
+        <div class="kyc-text" style="flex:1">
+          <h3>Vérification en cours</h3>
+          <p>Votre CNI est en cours de vérification par notre équipe. Vous recevrez une confirmation sous 24-48h.</p>
+        </div>
+        <button class="kyc-btn blue" disabled>En attente</button>`;
+    } else {
+      banner.className = 'kyc-banner';
+      banner.innerHTML = `
+        <div class="kyc-icon">🪪</div>
+        <div class="kyc-text" style="flex:1">
+          <h3>Vérifiez votre identité</h3>
+          <p>Soumettez votre CNI pour obtenir le badge ✅ Agent Vérifié sur vos annonces.</p>
+        </div>
+        <button class="kyc-btn yellow" onclick="openKycUpload()">Vérifier mon identité</button>`;
+    }
+  }
+
+  /* ── KYC Upload Modal ── */
+  function openKycUpload() {
+    document.getElementById('kycOverlay').classList.add('open');
+  }
+  function closeKycUpload() {
+    document.getElementById('kycOverlay').classList.remove('open');
+  }
+
+  let _kycFile = null;
+  document.addEventListener('DOMContentLoaded', () => {
+    const zone = document.getElementById('kycDropZone');
+    const input = document.getElementById('kycFileInput');
+    if(zone) {
+      zone.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => {
+        _kycFile = input.files[0];
+        if(_kycFile) {
+          zone.classList.add('has-file');
+          zone.querySelector('p').textContent = '✅ ' + _kycFile.name;
+        }
+      });
+    }
+  });
+
+  async function submitKyc() {
+    if(!_kycFile) { showToast('Veuillez sélectionner un fichier.'); return; }
+    const btn = document.getElementById('kycSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Envoi...';
+    try {
+      const ext  = _kycFile.name.split('.').pop();
+      const path = `kyc/${_user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await _client.storage.from('kyc-docs').upload(path, _kycFile, { upsert: true });
+      if(upErr) { showToast('Erreur upload : ' + upErr.message); return; }
+      const { data: urlData } = _client.storage.from('kyc-docs').getPublicUrl(path);
+      const { error: dbErr } = await _client.from('profiles').update({
+        kyc_status: 'pending',
+        kyc_doc_url: urlData.publicUrl
+      }).eq('id', _user.id);
+      if(dbErr) { showToast('Erreur : ' + dbErr.message); return; }
+      _profile.kyc_status = 'pending';
+      _profile.kyc_doc_url = urlData.publicUrl;
+      closeKycUpload();
+      renderKycBanner('pending');
+      showToast('Document envoyé ✅ Vérification en cours.');
+    } catch(e) {
+      showToast('Une erreur est survenue.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Envoyer';
+    }
+  }
+
+  async function loadListings(){
+    const{data}=await _client.from('listings').select('*').eq('owner_id',_user.id).order('created_at',{ascending:false});
+    _listings=data||[];
+    const now=new Date();
+    const active=_listings.filter(l=>l.status==='active'&&(!l.expires_at||new Date(l.expires_at)>now));
+    const expired=_listings.filter(l=>l.status==='active'&&l.expires_at&&new Date(l.expires_at)<=now);
+    const drafts=_listings.filter(l=>l.status==='draft');
+    document.getElementById('statTotal').textContent=_listings.length;
+    document.getElementById('statActive').textContent=active.length;
+    document.getElementById('statExpired').textContent=expired.length;
+    document.getElementById('statDraft').textContent=drafts.length;
+    renderListings(_listings);
+  }
+
+  function fmtPrice(n){return(n||0).toLocaleString('fr-FR')+' FCFA';}
+  function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/86400000);}
+
+  function renderListings(list){
+    const grid=document.getElementById('listingsGrid'),empty=document.getElementById('emptyState');
+    grid.innerHTML='';
+    if(!list.length){grid.style.display='none';empty.style.display='block';return;}
+    grid.style.display='grid';empty.style.display='none';
+    list.forEach(ad=>{
+      const img=ad.images?.[0]||'assets/img/no-image.png';
+      const title=ad.title||'Annonce';
+      const mode=ad.rent_sale==='sale'?'À vendre':'À louer';
+      const days=daysLeft(ad.expires_at);
+      const isActive=ad.status==='active'&&(days===null||days>0);
+      const isExpired=ad.status==='active'&&days!==null&&days<=0;
+      const pillCls=isActive?'pill-active':isExpired?'pill-expired':'pill-draft';
+      const pillLabel=isActive?'✅ En ligne':isExpired?'⚠️ Expirée':'📋 Brouillon';
+      const card=document.createElement('div');card.className='dash-card';
+      card.innerHTML=`
+        <div class="thumb">
+          <img src="${img}" alt="${title}" loading="lazy">
+          <span class="status-pill-card ${pillCls}">${pillLabel}</span>
+          ${days!==null&&days>0&&days<=7?`<span class="expire-badge">⏳ ${days}j</span>`:''}
+          ${isExpired?`<span class="expire-badge">Expirée</span>`:''}
+        </div>
+        <div class="info">
+          <h3>${title}</h3>
+          <div class="meta"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> ${[ad.district,ad.city].filter(Boolean).join(' · ')} · ${mode}</div>
+          <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
+          <div class="views" style="font-size:.75rem;color:#aaa;margin-top:4px"><i class="fas fa-eye"></i> ${ad.views||0} vue${(ad.views||0)>1?'s':''}</div>
+        </div>
+        <div class="card-actions">
+          ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
+          <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
+          ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
+          <button class="btn-delete"><i class="fas fa-trash"></i></button>
+        </div>`;
+      card.querySelector('.btn-edit').addEventListener('click',()=>openEditModal(ad));
+      card.querySelector('.btn-delete').addEventListener('click',()=>deleteAd(ad.id,title));
+      if(isExpired)card.querySelector('.btn-renew').addEventListener('click',()=>renewAd(ad.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';document.getElementById('editOverlay').classList.add('open');}
+  function closeEditModal(){document.getElementById('editOverlay').classList.remove('open');}
+
+  async function saveEdit(){
+    const id=document.getElementById('editId').value;
+    const updates={title:document.getElementById('editTitle').value.trim(),price:Number(document.getElementById('editPrice').value)||0,city:document.getElementById('editCity').value,type:document.getElementById('editType').value,rent_sale:document.getElementById('editMode').value,description:document.getElementById('editDesc').value.trim()};
+    const{error}=await _client.from('listings').update(updates).eq('id',id);
+    if(error){showToast('Erreur : '+error.message);return;}
+    closeEditModal();showToast('Annonce mise à jour ✅');loadListings();
+  }
+
+  async function deleteAd(id,title){
+    if(!confirm(`Supprimer "${title}" ? Cette action est irréversible.`))return;
+    const{error}=await _client.from('listings').delete().eq('id',id);
+    if(error){showToast('Erreur : '+error.message);return;}
+    showToast('Annonce supprimée');loadListings();
+  }
+
+  async function renewAd(id){
+    const ad=_listings.find(l=>l.id===id);
+    const days=ad?.rent_sale==='sale'?60:30;
+    const expires=new Date();expires.setDate(expires.getDate()+days);
+    const{error}=await _client.from('listings').update({expires_at:expires.toISOString(),status:'active'}).eq('id',id);
+    if(error){showToast('Erreur : '+error.message);return;}
+    showToast(`Annonce renouvelée pour ${days} jours ✅`);loadListings();
+  }
+
+  function openProfileEdit(){document.getElementById('profileName').value=_profile.name||'';document.getElementById('profilePhone').value=_profile.agent_phone||_profile.phone||'';document.getElementById('profileBio').value=_profile.agent_bio||'';document.getElementById('profileEditOverlay').classList.add('open');}
+  function closeProfileEdit(){document.getElementById('profileEditOverlay').classList.remove('open');}
+
+  async function saveProfile(){
+    const updates={
+      name:        document.getElementById('pfName').value.trim(),
+      agent_phone: document.getElementById('pfPhone').value.trim(),
+      agent_bio:   document.getElementById('pfBio').value.trim(),
+      zone:        document.getElementById('pfZone').value.trim(),
+    };
+    const{error}=await _client.from('profiles').upsert({id:_user.id,...updates});
+    if(error){showToast('Erreur : '+error.message);return;}
+    _profile={..._profile,...updates};
+    document.getElementById('dashName').textContent=updates.name||_user.email;
+    document.getElementById('dashUserName').textContent=updates.name||_user.email;
+    showToast('Profil mis à jour ✅');
+  }
+
+  ['editOverlay','kycOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+
+  let _toastTimer;
+  function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body>
+</html>

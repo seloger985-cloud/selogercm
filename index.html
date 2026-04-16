@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>SE LOGER CM — Unique Solutions, Smart Living</title>
+  <meta name="description" content="Trouvez votre logement idéal à Douala et au Cameroun. Location et vente d'appartements, maisons et villas. Annonces vérifiées par SE LOGER CM.">
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://www.selogercm.com/">
+  <meta property="og:title"       content="SE LOGER CM — Unique Solutions, Smart Living">
+  <meta property="og:description" content="Trouvez votre logement idéal à Douala et au Cameroun. Location et vente d'appartements, maisons et villas. Annonces vérifiées par SE LOGER CM.">
+  <meta property="og:image"       content="https://www.selogercm.com/assets/img/og-cover.jpg">
+  <meta property="og:locale"      content="fr_CM">
+  <meta property="og:site_name"   content="SE LOGER CM">
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="SE LOGER CM — Unique Solutions, Smart Living">
+  <meta name="twitter:description" content="Trouvez votre logement idéal à Douala et au Cameroun. Location et vente d'appartements, maisons et villas.">
+  <meta name="twitter:image"       content="https://www.selogercm.com/assets/img/og-cover.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+  <!-- Styles témoignages (partagés avec about.html) -->
+  <style>
+    .temoignages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.1rem;
+    }
+    .temoignage-card {
+      background: #fff; border-radius: 16px; padding: 1.4rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,.06);
+      position: relative; transition: transform .2s, box-shadow .2s;
+    }
+    .temoignage-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .temoignage-quote {
+      font-size: .92rem; color: #444; line-height: 1.7;
+      margin-bottom: 1rem; font-style: italic;
+    }
+    .temoignage-quote::before { content: '\201C'; color: #ff7a00; font-size: 1.4rem; line-height: 0; vertical-align: -.3rem; margin-right: .15rem; }
+    .temoignage-quote::after  { content: '\201D'; color: #ff7a00; font-size: 1.4rem; line-height: 0; vertical-align: -.3rem; margin-left: .15rem; }
+    .temoignage-footer { display: flex; align-items: center; gap: .75rem; }
+    .temoignage-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #111; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .88rem; font-weight: 800; flex-shrink: 0;
+    }
+    .temoignage-name { font-size: .88rem; font-weight: 800; color: #111; }
+    .temoignage-meta { font-size: .75rem; color: #999; margin-top: .1rem; }
+    .temoignage-stars { color: #f5a623; font-size: .85rem; letter-spacing: 1px; }
+    .temoignage-placeholder {
+      grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: #bbb;
+    }
+    .temoignage-placeholder i { font-size: 2.5rem; display: block; margin-bottom: .75rem; color: #e5e5e5; }
+  </style>
+  <!-- Icônes sociales (WhatsApp / Telegram / TikTok) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+  <!-- Styles du site -->
+  <link rel="preload" href="assets/css/style.css" as="style">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preload" href="assets/js/supabase.js" as="script">
+  <link rel="preload" href="assets/js/auth.js" as="script">
+  <link rel="preload" href="assets/js/listings.js" as="script">
+  <style>
+    .listing-card {
+      background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,.07);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .listing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.12); }
+    .listing-badge { position:absolute; top:10px; left:10px; background:#111; color:#fff; border-radius:999px; padding:.25rem .65rem; font-size:.75rem; font-weight:800; }
+    .listing-badge.premium { background: #ff7a00; }
+    #unfurnishedGrid, #furnishedGrid,
+    #commercialRentGrid, #villasGrid,
+    #terrainsGrid, #commercialSaleGrid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+      gap: 1.2rem !important;
+    }
+    /* Limiter la largeur si peu d'annonces pour éviter les cards trop larges */
+    #commercialRentGrid:has(.listing-card:only-child),
+    #villasGrid:has(.listing-card:only-child),
+    #terrainsGrid:has(.listing-card:only-child),
+    #commercialSaleGrid:has(.listing-card:only-child) {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 340px)) !important;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+  <script src="assets/js/notify.js" defer></script>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
+  <!-- End Google Tag Manager -->
+</head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <!-- Header -->
+  <header>
+    <div class="container px navbar">
+      <a class="brand" href="/" aria-label="SE LOGER CM — Home">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo" loading="lazy">
+        <span>SE LOGER CM</span>
+      </a>
+      <div class="nav-right">
+        <a href="/publier" class="btn-primary" data-i18n="nav.publish">Publier une annonce</a>
+        <div class="lang" aria-label="Language switch">
+          <button id="langFR" type="button">FR</button><span>/</span><button id="langEN" type="button">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="snap hero" aria-label="Home">
+      <div class="container px pt pb">
+        <div class="hero-wrap">
+          <h1 class="hero-title" data-i18n="headline">
+            <span class="line">Unique Solutions,</span>
+            <span class="line">Smart Living</span>
+          </h1>
+          <p class="hero-sub" data-i18n="sub">
+            Whether you're buying, listing, or renting, we're here to help every step of the way.
+          </p>
+        </div>
+
+        <!-- Segmented control + Search -->
+        <div class="controls">
+          <!-- Segmented control -->
+          <div class="seg" data-mode="rent" role="tablist" aria-label="Offer type">
+            <button id="rentTab" class="seg-btn active" role="tab" aria-selected="true" data-i18n="home.rent">À LOUER</button>
+            <button id="saleTab" class="seg-btn inactive" role="tab" aria-selected="false" data-i18n="home.sale">À VENDRE</button>
+          </div>
+
+          <!-- Search bar -->
+          <!-- CHANGEMENT: method/action + champ caché mode + name= sur les selects -->
+          <form id="searchForm" method="get" action="listings_v2.html" aria-label="Search filter" class="search-grid">
+            <input type="hidden" name="mode" id="modeInput">
+            <div class="field-black">
+              <label class="hidden" for="city">City</label>
+              <select id="city" name="city" aria-label="City" data-i18n-placeholder="city">
+                <option value="" data-i18n="home.city">Ville</option>
+                <option>Douala</option>
+                <option>Yaoundé</option>
+                <option>Bafoussam</option>
+              </select>
+            </div>
+            <div class="field-black">
+              <label class="hidden" for="district">District</label>
+              <select id="district" name="district" aria-label="District" data-i18n-placeholder="district">
+                <option value="" data-i18n="home.district">Quartier</option>
+              </select>
+            </div>
+            <div class="field-black">
+              <label class="hidden" for="type">Type</label>
+              <select id="type" name="type" aria-label="Type" data-i18n-placeholder="type">
+                <option value="" data-i18n="home.type">Type de bien</option>
+                <option value="apartment" data-i18n="apartment">Apartment</option>
+                <option value="house" data-i18n="house">House</option>
+                <option value="studio" data-i18n="studio">Studio</option>
+                <option value="villa" data-i18n="villa">Villa</option>
+              </select>
+            </div>
+            <div class="field-black">
+              <label class="hidden" for="bedrooms">Bedrooms</label>
+              <select id="bedrooms" name="bedrooms" aria-label="Bedrooms" data-i18n-placeholder="bedrooms">
+                <option value="" data-i18n="home.bedrooms">Chambres</option>
+                <option value="1">1</option><option value="2">2</option>
+                <option value="3">3</option><option value="4">4+</option>
+              </select>
+            </div>
+            <div class="field-black">
+              <label class="hidden" for="price">Price</label>
+              <select id="price" name="price" aria-label="Price">
+                <!-- Options injectées selon RENT / SALE -->
+              </select>
+            </div>
+            <div class="search-btn-cell">
+              <button id="searchBtn" class="btn-primary" data-i18n="home.search">RECHERCHER</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTIONS LOCATION (visibles par défaut) -->
+    <div id="rentSections">
+      <!-- Top Unfurnished -->
+      <section id="unfurnished" class="snap section-soft" aria-label="Top Unfurnished">
+        <div class="container px pt pb">
+          <h2 class="section-title" data-i18n="home.unfurnishedTitle">Appartements non meublés</h2>
+          <p class="section-sub" data-i18n="home.premium">Premium • Non meublé</p>
+          <div id="unfurnishedGrid" class="grid grid-3" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Top Furnished -->
+      <section id="furnishedSection" class="snap section-soft" aria-label="Top Furnished">
+        <div class="container px pt pb">
+          <h2 class="section-title" data-i18n="home.furnishedTitle">Appartements meublés</h2>
+          <p class="section-sub" data-i18n="home.premium">Premium • Meublé</p>
+          <div id="furnishedGrid" class="grid grid-3"></div>
+        </div>
+      </section>
+
+      <!-- Locaux Commerciaux à louer -->
+      <section class="snap section-soft" aria-label="Locaux Commerciaux">
+        <div class="container px pt pb">
+          <h2 class="section-title">Locaux Commerciaux</h2>
+          <p class="section-sub">Boutiques • Bureaux • Entrepôts à louer</p>
+          <div id="commercialRentGrid" class="grid grid-3" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTIONS VENTE (cachées par défaut) -->
+    <div id="saleSections" style="display:none">
+      <!-- Top Villas & Maisons -->
+      <section class="snap section-soft" aria-label="Top Villas">
+        <div class="container px pt pb">
+          <h2 class="section-title">Villas &amp; Demeures</h2>
+          <p class="section-sub">À acquérir</p>
+          <div id="villasGrid" class="grid grid-3" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Top Terrains -->
+      <section class="snap section-soft" aria-label="Top Terrains">
+        <div class="container px pt pb">
+          <h2 class="section-title">Terrains d'Exception</h2>
+          <p class="section-sub">Opportunités foncières</p>
+          <div id="terrainsGrid" class="grid grid-3"></div>
+        </div>
+      </section>
+
+      <!-- Fonds de Commerce -->
+      <section class="snap section-soft" aria-label="Fonds de Commerce">
+        <div class="container px pt pb">
+          <h2 class="section-title">Fonds de Commerce</h2>
+          <p class="section-sub">Boutiques • Locaux commerciaux à acquérir</p>
+          <div id="commercialSaleGrid" class="grid grid-3" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+
+
+    <!-- Témoignages clients -->
+    <section class="snap section-soft" aria-label="Témoignages clients">
+      <div class="container px pt pb">
+        <h2 class="section-title"><span data-i18n="about.reviews.title">Ce que disent nos clients</span></h2>
+        <p class="section-sub" data-i18n="about.reviews.sub">Des témoignages authentiques de personnes accompagnées par notre équipe.</p>
+        <div id="testimonialsSection" class="temoignages-grid" style="margin-top:1.5rem"></div>
+        <div style="text-align:center;margin-top:1.8rem">
+          <a href="about.html#temoignages" style="display:inline-flex;align-items:center;gap:.4rem;color:#ff7a00;font-weight:700;text-decoration:none;font-size:.9rem">
+            <span data-i18n="about.reviews.seeall">Voir tous les témoignages</span> <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Partner / Contact -->
+    <section class="snap section-partner" aria-label="Partner with us" id="contact">
+      <div class="container px pt pb">
+        <div class="grid grid-2 align-center">
+          <div class="left">
+            <h2 class="partner-title" data-i18n="partner">Partner with us</h2>
+            <p class="partner-sub" data-i18n="partnerSub">
+              Become a partner • Let’s build modern real-estate experiences.
+            </p>
+            <div class="partner-cta">
+              <button id="openContact" class="btn-primary" data-i18n="contact">Contact us</button>
+            </div>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.2rem;">
+              <a href="/a-propos" style="display:inline-flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.88rem;font-weight:700;border:1px solid rgba(255,255,255,0.3);padding:.5rem 1rem;border-radius:999px;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                🏢 À propos
+              </a>
+              <a href="/services" style="display:inline-flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.88rem;font-weight:700;border:1px solid rgba(255,255,255,0.3);padding:.5rem 1rem;border-radius:999px;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                🛎️ Nos services
+              </a>
+              <a href="/rendez-vous" style="display:inline-flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.88rem;font-weight:700;background:#ff7a00;border:1px solid #ff7a00;padding:.5rem 1rem;border-radius:999px;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                📅 Prendre RDV
+              </a>
+            </div>
+          </div>
+          <div class="right">
+            <div class="contact-lines">
+              <div class="brand-strong">SE LOGER CM</div>
+              <div>Boulevard de la république, Bonamoussadi</div>
+              <div>Tel: (237) 650 840 714</div>
+              <div class="icon-links">
+                <a class="icon-link" href="https://wa.me/237650840714" target="_blank" rel="noopener" title="WhatsApp">
+                  <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+                <a class="icon-link" href="https://t.me/seloger237" target="_blank" rel="noopener" title="Telegram">
+                  <i class="fab fa-telegram"></i> Telegram
+                </a>
+                <a class="icon-link" href="https://www.tiktok.com/@se.loger6" target="_blank" rel="noopener" title="TikTok">
+                  <i class="fab fa-tiktok"></i> TikTok
+                </a>
+              </div>
+              <!-- Bouton avis Google -->
+              <a
+                id="googleReviewBtn"
+                href="https://search.google.com/local/writereview?placeid=VOTRE_PLACE_ID_GMB"
+                target="_blank"
+                rel="noopener"
+                style="display:inline-flex;align-items:center;gap:.5rem;margin-top:1rem;background:#fff;color:#111;font-weight:700;font-size:.82rem;padding:.5rem 1rem;border-radius:999px;text-decoration:none;transition:opacity .2s;"
+                onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"
+                title="Laisser un avis Google"
+              >
+                <svg width="16" height="16" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                ⭐ Laisser un avis Google
+              </a>
+            </div>
+
+            <!-- Carte Google Maps -->
+            <div style="margin-top:1.2rem;border-radius:14px;overflow:hidden;height:160px;">
+              <iframe
+                title="SE LOGER CM — Localisation Bonamoussadi Douala"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3979.6!2d9.7436!3d4.0764!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sBonamoussadi%2C+Douala!5e0!3m2!1sfr!2scm!4v1"
+                width="100%" height="160"
+                style="border:0;display:block;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
+          </div>
+        </div>
+        <div class="copyright">
+          © SE LOGER CM — Unique Solutions, Smart Living
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container px inner">
+      <div class="footer-brand">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM logo small" class="footer-logo" loading="lazy">
+        <span class="footer-name">SE LOGER CM</span>
+      </div>
+      <nav aria-label="Footer links" class="footer-nav">
+        <a href="#top">Home</a>
+        <a href="#unfurnished">Annonces</a>
+        <a href="/blog">Blog</a>
+        <a href="/a-propos">À propos</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- Contact modal -->
+  <div id="contactModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="panel">
+      <div class="modal-head">
+        <strong id="contactTitle" data-i18n="contact">Contact us</strong>
+        <button id="closeModal" class="modal-close" aria-label="Close">✕</button>
+      </div>
+      <form id="contactForm">
+        <label class="hidden" for="contactName">Name</label>
+        <input id="contactName" type="text" placeholder="Your name" class="input">
+        <label class="hidden" for="contactEmail">Email</label>
+        <input id="contactEmail" type="email" placeholder="Your email" required class="input">
+        <label class="hidden" for="contactMessage">Message</label>
+        <textarea id="contactMessage" rows="5" placeholder="Your message" required class="input"></textarea>
+        <div class="modal-actions">
+          <button type="button" id="cancelModal" class="seg-btn inactive modal-cancel">Cancel</button>
+          <button type="submit" class="btn-primary" id="contactSendBtn" data-i18n="send">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/i18n.js" defer></script>
+  <script src="assets/js/listings.js"></script>
+  <script>
+  /* ── Accueil : charger les annonces premium depuis Supabase ── */
+  document.addEventListener('DOMContentLoaded', async () => {
+    const unGrid = document.getElementById('unfurnishedGrid');
+    const fuGrid = document.getElementById('furnishedGrid');
+
+    function skeleton() {
+      return Array(3).fill(0).map(() => `
+        <div class="card" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.07)">
+          <div style="height:180px;background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div>
+          <div style="padding:1rem">
+            <div style="height:14px;background:#eee;border-radius:4px;margin-bottom:.5rem;width:70%"></div>
+            <div style="height:12px;background:#eee;border-radius:4px;width:50%"></div>
+          </div>
+        </div>`).join('');
+    }
+
+    if (unGrid) unGrid.innerHTML = skeleton();
+    if (fuGrid) fuGrid.innerHTML = skeleton();
+
+    /* Attendre que Supabase soit prêt */
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+      await new Promise(r => setTimeout(r, 100)); tries++;
+    }
+
+   /* ══════════════════════════════════════════
+      ROTATION PREMIUM — seed toutes les 30 min
+      Même seed = même affichage pour tous les
+      visiteurs au même créneau de 30 minutes.
+   ══════════════════════════════════════════ */
+   function rotatePremium(listings, max = 3) {
+     if (listings.length <= max) return listings;
+     /* Seed basé sur le créneau de 30 minutes actuel */
+     const seed  = Math.floor(Date.now() / (30 * 60 * 1000));
+     /* Shuffle déterministe avec le seed */
+     const arr   = [...listings];
+     for (let i = arr.length - 1; i > 0; i--) {
+       const j = (seed * 1664525 + i * 1013904223) % (i + 1);
+       [arr[i], arr[j]] = [arr[j], arr[i]];
+     }
+     return arr.slice(0, max);
+   }
+
+   /* ── Charger annonces LOCATION — premium d'abord, sinon les plus récentes ── */
+let unfurnishedAll = await SLCM_listings.getPremiumListings(false, 50); // charge 50, affiche 6
+let furnishedAll   = await SLCM_listings.getPremiumListings(true, 50);
+
+/* Rotation sur les premium, fallback si vide */
+let unfurnished = rotatePremium(unfurnishedAll, 6);
+let furnished   = rotatePremium(furnishedAll);
+
+if (!unfurnished.length || !furnished.length) {
+  const allRent = await SLCM_listings.getListings({ mode: 'rent' });
+  const residential = allRent.filter(l => ['apartment','house','studio','villa','duplex','residence'].includes(l.type));
+  if (!unfurnished.length) unfurnished = residential.filter(l => !l.furnished).slice(0, 6);
+  if (!furnished.length)   furnished   = residential.filter(l =>  l.furnished).slice(0, 3);
+  if (!unfurnished.length) unfurnished = residential.slice(0, 3);
+}
+
+    /* ── Charger annonces VENTE premium ── */
+    async function loadSalePremium() {
+      let tries2 = 0;
+      while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries2 < 30) {
+        await new Promise(r => setTimeout(r, 100)); tries2++;
+      }
+      const client = window.SLCM_DB.client;
+
+      /* Villas & Maisons — premium d'abord avec rotation, sinon les plus récentes */
+      const { data: villasP } = await client
+        .from('listings').select('*')
+        .eq('status', 'active').eq('premium', true).eq('rent_sale', 'sale')
+        .in('type', ['villa', 'house', 'duplex'])
+        .order('created_at', { ascending: false }).limit(50);
+
+      let villasData = rotatePremium(villasP || []);
+      if (!villasData.length) {
+        const { data: villasAll } = await client
+          .from('listings').select('*')
+          .eq('status', 'active').eq('rent_sale', 'sale')
+          .in('type', ['villa', 'house', 'duplex'])
+          .order('created_at', { ascending: false }).limit(3);
+        villasData = villasAll || [];
+      }
+
+      /* Terrains — premium d'abord avec rotation, sinon les plus récents */
+      const { data: terrainsP } = await client
+        .from('listings').select('*')
+        .eq('status', 'active').eq('premium', true).eq('rent_sale', 'sale')
+        .in('type', ['plots-of-land'])
+        .order('created_at', { ascending: false }).limit(50);
+
+      let terrainsData = rotatePremium(terrainsP || [], 6);
+      if (!terrainsData.length) {
+        const { data: terrainsAll } = await client
+          .from('listings').select('*')
+          .eq('status', 'active').eq('rent_sale', 'sale')
+          .in('type', ['plots-of-land'])
+          .order('created_at', { ascending: false }).limit(6);
+        terrainsData = terrainsAll || [];
+      }
+
+      /* Fonds de Commerce — premium avec rotation */
+      const { data: commercialSaleRaw } = await client
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .eq('rent_sale', 'sale')
+        .eq('premium', true)
+        .in('type', ['commercial', 'warehouse', 'shop'])
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const commercialSaleData = rotatePremium(commercialSaleRaw || []);
+
+      const villas        = villasData   || [];
+      const terrains      = terrainsData || [];
+      const commercialSale = commercialSaleData || [];
+
+      return { villas, terrains, commercialSale };
+    }
+
+    if (unGrid) {
+      unGrid.innerHTML = unfurnished.length
+        ? unfurnished.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+    if (fuGrid) {
+      fuGrid.innerHTML = furnished.length
+        ? furnished.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+
+    /* ── Locaux commerciaux à louer — premium d'abord, sinon les plus récents ── */
+    let triesC = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && triesC < 30) {
+      await new Promise(r => setTimeout(r, 100)); triesC++;
+    }
+    const commClient = window.SLCM_DB.client;
+
+    const { data: commRentRaw } = await commClient
+      .from('listings')
+      .select('*')
+      .eq('status', 'active')
+      .eq('rent_sale', 'rent')
+      .eq('premium', true)
+      .in('type', ['commercial', 'warehouse', 'shop'])
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    let commRent = rotatePremium(commRentRaw || []);
+
+    /* Fallback : si aucun commercial premium, ne rien afficher */
+    const commercialRentGrid = document.getElementById('commercialRentGrid');
+    if (commercialRentGrid) {
+      commercialRentGrid.innerHTML = commRent.length
+        ? commRent.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+
+    /* ── Charger et afficher les annonces vente ── */
+    const { villas, terrains, commercialSale } = await loadSalePremium();
+    const villasGrid   = document.getElementById('villasGrid');
+    const terrainsGrid = document.getElementById('terrainsGrid');
+    const commercialSaleGrid = document.getElementById('commercialSaleGrid');
+
+    if (villasGrid) {
+      villasGrid.innerHTML = villas.length
+        ? villas.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+    if (terrainsGrid) {
+      terrainsGrid.innerHTML = terrains.length
+        ? terrains.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+    if (commercialSaleGrid) {
+      commercialSaleGrid.innerHTML = commercialSale.length
+        ? commercialSale.map(l => SLCM_listings.renderCard(l)).join('')
+        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    }
+  });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+
+  <!-- Sync search bar with publish.html (cities, districts, types, price ranges) -->
+  <script>
+  (function(){
+    // --- Source unique de vérité : SLCM_CONFIG (config.js) ---
+    const CITIES = (typeof SLCM_CONFIG !== 'undefined' && SLCM_CONFIG.cities)
+      ? SLCM_CONFIG.cities
+      : { 'Douala': [], 'Yaoundé': [], 'Bafoussam': [] };
+
+    const TYPES = (typeof SLCM_CONFIG !== 'undefined' && SLCM_CONFIG.propertyTypes)
+      ? SLCM_CONFIG.propertyTypes.map(t => ({ value: t.value, label: t.labelFR }))
+      : [];
+
+    const lang = (typeof SLCM_CONFIG !== 'undefined') ? (localStorage.getItem('slcm_lang') || 'fr') : 'fr';
+
+    const PRICE_RANGES = (typeof SLCM_CONFIG !== 'undefined' && SLCM_CONFIG.priceRanges)
+      ? {
+          rent: SLCM_CONFIG.priceRanges.rent.map(r => ({ value: r.value, label: lang === 'fr' ? r.labelFR : r.labelEN })),
+          sale: SLCM_CONFIG.priceRanges.sale.map(r => ({ value: r.value, label: lang === 'fr' ? r.labelFR : r.labelEN }))
+        }
+      : { rent: [], sale: [] };
+
+    // --- DOM refs ---
+    const citySel     = document.getElementById('city');
+    const districtSel = document.getElementById('district');
+    const typeSel     = document.getElementById('type');
+    const bedroomsSel = document.getElementById('bedrooms');
+    const priceSel    = document.getElementById('price');
+    const rentTab     = document.getElementById('rentTab');
+    const saleTab     = document.getElementById('saleTab');
+
+    function setOptions(select, items, placeholder){
+      if(!select) return;
+      select.innerHTML = (placeholder ? `<option value="">${placeholder}</option>` : '') +
+        items.map(it => {
+          if (typeof it === 'string') return `<option value="${it}">${it}</option>`;
+          return `<option value="${it.value}">${it.label}</option>`;
+        }).join('');
+    }
+
+    // Types (ajout Duplex / Warehouse / Plots of land)
+    setOptions(typeSel, TYPES, 'Type');
+
+    // Bedrooms (sécurité si vide)
+    if (bedroomsSel && bedroomsSel.options.length <= 1) {
+      setOptions(bedroomsSel, ['1','2','3','4+'], 'Bedrooms');
+    }
+
+    // Districts selon City
+    function refreshDistricts(){
+      const city = (citySel && citySel.value) || 'Douala';
+      const list = CITIES[city] || [];
+      setOptions(districtSel, list, 'District');
+    }
+
+    if (citySel) {
+      // NE PAS reconstruire la liste City : on garde ton HTML
+      citySel.value = 'Douala';                 // Douala par défaut
+      citySel.addEventListener('change', refreshDistricts);
+    }
+    refreshDistricts();
+
+    // Prix selon mode
+    let mode = 'rent';
+    function refreshPrices(){
+      const ranges = PRICE_RANGES[mode] || [];
+      setOptions(priceSel, ranges, 'Price');
+    }
+    function toggleTabs(){
+      rentTab?.classList.toggle('active', mode==='rent');
+      saleTab?.classList.toggle('active', mode!=='rent');
+      rentTab?.classList.toggle('inactive', mode!=='rent');
+      saleTab?.classList.toggle('inactive', mode==='rent');
+    }
+    function toggleSections(mode) {
+      const rentSec = document.getElementById('rentSections');
+      const saleSec = document.getElementById('saleSections');
+      if (rentSec) rentSec.style.display = mode === 'rent' ? 'block' : 'none';
+      if (saleSec) saleSec.style.display = mode === 'sale' ? 'block' : 'none';
+    }
+
+    rentTab?.addEventListener('click', () => { mode='rent'; refreshPrices(); toggleTabs(); toggleSections('rent'); });
+    saleTab?.addEventListener('click', () => { mode='sale'; refreshPrices(); toggleTabs(); toggleSections('sale'); });
+
+    // Init
+    refreshPrices(); toggleTabs();
+  })();
+  </script>
+
+  <!-- TOUT PETIT SCRIPT: écrit mode=rent|sale dans le champ caché avant l'envoi GET -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('searchForm');
+    const modeInput = document.getElementById('modeInput');
+    const rentTab = document.getElementById('rentTab');
+    const saleTab = document.getElementById('saleTab');
+    if (!form) return;
+    form.addEventListener('submit', () => {
+      modeInput.value = rentTab.classList.contains('active') ? 'rent' : 'sale';
+    });
+  });
+  </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const publishLink = document.querySelector('a[href="/publier"]');
+  if (!publishLink) return;
+
+  publishLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const user = typeof SLCM !== 'undefined' ? await SLCM.getCurrentUser() : null;
+    window.location.href = user ? '/publier' : '/connexion';
+  });
+});
+</script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form    = document.getElementById('contactForm');
+    const sendBtn = document.getElementById('contactSendBtn');
+    if (!form) return;
+
+form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name    = document.getElementById('contactName').value.trim();
+      const email   = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+
+      sendBtn.textContent = 'Sending...';
+      sendBtn.disabled = true;
+
+      /* Envoi EmailJS (notify.js) */
+      if (window.SLCM_notify) {
+        SLCM_notify.onContactFormSubmit(name, email, message, async (success) => {
+          /* Notification WhatsApp en parallèle (silencieuse si échec) */
+          if (window.SLCM_WA) {
+            SLCM_WA.notify('contact', { name, email, message });
+          }
+          sendBtn.textContent = 'Send';
+          sendBtn.disabled = false;
+          if (success) {
+            alert('Message envoyé ! Nous vous répondrons très bientôt.');
+            form.reset();
+            document.getElementById('contactModal').classList.remove('show');
+          } else {
+            alert('Erreur d\'envoi. Contactez-nous sur WhatsApp ou par téléphone.');
+          }
+        });
+      } else {
+        /* Fallback : notification WhatsApp seule */
+        if (window.SLCM_WA) {
+          const ok = await SLCM_WA.notify('contact', { name, email, message });
+          sendBtn.textContent = 'Send';
+          sendBtn.disabled = false;
+          if (ok) {
+            alert('Message envoyé !');
+            form.reset();
+            document.getElementById('contactModal').classList.remove('show');
+          } else {
+            alert('Erreur d\'envoi. Contactez-nous directement sur WhatsApp.');
+          }
+        } else {
+          sendBtn.textContent = 'Send';
+          sendBtn.disabled = false;
+          alert('Message envoyé ! (mode démo)');
+          document.getElementById('contactModal').classList.remove('show');
+        }
+      }
+    });
+  });
+  </script>
+  <script src="assets/js/lang.js" defer></script>
+  <script>
+  /* Re-appliquer les traductions immédiatement au changement de langue */
+  document.addEventListener('slcm:langchange', (e) => {
+    const lang = e.detail.lang;
+
+    /* Hero title */
+    const heroTitle = document.querySelector('.hero-title');
+    if (heroTitle) {
+      const texts = {
+        fr: ['Solutions Uniques,', 'Vie Intelligente'],
+        en: ['Unique Solutions,', 'Smart Living']
+      };
+      const lines = texts[lang] || texts.en;
+      heroTitle.innerHTML = lines.map(l => `<span class="line">${l}</span>`).join('');
+    }
+
+    /* Hero sub */
+    const heroSub = document.querySelector('.hero-sub');
+    if (heroSub) {
+      heroSub.textContent = lang === 'fr'
+        ? "Que vous achetiez, publiiez ou louiez, nous sommes là à chaque étape."
+        : "Whether you're buying, listing, or renting, we're here to help every step of the way.";
+    }
+
+    /* Segments À LOUER / À VENDRE */
+    const rentTab = document.getElementById('rentTab');
+    const saleTab = document.getElementById('saleTab');
+    if (rentTab) rentTab.textContent = lang === 'fr' ? 'À LOUER' : 'TO RENT';
+    if (saleTab) saleTab.textContent = lang === 'fr' ? 'À VENDRE' : 'FOR SALE';
+
+    /* Bouton rechercher */
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) searchBtn.textContent = lang === 'fr' ? 'RECHERCHER' : 'SEARCH';
+  });
+  </script>
+  <script src="assets/js/footer.js" defer></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/favorites.js" defer></script>
+  <script src="assets/js/chatbot.js" defer></script>
+  <script src="assets/js/testimonials.js" defer></script>
+  <script src="assets/js/whatsapp.js" defer></script>
+
+  <!-- ── Google My Business : Données structurées LocalBusiness ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "SE LOGER CM",
+    "alternateName": "SE LOGER CAMEROUN",
+    "url": "https://www.selogercm.com",
+    "logo": "https://www.selogercm.com/assets/img/logo.png",
+    "image": "https://www.selogercm.com/assets/img/og-cover.jpg",
+    "description": "Agence immobilière en ligne spécialisée dans la location et la vente d'appartements, maisons et villas à Douala, Yaoundé et au Cameroun.",
+    "telephone": "+237650840714",
+    "email": "contact@selogercm.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Boulevard de la République",
+      "addressLocality": "Bonamoussadi, Douala",
+      "addressCountry": "CM"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 4.0764,
+      "longitude": 9.7436
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "08:00",
+        "closes": "18:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Saturday",
+        "opens": "09:00",
+        "closes": "14:00"
+      }
+    ],
+    "sameAs": [
+      "https://wa.me/237650840714",
+      "https://t.me/seloger237",
+      "https://www.tiktok.com/@se.loger6"
+    ],
+    "areaServed": [
+      { "@type": "City", "name": "Douala" },
+      { "@type": "City", "name": "Yaoundé" },
+      { "@type": "City", "name": "Bafoussam" }
+    ],
+    "priceRange": "XAF",
+    "currenciesAccepted": "XAF",
+    "paymentAccepted": "Mobile Money, Cash",
+    "hasMap": "https://maps.google.com/?q=Bonamoussadi+Douala+Cameroun"
+  }
+  </script>
+</body>
+</html>

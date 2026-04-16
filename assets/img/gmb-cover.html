@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1332px; height: 750px; overflow: hidden;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+    }
+
+    .bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,122,0,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(255,122,0,0.08) 0%, transparent 60%),
+        linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #111 100%);
+    }
+
+    /* Grille de points décorative */
+    .dots {
+      position: absolute; inset: 0; opacity: .15;
+      background-image: radial-gradient(circle, #ff7a00 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    /* Formes géométriques */
+    .shape-1 {
+      position: absolute;
+      right: -60px; top: -60px;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,122,0,.25);
+    }
+    .shape-2 {
+      position: absolute;
+      right: 40px; top: 40px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,122,0,.15);
+    }
+    .shape-3 {
+      position: absolute;
+      right: 140px; bottom: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,122,0,.1);
+    }
+
+    /* Bâtiments stylisés */
+    .buildings {
+      position: absolute;
+      right: 80px; bottom: 0;
+      display: flex; align-items: flex-end; gap: 12px;
+      opacity: .18;
+    }
+    .b { background: #ff7a00; border-radius: 4px 4px 0 0; }
+    .b1 { width: 45px; height: 280px; }
+    .b2 { width: 60px; height: 360px; }
+    .b3 { width: 38px; height: 200px; }
+    .b4 { width: 70px; height: 420px; }
+    .b5 { width: 42px; height: 260px; }
+    .b6 { width: 55px; height: 310px; }
+    .b7 { width: 35px; height: 180px; }
+
+    /* Fenêtres sur les bâtiments */
+    .b::after {
+      content: '';
+      position: absolute;
+      inset: 12px 8px;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 14px,
+        rgba(255,255,255,.3) 14px, rgba(255,255,255,.3) 18px
+      );
+    }
+    .b { position: relative; }
+
+    /* Contenu principal */
+    .content {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 0 90px;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,122,0,.12);
+      border: 1px solid rgba(255,122,0,.35);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 11px; font-weight: 700;
+      color: #ff7a00; letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+    .badge::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #ff7a00;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .3; }
+    }
+
+    .logo-row {
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 20px;
+    }
+    .logo-icon {
+      width: 58px; height: 58px;
+      background: linear-gradient(135deg, #ff7a00, #e06200);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 24px rgba(255,122,0,.4);
+    }
+    .logo-text {
+      font-size: 38px; font-weight: 900;
+      color: #fff; letter-spacing: -.5px;
+      line-height: 1;
+    }
+    .logo-text span { color: #ff7a00; }
+
+    .tagline {
+      font-size: 20px; font-weight: 300;
+      color: rgba(255,255,255,.55);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    .divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, #ff7a00, transparent);
+      border-radius: 2px;
+      margin-bottom: 36px;
+    }
+
+    .services {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 44px;
+    }
+    .service-pill {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,.7);
+    }
+
+    .footer-row {
+      display: flex; align-items: center; gap: 32px;
+    }
+    .info-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(255,255,255,.4);
+      font-weight: 500;
+    }
+    .info-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #ff7a00; flex-shrink: 0;
+    }
+
+    /* Bande orange basse */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ff7a00 0%, #ffaa44 50%, #ff7a00 100%);
+    }
+
+    /* Texte flottant en filigrane */
+    .watermark {
+      position: absolute;
+      top: 50%; right: -20px;
+      transform: translateY(-50%) rotate(90deg);
+      transform-origin: center;
+      font-size: 11px; letter-spacing: 4px;
+      color: rgba(255,255,255,.06);
+      text-transform: uppercase; font-weight: 700;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="dots"></div>
+
+  <!-- Formes décoratives -->
+  <div class="shape-1"></div>
+  <div class="shape-2"></div>
+  <div class="shape-3"></div>
+
+  <!-- Skyline -->
+  <div class="buildings">
+    <div class="b b7"></div>
+    <div class="b b3"></div>
+    <div class="b b1"></div>
+    <div class="b b6"></div>
+    <div class="b b2"></div>
+    <div class="b b4"></div>
+    <div class="b b5"></div>
+    <div class="b b1"></div>
+    <div class="b b3"></div>
+  </div>
+
+  <!-- Filigrane -->
+  <div class="watermark">SELOGERCM · DOUALA · CAMEROUN · IMMOBILIER</div>
+
+  <!-- Contenu -->
+  <div class="content">
+    <div class="badge">Agence immobilière certifiée</div>
+
+    <div class="logo-row">
+      <div class="logo-icon">🏠</div>
+      <div class="logo-text">SE LOGER <span>CM</span></div>
+    </div>
+
+    <div class="tagline">Unique Solutions, Smart Living</div>
+
+    <div class="divider"></div>
+
+    <div class="services">
+      <span class="service-pill">📍 Location</span>
+      <span class="service-pill">🏷️ Vente</span>
+      <span class="service-pill">🏠 Appartements</span>
+      <span class="service-pill">🏡 Villas & Maisons</span>
+      <span class="service-pill">🏗️ Terrains</span>
+      <span class="service-pill">✅ Annonces vérifiées</span>
+    </div>
+
+    <div class="footer-row">
+      <div class="info-item"><div class="info-dot"></div> Bonamoussadi, Douala</div>
+      <div class="info-item"><div class="info-dot"></div> Yaoundé · Bafoussam</div>
+      <div class="info-item"><div class="info-dot"></div> (+237) 650 840 714</div>
+      <div class="info-item"><div class="info-dot"></div> selogercm.com</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar"></div>
+</body>
+</html>

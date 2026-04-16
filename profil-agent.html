@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Profil Agent — SE LOGER CM</title>
+  <meta name="description" content="Profil agent immobilier SE LOGER CM">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
+    * { box-sizing: border-box; }
+    body { background: var(--gray); font-family: 'Poppins', sans-serif; }
+    main { padding-top: 90px; padding-bottom: 60px; min-height: 100vh; }
+    .wrap { max-width: 1000px; margin: auto; padding: 0 1.2rem; }
+
+    /* ── Hero ── */
+    .profile-hero {
+      background: var(--dark);
+      padding: 3rem 0 4.5rem;
+      margin-bottom: -3rem;
+    }
+    .profile-hero-inner {
+      max-width: 1000px; margin: auto; padding: 0 1.2rem;
+      display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+    }
+    .agent-avatar {
+      width: 110px; height: 110px; border-radius: 50%;
+      background: #333; border: 3px solid var(--orange);
+      overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; color: #fff; font-weight: 900;
+    }
+    .agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .agent-info { flex: 1; min-width: 0; }
+    .agent-name-row {
+      display: flex; align-items: center; gap: .75rem;
+      flex-wrap: wrap; margin-bottom: .4rem;
+    }
+    .agent-name { font-size: 1.7rem; font-weight: 900; color: #fff; }
+    .verified-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: rgba(255,122,0,.2); border: 1px solid rgba(255,122,0,.4);
+      color: var(--orange); border-radius: 999px;
+      padding: .25rem .75rem; font-size: .75rem; font-weight: 800;
+    }
+    .kyc-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3);
+      color: #22c55e; border-radius: 999px;
+      padding: .25rem .75rem; font-size: .75rem; font-weight: 800;
+    }
+    .agent-role { color: rgba(255,255,255,.45); font-size: .82rem; margin-bottom: .5rem; }
+    .agent-bio { color: rgba(255,255,255,.6); font-size: .9rem; line-height: 1.6; margin-bottom: .75rem; }
+    .agent-zone { color: rgba(255,255,255,.4); font-size: .78rem; margin-bottom: .75rem; }
+    .agent-contacts { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .agent-contact-btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .5rem 1.1rem; border-radius: 999px;
+      font-family: inherit; font-size: .82rem; font-weight: 700;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .agent-contact-btn:hover { opacity: .85; }
+    .btn-call { background: #fff; color: var(--dark); }
+    .btn-wa   { background: #25d366; color: #fff; }
+    .agent-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .agent-stat { text-align: center; }
+    .agent-stat .num { font-size: 1.6rem; font-weight: 900; color: var(--orange); }
+    .agent-stat .lbl { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: 2px; }
+
+    /* ── Share agent ── */
+    .share-agent {
+      display: flex; align-items: center; gap: .5rem;
+      margin-top: .8rem; flex-wrap: wrap;
+    }
+    .share-agent span { font-size: .75rem; color: rgba(255,255,255,.35); }
+    .share-agent-btn {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .75rem; border-radius: 999px; font-size: .72rem;
+      font-weight: 700; text-decoration: none; transition: opacity .2s; border: none; cursor: pointer;
+    }
+    .share-agent-btn:hover { opacity: .85; }
+    .s-wa   { background: #25d366; color: #fff; }
+    .s-copy { background: rgba(255,255,255,.12); color: rgba(255,255,255,.7); }
+
+    /* ── Listings ── */
+    .section-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 2rem 0 1.2rem; padding-top: 3.5rem;
+    }
+    .section-bar h2 { font-size: 1.1rem; font-weight: 800; color: var(--dark); }
+    .section-bar span { font-size: .82rem; color: #aaa; }
+    .listing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.2rem;
+    }
+
+    /* ── States ── */
+    .loading-state { text-align: center; padding: 4rem; color: #aaa; }
+    .not-found {
+      text-align: center; padding: 4rem 1rem;
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.06);
+      margin-top: 4rem;
+    }
+    .not-found i { font-size: 2.5rem; color: #ddd; display: block; margin-bottom: 1rem; }
+    .not-found h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem; }
+    .not-found p { color: #888; margin-bottom: 1.5rem; font-size: .9rem; }
+    .empty-listings {
+      text-align: center; padding: 2.5rem; background: #fff;
+      border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.05);
+      grid-column: 1/-1;
+    }
+    .empty-listings i { font-size: 2rem; color: #ddd; display: block; margin-bottom: .75rem; }
+
+    @media (max-width: 640px) {
+      .profile-hero-inner { flex-direction: column; text-align: center; }
+      .agent-name-row { justify-content: center; }
+      .agent-contacts { justify-content: center; }
+      .agent-stats { justify-content: center; }
+      .share-agent { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container px navbar">
+    <a class="brand" href="/">
+      <img src="./assets/img/logo.png" alt="SE LOGER CM logo">
+      <span>SE LOGER CM</span>
+    </a>
+  </div>
+</header>
+
+<main id="mainContent">
+  <div class="loading-state" id="loadingState">
+    <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--orange)"></i>
+    <p style="margin-top:1rem">Chargement du profil…</p>
+  </div>
+</main>
+
+<footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/listings.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/footer.js"></script>
+<script src="assets/js/nav.js"></script>
+
+<script>
+/* ══════════════════════════════════════
+   PAGE AGENT PUBLIQUE — /agent?id=UUID
+   Accessible sans connexion
+══════════════════════════════════════ */
+
+function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
+
+async function waitSB() {
+  let t = 0;
+  while ((!window.SLCM_DB || !window.SLCM_DB.client) && t < 50) {
+    await new Promise(r => setTimeout(r, 100)); t++;
+  }
+  return window.SLCM_DB?.client || null;
+}
+
+async function init() {
+  const params  = new URLSearchParams(window.location.search);
+  const agentId = params.get('id');
+
+  const client = await waitSB();
+  if (!client) { showError('Connexion impossible. Réessayez.'); return; }
+
+  if (!agentId) { showError('Identifiant agent manquant.'); return; }
+
+  /* Charger le profil */
+  const { data: profile, error } = await client
+    .from('profiles')
+    .select('*')
+    .eq('id', agentId)
+    
+    .single();
+
+  if (error || !profile) { showError('Ce profil agent n\'existe pas ou n\'est pas public.'); return; }
+
+  /* Charger les annonces actives de l'agent */
+  const { data: listings } = await client
+    .from('listings')
+    .select('*')
+    .eq('owner_id', agentId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  renderProfile(profile, listings || []);
+}
+
+function renderProfile(profile, listings) {
+  const main     = document.getElementById('mainContent');
+  const name     = profile.name || 'Agent SE LOGER CM';
+  const phone    = profile.agent_phone || profile.phone || '';
+  const bio      = profile.agent_bio || profile.bio || 'Agent immobilier professionnel sur SE LOGER CM.';
+  const zone     = profile.zone ? profile.zone.replace(/_/g, ' · ').replace(/Douala|Yaoundé/g, '') : '';
+  const isVerified = profile.kyc_status === 'verified';
+  const isPro      = !!profile.is_pro;
+  const since      = profile.created_at ? new Date(profile.created_at).getFullYear() : '';
+  const totalViews = listings.reduce((s, l) => s + (l.views || 0), 0);
+  const agentUrl   = `https://www.selogercm.com/profil-agent?id=${profile.id}`;
+
+  /* Initiales avatar */
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const avatarHtml = profile.agent_photo
+    ? `<img src="${profile.agent_photo}" alt="${name}">`
+    : `<span>${initials}</span>`;
+
+  /* Contacts */
+  const contactsHtml = phone ? `
+    <a href="tel:${phone}" class="agent-contact-btn btn-call">
+      <i class="fas fa-phone"></i> Appeler
+    </a>
+    <a href="https://wa.me/${phone.replace(/[^0-9]/g,'')}" target="_blank" class="agent-contact-btn btn-wa">
+      <i class="fab fa-whatsapp"></i> WhatsApp
+    </a>` : '';
+
+  /* Stats */
+  const statsHtml = `
+    <div class="agent-stat">
+      <div class="num">${listings.length}</div>
+      <div class="lbl">Annonces actives</div>
+    </div>
+    <div class="agent-stat">
+      <div class="num">${totalViews}</div>
+      <div class="lbl">Vues totales</div>
+    </div>
+    ${since ? `<div class="agent-stat">
+      <div class="num">${since}</div>
+      <div class="lbl">Membre depuis</div>
+    </div>` : ''}`;
+
+  /* Cards annonces */
+  const listingsHtml = listings.length
+    ? listings.map(l => SLCM_listings.renderCard(l)).join('')
+    : `<div class="empty-listings">
+        <i class="fas fa-home"></i>
+        <p style="color:#888">Aucune annonce active pour le moment.</p>
+       </div>`;
+
+  /* Mise à jour SEO */
+  document.title = `${name} — ${profile.role === 'agent' || profile.role === 'agent_externe' ? 'Agent immobilier' : 'Annonceur'} | SE LOGER CM`;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', `${name} — ${profile.role === 'agent' || profile.role === 'agent_externe' ? 'Agent immobilier' : 'Annonceur'} à Douala. ${listings.length} annonce(s) active(s) sur SE LOGER CM.`);
+
+  main.innerHTML = `
+    <!-- Hero profil -->
+    <div class="profile-hero">
+      <div class="profile-hero-inner">
+        <div class="agent-avatar">${avatarHtml}</div>
+        <div class="agent-info">
+          <div class="agent-name-row">
+            <div class="agent-name">${name}</div>
+            ${isVerified ? '<span class="kyc-badge">✅ KYC Vérifié</span>' : ''}
+            ${isPro ? '<span class="verified-badge">⭐ Agent Pro</span>' : ''}
+          </div>
+          <div class="agent-role">${profile.role === 'agent' || profile.role === 'agent_externe' ? 'Agent immobilier' : 'Annonceur'} · SE LOGER CM</div>
+          ${bio ? `<div class="agent-bio">${bio}</div>` : ''}
+          ${zone ? `<div class="agent-zone"><i class="fas fa-map-marker-alt" style="color:var(--orange);margin-right:.3rem"></i>${zone}</div>` : ''}
+          <div class="agent-contacts">${contactsHtml}</div>
+          <!-- Partager ce profil -->
+          <div class="share-agent">
+            <span>Partager :</span>
+            <a href="https://wa.me/?text=${encodeURIComponent('Découvrez le profil de ' + name + ' sur SE LOGER CM : ' + agentUrl)}"
+               target="_blank" class="share-agent-btn s-wa">
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <button class="share-agent-btn s-copy" onclick="copyAgentLink()">
+              <i class="fas fa-link"></i> <span id="copyLabel">Copier le lien</span>
+            </button>
+          </div>
+        </div>
+        <div class="agent-stats">${statsHtml}</div>
+      </div>
+    </div>
+
+    <!-- Listings -->
+    <div class="wrap">
+      <div class="section-bar">
+        <h2>Annonces de ${name.split(' ')[0]}</h2>
+        <span>${listings.length} bien${listings.length > 1 ? 's' : ''} disponible${listings.length > 1 ? 's' : ''}</span>
+      </div>
+      <div class="listing-grid">${listingsHtml}</div>
+    </div>
+  `;
+}
+
+function copyAgentLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const label = document.getElementById('copyLabel');
+    if (label) {
+      label.textContent = 'Copié !';
+      setTimeout(() => { label.textContent = 'Copier le lien'; }, 2000);
+    }
+  });
+}
+
+function showError(msg) {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="wrap">
+      <div class="not-found">
+        <i class="fas fa-user-slash"></i>
+        <h2>Profil introuvable</h2>
+        <p>${msg}</p>
+        <a href="/annonces" style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;background:var(--orange);color:#fff;border-radius:999px;text-decoration:none;font-weight:700">
+          <i class="fas fa-search"></i> Voir toutes les annonces
+        </a>
+      </div>
+    </div>`;
+}
+
+init();
+</script>
+
+</body>
+</html>
