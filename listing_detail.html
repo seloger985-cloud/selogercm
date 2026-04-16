@@ -599,10 +599,14 @@
       const title   = document.getElementById('similarTitle');
       const sub     = document.getElementById('similarSub');
 
-      let listings = [];
-      let mode = 'owner';
+      /* ── Fourchette de prix ±30% ── */
+      const priceMin = ad.price ? Math.floor(ad.price * 0.7) : 0;
+      const priceMax = ad.price ? Math.ceil(ad.price * 1.3)  : 999999999;
 
-      /* Priorité 1 — même annonceur */
+      let ownerListings = [];
+      let similarListings = [];
+
+      /* Bloc 1 — Autres annonces du même annonceur */
       if (ad.owner_id) {
         const { data } = await client
           .from('listings')
@@ -612,54 +616,77 @@
           .neq('id', ad.id)
           .order('created_at', { ascending: false })
           .limit(3);
-        listings = data || [];
+        ownerListings = data || [];
       }
 
-      /* Priorité 2 — même zone si pas assez */
-      if (listings.length < 3) {
-        mode = 'zone';
+      /* Bloc 2 — Annonces similaires : même quartier + même type + fourchette prix */
+      if (ad.district) {
+        const { data: byDistrict } = await client
+          .from('listings')
+          .select('*')
+          .eq('status', 'active')
+          .neq('id', ad.id)
+          .eq('city', ad.city || 'Douala')
+          .eq('district', ad.district)
+          .eq('type', ad.type)
+          .gte('price', priceMin)
+          .lte('price', priceMax)
+          .order('created_at', { ascending: false })
+          .limit(6);
 
-        if (ad.district) {
-          const { data: sameDistrict } = await client
-            .from('listings')
-            .select('*')
-            .eq('status', 'active')
-            .neq('id', ad.id)
-            .eq('city', ad.city || 'Douala')
-            .eq('district', ad.district)
-            .order('created_at', { ascending: false })
-            .limit(3);
-          const extra = (sameDistrict || []).filter(l => !listings.find(x => x.id === l.id));
-          listings = [...listings, ...extra].slice(0, 3);
-        }
-
-        if (listings.length < 3) {
-          const { data: sameCity } = await client
-            .from('listings')
-            .select('*')
-            .eq('status', 'active')
-            .neq('id', ad.id)
-            .eq('city', ad.city || 'Douala')
-            .order('created_at', { ascending: false })
-            .limit(3);
-          const extra = (sameCity || []).filter(l => !listings.find(x => x.id === l.id));
-          listings = [...listings, ...extra].slice(0, 3);
-        }
+        similarListings = (byDistrict || [])
+          .filter(l => !ownerListings.find(x => x.id === l.id))
+          .slice(0, 3);
       }
 
-      if (!listings.length) return;
+      /* Fallback — même ville + même type + fourchette prix */
+      if (similarListings.length < 3) {
+        const { data: byCity } = await client
+          .from('listings')
+          .select('*')
+          .eq('status', 'active')
+          .neq('id', ad.id)
+          .eq('city', ad.city || 'Douala')
+          .eq('type', ad.type)
+          .gte('price', priceMin)
+          .lte('price', priceMax)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        const extra = (byCity || [])
+          .filter(l => !ownerListings.find(x => x.id === l.id) && !similarListings.find(x => x.id === l.id));
+        similarListings = [...similarListings, ...extra].slice(0, 3);
+      }
+
+      /* Rien à afficher */
+      if (!ownerListings.length && !similarListings.length) return;
 
       section.style.display = 'block';
 
-      if (mode === 'owner') {
+      let html = '';
+
+      /* Bloc annonceur */
+      if (ownerListings.length) {
         title.textContent = '🏠 Autres annonces de cet annonceur';
         sub.textContent   = 'Plus de biens proposés par le même propriétaire ou agent.';
+        html += ownerListings.map(l => SLCM_listings.renderCard(l)).join('');
       } else {
         title.textContent = `📍 Annonces similaires à ${ad.district || ad.city || 'Douala'}`;
-        sub.textContent   = 'Des biens dans la même zone qui pourraient vous intéresser.';
+        sub.textContent   = `Même type de bien · Prix similaire (±30%) · Même zone`;
       }
 
-      grid.innerHTML = listings.map(l => SLCM_listings.renderCard(l)).join('');
+      /* Bloc similaires (si différent du bloc annonceur) */
+      if (similarListings.length && ownerListings.length) {
+        html += `<div style="grid-column:1/-1;margin-top:1.5rem;margin-bottom:.5rem">
+          <div style="font-size:.95rem;font-weight:900;color:#111">📍 Annonces similaires dans ce quartier</div>
+          <div style="font-size:.8rem;color:#888">Même type · Prix similaire ±30%</div>
+        </div>`;
+        html += similarListings.map(l => SLCM_listings.renderCard(l)).join('');
+      } else if (similarListings.length) {
+        html += similarListings.map(l => SLCM_listings.renderCard(l)).join('');
+      }
+
+      grid.innerHTML = html;
     }
 
     loadAndRender();
