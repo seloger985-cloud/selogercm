@@ -1,5 +1,6 @@
 # URLs propres → fichiers HTML
 /annonces          /listings_v2.html     200
+/annonce/:id       /listing_detail.html  200
 /publier           /publish.html         200
 /blog              /blog.html            200
 /tarifs            /pricing.html         200
@@ -15,9 +16,6 @@
 /favoris           /favorites.html       200
 /reset-password    /reset-password.html  200
 /profil-agent      /profil-agent.html    200
-
-# OG Tags — la fonction gère bot ET humain
-/annonce           /.netlify/functions/og-listing  200
 
 # Redirection index
 /index.html        /                     301
