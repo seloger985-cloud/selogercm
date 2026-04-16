@@ -804,6 +804,11 @@
                  href="#" target="_blank" rel="noopener">
                 <i class="fab fa-telegram" style="font-size:1.2rem"></i> Telegram
               </a>
+              <a class="contact-btn" id="visiteBtn"
+                 href="#" target="_blank" rel="noopener"
+                 style="background:#fff8f0;border:2px solid var(--orange);color:var(--orange);font-weight:800;margin-top:.3rem">
+                <i class="fas fa-calendar-check"></i> Réserver une visite
+              </a>
               <p class="contact-note">
                 <i class="fas fa-shield-alt"></i>
                 SE LOGER CM vérifie toutes les annonces
@@ -874,6 +879,31 @@
 
         if (tgBtn) {
           tgBtn.href = 'https://t.me/seloger237?text=' + tgMsg;
+        }
+
+        /* ── Bouton Réserver une visite ── */
+        const visiteBtn = document.getElementById('visiteBtn');
+        if (visiteBtn) {
+          const visiteMsg = encodeURIComponent(
+            `🏠 *${title}*
+` +
+            `📍 ${location}
+` +
+            `💰 *${price}*
+` +
+            `🔑 Réf: ${ref}
+` +
+            `${'─'.repeat(30)}
+` +
+            `Bonjour, je souhaite réserver une visite pour ce bien.
+` +
+            `Quand êtes-vous disponible ?`
+          );
+          /* Numéro de l'agent si disponible, sinon SE LOGER CM */
+          const agentPhone = window._currentAdOwnerId
+            ? (document.getElementById('agentName')?.dataset?.phone || '237650840714')
+            : '237650840714';
+          visiteBtn.href = 'https://wa.me/' + agentPhone.replace(/[^0-9]/g, '') + '?text=' + visiteMsg;
         }
 
         /* ── Liens de partage social ── */
