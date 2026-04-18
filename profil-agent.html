@@ -159,6 +159,12 @@
    Accessible sans connexion
 ══════════════════════════════════════ */
 
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
 
 async function waitSB() {
@@ -214,7 +220,7 @@ function renderProfile(profile, listings) {
   /* Initiales avatar */
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const avatarHtml = profile.agent_photo
-    ? `<img src="${profile.agent_photo}" alt="${name}">`
+    ? `<img src="${profile.agent_photo}" alt="${escapeHtml(name)}">`
     : `<span>${initials}</span>`;
 
   /* Contacts */
@@ -261,12 +267,12 @@ function renderProfile(profile, listings) {
         <div class="agent-avatar">${avatarHtml}</div>
         <div class="agent-info">
           <div class="agent-name-row">
-            <div class="agent-name">${name}</div>
+            <div class="agent-name">${escapeHtml(name)}</div>
             ${isVerified ? '<span class="kyc-badge">✅ KYC Vérifié</span>' : ''}
             ${isPro ? '<span class="verified-badge">⭐ Agent Pro</span>' : ''}
           </div>
           <div class="agent-role">${profile.role === 'agent' || profile.role === 'agent_externe' ? 'Agent immobilier' : 'Annonceur'} · SE LOGER CM</div>
-          ${bio ? `<div class="agent-bio">${bio}</div>` : ''}
+          ${bio ? `<div class="agent-bio">${escapeHtml(bio)}</div>` : ''}
           ${zone ? `<div class="agent-zone"><i class="fas fa-map-marker-alt" style="color:var(--orange);margin-right:.3rem"></i>${zone}</div>` : ''}
           <div class="agent-contacts">${contactsHtml}</div>
           <!-- Partager ce profil -->
@@ -288,7 +294,7 @@ function renderProfile(profile, listings) {
     <!-- Listings -->
     <div class="wrap">
       <div class="section-bar">
-        <h2>Annonces de ${name.split(' ')[0]}</h2>
+        <h2>Annonces de ${escapeHtml(name.split(' ')[0])}</h2>
         <span>${listings.length} bien${listings.length > 1 ? 's' : ''} disponible${listings.length > 1 ? 's' : ''}</span>
       </div>
       <div class="listing-grid">${listingsHtml}</div>

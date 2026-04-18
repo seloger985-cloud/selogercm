@@ -212,7 +212,6 @@
       <div class="stat-card green"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">En ligne</div></div>
       <div class="stat-card red"><div class="stat-num" id="statExpired">0</div><div class="stat-lbl">Expirées</div></div>
       <div class="stat-card blue"><div class="stat-num" id="statDraft">0</div><div class="stat-lbl">Brouillons</div></div>
-      <div class="stat-card" style="border-left-color:#8b5cf6"><div class="stat-num" id="statVues" style="color:#8b5cf6">0</div><div class="stat-lbl">Vues totales</div></div>
     </div>
 
 
@@ -323,6 +322,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/supabase.js"></script>
 <script>
+
+    /* ── Sécurité XSS ── */
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+
   async function waitSB(ms=5000){const s=100;let e=0;while((!window.SLCM_DB||!window.SLCM_DB.client)&&e<ms){await new Promise(r=>setTimeout(r,s));e+=s;}return window.SLCM_DB?.client||null;}
   let _client=null,_user=null,_profile=null,_listings=[];
 
@@ -358,8 +367,8 @@
     document.getElementById('dashEmail').textContent=_user.email;
     document.getElementById('dashUserName').textContent=name;
     const avatar=document.getElementById('dashAvatar');
-    if(_profile.agent_photo)avatar.innerHTML=`<img src="${_profile.agent_photo}" alt="${name}">`;
-    else avatar.innerHTML=`<span>${name.charAt(0).toUpperCase()}</span>`;
+    if(_profile.agent_photo)avatar.innerHTML=`<img src="${_profile.agent_photo}" alt="${escapeHtml(name)}">`;
+    else avatar.innerHTML=`<span>${escapeHtml(name.charAt(0).toUpperCase())}</span>`;
 
     /* Pré-remplir les champs profil */
     document.getElementById('pfName').value  = _profile.name || '';
@@ -468,8 +477,6 @@
     document.getElementById('statActive').textContent=active.length;
     document.getElementById('statExpired').textContent=expired.length;
     document.getElementById('statDraft').textContent=drafts.length;
-    const totalVues = _listings.reduce((sum, l) => sum + (l.views || 0), 0);
-    document.getElementById('statVues').textContent = totalVues;
     renderListings(_listings);
   }
 
@@ -502,12 +509,6 @@
           <h3>${title}</h3>
           <div class="meta"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> ${[ad.district,ad.city].filter(Boolean).join(' · ')} · ${mode}</div>
           <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
-          <div style="display:flex;align-items:center;gap:.4rem;margin-top:4px;font-size:.75rem">
-            <i class="fas fa-eye" style="color:#ff7a00"></i>
-            <span style="font-weight:700;color:#555">${ad.views||0}</span>
-            <span style="color:#aaa">vue${(ad.views||0)>1?'s':''}</span>
-            ${(ad.views||0) >= 10 ? '<span style="background:#fff4e8;color:#ff7a00;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:800">🔥</span>' : ''}
-          </div>
         </div>
         <div class="card-actions">
           ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}

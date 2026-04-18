@@ -10,7 +10,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  <script>
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
@@ -197,7 +204,7 @@
             <a href="article.html?id=${r.id}" class="related-card">
               <div class="rc-cover">${SLCM_blog.getCategoryInfo(r.category).icon}</div>
               <div class="rc-body">
-                <div class="rc-title">${r.title}</div>
+                <div class="rc-title">${escapeHtml(r.title)}</div>
                 <div class="rc-date">${SLCM_blog.formatDate(r.date)}</div>
               </div>
             </a>
@@ -208,9 +215,9 @@
     area.innerHTML = `
       <div class="article-header">
         <span class="cat-pill" style="background:${cat.color}">${cat.icon} ${cat.label}</span>
-        <h1 class="article-title">${art.title}</h1>
+        <h1 class="article-title">${escapeHtml(art.title)}</h1>
         <div class="article-meta">
-          <span><i class="fas fa-user"></i> ${art.author || 'SE LOGER CM'}</span>
+          <span><i class="fas fa-user"></i> ${escapeHtml(art.author || 'SE LOGER CM')}</span>
           <span><i class="fas fa-calendar-alt"></i> ${SLCM_blog.formatDate(art.date)}</span>
           <span><i class="fas fa-clock"></i> ${SLCM_blog.readingTime(art.content)} de lecture</span>
         </div>

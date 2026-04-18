@@ -34,25 +34,6 @@
     .btn-primary{ background:var(--orange); color:#fff; font-weight:700; }
     .btn-ghost{ background:#fff; border:1px solid #ddd; }
 
-    /* ── KYC ── */
-    .kyc-card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); padding:1rem 1.2rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:8px; }
-    .kyc-avatar { width:48px; height:48px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:900; color:#888; flex-shrink:0; overflow:hidden; }
-    .kyc-avatar img { width:100%; height:100%; object-fit:cover; }
-    .kyc-info { flex:1; min-width:0; }
-    .kyc-info .name  { font-weight:800; font-size:.95rem; color:#111; }
-    .kyc-info .email { font-size:.78rem; color:#888; }
-    .kyc-info .meta  { font-size:.75rem; color:#aaa; margin-top:.2rem; }
-    .kyc-doc-link { font-size:.82rem; color:var(--orange); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-top:.3rem; }
-    .kyc-doc-link:hover { text-decoration:underline; }
-    .kyc-actions { display:flex; gap:8px; flex-shrink:0; }
-    .btn-approve { background:#e8f5e9; color:#2e7d32; border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
-    .btn-approve:hover { opacity:.82; }
-    .btn-reject  { background:#fee2e2; color:#c00;    border:none; border-radius:8px; padding:.5rem 1rem; font-family:inherit; font-size:.82rem; font-weight:800; cursor:pointer; transition:opacity .2s; }
-    .btn-reject:hover  { opacity:.82; }
-    .badge-pending  { background:#fff8e1; color:#f59e0b; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-    .badge-verified { background:#e8f5e9; color:#2e7d32; border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-    .badge-rejected { background:#fee2e2; color:#c00;    border-radius:999px; padding:.2rem .7rem; font-size:.72rem; font-weight:800; }
-
     .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     .stat{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.05); }
     .stat .k{ font-size:22px; font-weight:900; }
@@ -170,21 +151,6 @@
         <h2>All listings</h2>
         <div id="results" class="grid"></div>
         <div id="empty" class="empty" style="display:none">No listing matches your filters.</div>
-      </div>
-
-
-      <!-- ═══ KYC AGENTS ═══ -->
-      <div class="panel" style="margin-top:1.5rem;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
-          <h2 style="margin:0;">🪪 Vérification Agents (KYC)</h2>
-          <div style="display:flex;gap:8px;">
-            <button onclick="loadKyc('pending')"  id="kycTabPending"  style="padding:.4rem .9rem;border-radius:8px;border:none;background:#fff8e1;color:#f59e0b;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">⏳ En attente</button>
-            <button onclick="loadKyc('verified')" id="kycTabVerified" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">✅ Vérifiés</button>
-            <button onclick="loadKyc('rejected')" id="kycTabRejected" style="padding:.4rem .9rem;border-radius:8px;border:none;background:#f0f0f0;color:#666;font-family:inherit;font-weight:800;cursor:pointer;font-size:.82rem;">❌ Rejetés</button>
-          </div>
-        </div>
-        <div id="kycList"><div style="text-align:center;color:#aaa;padding:2rem;">Chargement…</div></div>
-        <div id="kycEmpty" style="display:none;text-align:center;color:#aaa;padding:2rem;">Aucun agent dans cette catégorie.</div>
       </div>
 
       <!-- ═══ BLOG MANAGEMENT ═══ -->
@@ -389,6 +355,13 @@
       }, { once: false });
     }
 
+
+    /* ── Sécurité XSS ── */
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function card(ad){
       const img = (ad.images && ad.images[0]) ? ad.images[0] : 'assets/img/no-image.png';
       const title = ad.title_en || ad.title_fr || 'Listing';
@@ -404,11 +377,11 @@
         <article class="card" data-id="${ad.id}">
           <div class="thumb">
             ${badge}
-            <img src="${img}" alt="${title}">
+            <img src="${img}" alt="${escapeHtml(title)}">
           </div>
           <div class="body">
-            <div class="title">${title}</div>
-            <div class="meta">${meta}</div>
+            <div class="title">${escapeHtml(title)}</div>
+            <div class="meta">${escapeHtml(meta)}</div>
             <div class="price">${fmt(ad.price)} FCFA</div>
             <div class="actions">
               <button class="b-outline toggle-premium">${ad.premium ? 'Remove Premium' : 'Make Premium'}</button>
@@ -661,87 +634,6 @@
     });
 
     await renderBlogList();
-
-
-    /* ═══ KYC MANAGEMENT ═══ */
-    let _kycCurrentFilter = 'pending';
-
-    async function loadKyc(status = 'pending') {
-      _kycCurrentFilter = status;
-
-      /* Highlight tab actif */
-      ['pending','verified','rejected'].forEach(s => {
-        const btn = document.getElementById('kycTab' + s.charAt(0).toUpperCase() + s.slice(1));
-        if (!btn) return;
-        if (s === status) {
-          btn.style.background = s === 'pending' ? '#fff8e1' : s === 'verified' ? '#e8f5e9' : '#fee2e2';
-          btn.style.color = s === 'pending' ? '#f59e0b' : s === 'verified' ? '#2e7d32' : '#c00';
-        } else {
-          btn.style.background = '#f0f0f0';
-          btn.style.color = '#666';
-        }
-      });
-
-      const list  = document.getElementById('kycList');
-      const empty = document.getElementById('kycEmpty');
-      list.innerHTML = '<div style="text-align:center;color:#aaa;padding:2rem"><i class="fas fa-spinner fa-spin"></i></div>';
-      empty.style.display = 'none';
-
-      const client = window.SLCM_DB?.client;
-      if (!client) return;
-
-      const { data: agents, error } = await client
-        .from('profiles')
-        .select('id, name, phone, agent_bio, zone, kyc_status, kyc_doc_url, created_at')
-        .eq('role', 'agent_externe')
-        .eq('kyc_status', status)
-        .order('created_at', { ascending: false });
-
-      if (error) { list.innerHTML = '<p style="color:#c00">Erreur : ' + error.message + '</p>'; return; }
-      if (!agents || !agents.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-
-      list.innerHTML = '';
-      agents.forEach(agent => {
-        const card = document.createElement('div');
-        card.className = 'kyc-card';
-        const initials = (agent.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        const badgeClass = { pending: 'badge-pending', verified: 'badge-verified', rejected: 'badge-rejected' }[agent.kyc_status] || '';
-        const badgeLabel = { pending: '⏳ En attente', verified: '✅ Vérifié', rejected: '❌ Rejeté' }[agent.kyc_status] || '';
-        const docLink = agent.kyc_doc_url
-          ? `<a href="${agent.kyc_doc_url}" target="_blank" class="kyc-doc-link"><i class="fas fa-id-card"></i> Voir la CNI</a>`
-          : '<span style="font-size:.78rem;color:#bbb">Aucun document</span>';
-
-        card.innerHTML = `
-          <div class="kyc-avatar">${initials}</div>
-          <div class="kyc-info">
-            <div class="name">${agent.name || '—'} <span class="${badgeClass}">${badgeLabel}</span></div>
-            <div class="email">${agent.phone || 'Pas de téléphone'}</div>
-            <div class="meta">${agent.zone || 'Zone non renseignée'} · Inscrit le ${new Date(agent.created_at).toLocaleDateString('fr-FR')}</div>
-            <div>${docLink}</div>
-          </div>
-          <div class="kyc-actions">
-            ${status !== 'verified' ? `<button class="btn-approve" onclick="updateKyc('${agent.id}', 'verified')">✅ Approuver</button>` : ''}
-            ${status !== 'rejected' ? `<button class="btn-reject"  onclick="updateKyc('${agent.id}', 'rejected')">❌ Rejeter</button>`  : ''}
-          </div>`;
-        list.appendChild(card);
-      });
-    }
-
-    async function updateKyc(agentId, newStatus) {
-      const labels = { verified: 'approuver', rejected: 'rejeter' };
-      if (!confirm('Voulez-vous ' + (labels[newStatus] || newStatus) + ' cet agent ?')) return;
-      const client = window.SLCM_DB?.client;
-      if (!client) return;
-      const updates = { kyc_status: newStatus };
-      if (newStatus === 'verified') updates.verified_at = new Date().toISOString();
-      const { error } = await client.from('profiles').update(updates).eq('id', agentId);
-      if (error) { alert('Erreur : ' + error.message); return; }
-      loadKyc(_kycCurrentFilter);
-    }
-
-    /* Charger KYC au démarrage */
-    loadKyc('pending');
-
   });
   </script>
 </body>
