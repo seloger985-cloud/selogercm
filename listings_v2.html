@@ -121,6 +121,10 @@
         </div>
         <div class="search-btn-cell">
           <button class="btn-primary" type="submit">Rechercher</button>
+          <button type="button" id="shareSearchBtn" onclick="shareSearch()"
+            style="background:#f0f0f0;color:#555;border:none;padding:.6rem 1rem;border-radius:10px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;white-space:nowrap">
+            <i class="fas fa-share-alt"></i> <span id="shareLabel">Partager</span>
+          </button>
         </div>
       </div>
     </form>
@@ -146,6 +150,15 @@
   <script src="assets/js/favorites.js" defer></script>
   <script src="assets/js/chatbot.js" defer></script>
   <script>
+  function shareSearch() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      const label = document.getElementById('shareLabel');
+      label.textContent = 'Copié !';
+      setTimeout(() => { label.textContent = 'Partager'; }, 2000);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const grid  = document.getElementById('resultsGrid');
     const empty = document.getElementById('emptyState');
@@ -281,14 +294,25 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      await loadAndRender({
+      const filters = {
         mode:     document.querySelector('.seg-btn.active')?.dataset.mode || 'rent',
         city:     citySel.value,
         district: distSel.value,
         type:     document.getElementById('type').value,
         bedrooms: document.getElementById('bedrooms').value,
         price:    document.getElementById('price').value,
+      };
+
+      /* ── Encoder les filtres dans l'URL pour partage WhatsApp ── */
+      const url = new URL(window.location);
+      url.searchParams.delete('page');
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v) url.searchParams.set(k, v);
+        else url.searchParams.delete(k);
       });
+      window.history.pushState({}, '', url);
+
+      await loadAndRender(filters);
     });
 
     /* Chargement initial */
