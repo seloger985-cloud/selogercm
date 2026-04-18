@@ -1,6 +1,6 @@
 # URLs propres → fichiers HTML
 /annonces          /listings_v2.html     200
-/annonce/:id       /listing_detail.html  200
+/annonce           /listing_detail.html  200
 /publier           /publish.html         200
 /blog              /blog.html            200
 /tarifs            /pricing.html         200
@@ -16,6 +16,12 @@
 /favoris           /favorites.html       200
 /reset-password    /reset-password.html  200
 /profil-agent      /profil-agent.html    200
+
+# Pages légales
+/mentions-legales  /mentions-legales.html  200
+/confidentialite   /confidentialite.html   200
+/cgu               /cgu.html               200
+/cookies           /cookies.html           200
 
 # Redirection index
 /index.html        /                     301

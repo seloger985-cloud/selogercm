@@ -109,6 +109,8 @@
     },
     legal:   { fr: 'Mentions légales', en: 'Legal notice' },
     privacy: { fr: 'Confidentialité',  en: 'Privacy'      },
+    cgu:     { fr: 'CGU',              en: 'Terms'        },
+    cookies: { fr: 'Cookies',          en: 'Cookies'      },
   };
 
   function buildFooter() {
@@ -141,8 +143,10 @@
         <div class="footer-bottom">
           <p class="footer-copy">${C.copyright[lang](year)}</p>
           <div class="footer-legal">
-            <a href="#">${C.legal[lang]}</a>
-            <a href="#">${C.privacy[lang]}</a>
+            <a href="/mentions-legales">${C.legal[lang]}</a>
+            <a href="/confidentialite">${C.privacy[lang]}</a>
+            <a href="/cgu">${C.cgu[lang]}</a>
+            <a href="/cookies">${C.cookies[lang]}</a>
           </div>
         </div>
       </div>
