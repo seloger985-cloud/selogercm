@@ -573,5 +573,6 @@
   let _toastTimer;
   function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
 </script>
+<script src="assets/js/cookies.js" defer></script>
 </body>
 </html>
