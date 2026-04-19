@@ -25,16 +25,30 @@
     banner.innerHTML = `
       <style>
         #urgencyBanner {
-          background: linear-gradient(90deg, #ff7a00, #ff9633);
+          background: linear-gradient(90deg, #ff7a00 0%, #ff9633 100%);
           color: #fff;
-          padding: .75rem 1rem;
+          padding: 1.1rem 1rem;
           overflow: hidden;
           position: absolute;
           bottom: 0; left: 0; right: 0;
           z-index: 5;
-          box-shadow: 0 -4px 12px rgba(0,0,0,.1);
+          box-shadow: 0 -8px 24px rgba(255,122,0,.25);
+          border-top: 2px solid rgba(255,255,255,.15);
         }
         section.hero { position: relative; }
+        #urgencyBanner .ub-track {
+          font-size: .92rem !important;
+          gap: 2.5rem !important;
+        }
+        #urgencyBanner .ub-num {
+          font-size: 1.15rem !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,.15);
+        }
+        @media (max-width: 600px) {
+          #urgencyBanner { padding: .85rem .75rem; }
+          #urgencyBanner .ub-track { gap: 1.2rem !important; font-size: .8rem !important; }
+          #urgencyBanner .ub-num { font-size: .95rem !important; }
+        }
         #urgencyBanner .ub-track {
           display: flex; align-items: center; justify-content: center;
           gap: 2.5rem; flex-wrap: wrap;
@@ -246,10 +260,29 @@
     partnerSection.parentNode.insertBefore(cta, partnerSection);
   }
 
+
+  /* ══════════════════════════════════════
+     OVERRIDE — Forcer 3 colonnes dès 768px
+     pour montrer plus d'annonces à l'écran
+  ══════════════════════════════════════ */
+  function forceThreeColumnsOnGrids() {
+    const style = document.createElement('style');
+    style.id = 'slcm-grid3-override';
+    style.textContent = `
+      @media (min-width: 768px) {
+        section.section-soft .grid.grid-3 {
+          grid-template-columns: repeat(3, 1fr) !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   /* ══════════════════════════════════════
      INIT
   ══════════════════════════════════════ */
   function init() {
+    forceThreeColumnsOnGrids();
     buildUrgencyBanner();
     buildPublishCTA();
     setupScrollAnimations();
