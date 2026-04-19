@@ -180,7 +180,7 @@ const SLCM_listings = (() => {
 
     return `
       <div class="listing-card" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s">
-        <a href="/annonce?id=${listing.id}" style="text-decoration:none;color:inherit;display:block">
+        <a href="/annonce/${listing.slug || listing.id}" style="text-decoration:none;color:inherit;display:block">
           <div style="position:relative;height:240px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
             ${badge}

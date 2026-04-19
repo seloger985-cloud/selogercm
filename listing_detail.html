@@ -510,6 +510,9 @@
        LIRE L'ID DEPUIS L'URL + CHARGER SUPABASE
     ══════════════════════════════════════ */
     const params      = new URLSearchParams(window.location.search);
+    /* Support URL SEO: /annonce/douala-bonapriso-xxx OU /annonce?id=uuid */
+    const pathParts   = window.location.pathname.split('/').filter(Boolean);
+    const urlSlug     = pathParts[0] === 'annonce' && pathParts[1] ? pathParts[1] : null;
     const adId        = params.get('id');
     const pageContent = document.getElementById('pageContent');
 
@@ -528,7 +531,7 @@
     }
 
     async function loadAndRender() {
-      if (!adId) { showError("Identifiant d'annonce manquant."); return; }
+      if (!adId && !urlSlug) { showError("Identifiant d'annonce manquant."); return; }
 
       let tries = 0;
       while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 30) {
@@ -538,24 +541,39 @@
 
       if (!window.SLCM_listings) { showError("Erreur de chargement des scripts."); return; }
 
-      const ad = await SLCM_listings.getListingById(adId);
+      /* Chercher par slug (priorité) ou par id */
+      let ad = null;
+      if (urlSlug) {
+        const { data } = await window.SLCM_DB.client
+          .from('listings').select('*')
+          .eq('slug', urlSlug).eq('status', 'active').single();
+        ad = data;
+      }
+      if (!ad && adId) {
+        ad = await SLCM_listings.getListingById(adId);
+      }
       if (!ad) { showError("Cette annonce n'existe pas ou a été supprimée."); return; }
+
+      /* Redirection SEO: si on est arrivé via ?id=uuid mais l'annonce a un slug, rediriger */
+      if (adId && !urlSlug && ad.slug) {
+        window.history.replaceState({}, '', `/annonce/${ad.slug}`);
+      }
 
       normalizeAd(ad);
       window._currentAdOwnerId = ad.owner_id || null; /* Pour la modale agent */
 
       /* ── Incrémenter le compteur de vues (1 fois par session) ── */
-      const viewKey = 'slcm_viewed_' + adId;
+      const viewKey = 'slcm_viewed_' + ad.id;
       if (!sessionStorage.getItem(viewKey)) {
         sessionStorage.setItem(viewKey, '1');
         try {
-          await window.SLCM_DB.client.rpc('increment_views', { listing_id: adId });
+          await window.SLCM_DB.client.rpc('increment_views', { listing_id: ad.id });
         } catch(e) {
           /* Fallback direct si RPC non disponible */
           const currentViews = ad.views || 0;
           window.SLCM_DB.client.from('listings')
             .update({ views: currentViews + 1 })
-            .eq('id', adId);
+            .eq('id', ad.id);
         }
       }
 
@@ -567,7 +585,7 @@
       const adPrice    = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
       const adMode     = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
       const adImg      = (ad.images && ad.images[0]) || 'https://www.selogercm.com/assets/img/og-cover.jpg';
-      const adUrl      = `https://www.selogercm.com/annonce?id=${ad.id}`;
+      const adUrl      = `https://www.selogercm.com/annonce/${ad.slug || ad.id}`;
       const adDesc     = `${adTitle} — ${adCity} — ${adPrice} ${adMode}. ${ad.description ? ad.description.slice(0, 120) + '…' : 'Annonce immobilière vérifiée par SE LOGER CM.'}`;
 
       /* Title */
@@ -883,8 +901,8 @@
         const mode    = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';
         const location = [ad.district, ad.city].filter(Boolean).join(', ');
         const ref     = ad.ref || (ad.id ? ad.id.substring(0, 8).toUpperCase() : '');
-        const listingUrl  = `https://selogercm.com/annonce?id=${ad.id}`;
-        const listingShare = `https://selogercm.com/share?id=${ad.id}`; /* URL pour partage social avec OG tags */
+        const listingUrl  = `https://selogercm.com/annonce/${ad.slug || ad.id}`;
+        const listingShare = `https://selogercm.com/annonce/${ad.slug || ad.id}`; /* URL SEO pour partage social */
         window._currentListingUrl = listingUrl;
         window._currentListingTitle = title;
 
@@ -1303,6 +1321,5 @@
   <script src="assets/js/footer.js" defer></script>
   <script src="assets/js/nav.js" defer></script>
   <script src="assets/js/favorites.js" defer></script>
-  <script src="assets/js/cookies.js" defer></script>
 </body>
 </html>

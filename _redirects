@@ -1,5 +1,6 @@
 # URLs propres → fichiers HTML
 /annonces          /listings_v2.html     200
+/annonce/:slug     /listing_detail.html  200
 /annonce           /listing_detail.html  200
 /publier           /publish.html         200
 /blog              /blog.html            200
