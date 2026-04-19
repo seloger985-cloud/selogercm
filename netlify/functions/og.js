@@ -39,9 +39,13 @@ function fmtPrice(n, mode) {
 exports.handler = async function(event) {
   const userAgent = event.headers['user-agent'] || '';
   
-  /* Récupérer le slug depuis le path */
+  /* Récupérer le slug depuis le path /share/:slug OU query ?slug= */
   const pathMatch = event.path.match(/\/share\/([^/?]+)/);
-  const slug = pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+  const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
+  const slug = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
+
+  /* Log pour debug Netlify */
+  console.log('og.js — path:', event.path, '| slug:', slug, '| UA:', userAgent.slice(0, 80));
 
   /* Pas de slug → redirection vers /annonces */
   if (!slug) {

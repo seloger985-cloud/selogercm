@@ -18,9 +18,9 @@
 /reset-password    /reset-password.html  200
 /profil-agent      /profil-agent.html    200
 
-# OG tags pour partage social (Facebook, WhatsApp, LinkedIn…)
-/share/:slug       /.netlify/functions/og  200
-/share             /.netlify/functions/og  200
+# OG tags pour partage social — passer le slug en query string à la fonction
+/share/:slug       /.netlify/functions/og?slug=:slug  200
+/share             /.netlify/functions/og             200
 
 # Pages légales
 /mentions-legales  /mentions-legales.html  200
