@@ -200,7 +200,7 @@ Format de réponse OBLIGATOIRE — tu dois TOUJOURS répondre avec ce JSON et ri
   "message": "message convivial en français pour l'utilisateur (max 2 phrases)",
   "filters": {
     "mode": "rent" ou "sale" ou null,
-    "type": "apartment" | "house" | "studio" | "villa" | "duplex" | "warehouse" | "commercial" | "plots-of-land" | null,
+    "type": "apartment" | "house" | "studio" | "villa" | "duplex" | null,
     "city": "Douala" | "Yaoundé" | "Bafoussam" | null,
     "district": "nom du quartier" ou null,
     "bedrooms": "1" | "2" | "3" | "4" | null,
@@ -211,9 +211,8 @@ Format de réponse OBLIGATOIRE — tu dois TOUJOURS répondre avec ce JSON et ri
   "needsMoreInfo": true si tu as besoin de plus d'infos, false sinon
 }
 
-Quartiers de Douala : Bonapriso, Akwa, Bali, Bonanjo, Deïdo, Bonamoussadi, Makepe, Kotto, Logpom, Ndogbong, PK8, Ndogpassi, Ndokoti, Yassa, Bonadiwoto, Bonaberi, Bessengue.
+Quartiers de Douala : Bonapriso, Akwa, Bali, Bonanjo, Deïdo, Bonamoussadi, Makepe, Kotto, Logpom, Logbessou, Bessengue, Ndogbong, PK8, Ndogpassi, Ndokoti.
 Quartiers de Yaoundé : Bastos, Nlongkak, Etoudi, Elig-Edzoa, Centre Ville, Melen.
-Types commerciaux : warehouse (entrepôt), commercial (local commercial/boutique/bureau), plots-of-land (terrain).
 Ne réponds JAMAIS en dehors du format JSON.`;
 
   /* ─── State ─── */
@@ -244,18 +243,16 @@ Ne réponds JAMAIS en dehors du format JSON.`;
   async function filterListings(filters) {
     const listings = await getListings();
     return listings.filter(ad => {
-      /* rent_sale — Supabase retourne snake_case */
-      if (filters.mode && ad.rent_sale !== filters.mode) return false;
+      if (filters.mode && ad.rentSale !== filters.mode) return false;
       if (filters.type && ad.type !== filters.type) return false;
-      if (filters.city && ad.city?.toLowerCase() !== filters.city?.toLowerCase()) return false;
-      if (filters.district && ad.district?.toLowerCase() !== filters.district?.toLowerCase()) return false;
-      /* bedrooms est stocké en text en DB — comparer en string */
-      if (filters.bedrooms && String(ad.bedrooms) !== String(filters.bedrooms)) return false;
+      if (filters.city && ad.city !== filters.city) return false;
+      if (filters.district && ad.district !== filters.district) return false;
+      if (filters.bedrooms && ad.bedrooms !== filters.bedrooms) return false;
       if (filters.maxPrice && ad.price > filters.maxPrice) return false;
       if (filters.minPrice && ad.price < filters.minPrice) return false;
       if (filters.furnished !== null && filters.furnished !== undefined && ad.furnished !== filters.furnished) return false;
       return true;
-    }).slice(0, 3);
+    }).slice(0, 3); // max 3 résultats dans le chat
   }
 
   /* ─── Construire le DOM ─── */
@@ -422,7 +419,7 @@ Ne réponds JAMAIS en dehors du format JSON.`;
     const queryStr = buildQueryString(filters);
     const seeAll = document.createElement('div');
     seeAll.className = 'msg bot';
-    seeAll.innerHTML = `<a href="/annonces${queryStr}" style="color:var(--orange);font-weight:700;">→ Voir toutes les annonces correspondantes</a>`;
+    seeAll.innerHTML = `<a href="listings_v2.html${queryStr}" style="color:var(--orange);font-weight:700;">→ Voir toutes les annonces correspondantes</a>`;
     body.appendChild(seeAll);
 
     body.scrollTop = body.scrollHeight;

@@ -10,7 +10,7 @@ const SLCM_CONFIG = {
     'Douala': [
       'Bonapriso', 'Akwa', 'Bali', 'Bonanjo', 'Deïdo', 'Bonamoussadi',
       'Makepe', 'Kotto', 'Logpom', 'Ndogbong', 'PK8', 'Ndogpassi', 'Ndokoti',
-      'Cité des Palmiers', 'Bepanda', 'Yassa', 'Bonadiwoto (Grand Mall)', 'Bonaberi', 'Bessengue'
+      'Cité des Palmiers', 'Bepanda', 'Logbessou', 'Bessengue'
     ],
     'Yaoundé': [
       'Bastos', 'Nlongkak', 'Etoudi', 'Elig-Edzoa', 'Centre Ville', 'Melen',
@@ -73,6 +73,8 @@ const SLCM_CONFIG = {
     'PK8':          [4.0100, 9.7850],
     'Ndogpassi':    [4.0300, 9.7700],
     'Ndokoti':      [4.0450, 9.7250],
+    'Logbessou':    [4.0870, 9.7780],
+    'Bessengue':    [4.0620, 9.6970],
     'Bastos':       [3.8800, 11.5160],
     'Nlongkak':     [3.8720, 11.5080],
     'Etoudi':       [3.9010, 11.5240],
