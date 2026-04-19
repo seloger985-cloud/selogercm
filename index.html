@@ -75,19 +75,10 @@
     .listing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.12); }
     .listing-badge { position:absolute; top:10px; left:10px; background:#111; color:#fff; border-radius:999px; padding:.25rem .65rem; font-size:.75rem; font-weight:800; }
     .listing-badge.premium { background: #ff7a00; }
-    #unfurnishedGrid, #furnishedGrid,
-    #commercialRentGrid, #villasGrid,
-    #terrainsGrid, #commercialSaleGrid {
+    #unfurnishedGrid, #furnishedGrid {
       display: grid !important;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
       gap: 1.2rem !important;
-    }
-    /* Limiter la largeur si peu d'annonces pour éviter les cards trop larges */
-    #commercialRentGrid:has(.listing-card:only-child),
-    #villasGrid:has(.listing-card:only-child),
-    #terrainsGrid:has(.listing-card:only-child),
-    #commercialSaleGrid:has(.listing-card:only-child) {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 340px)) !important;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
@@ -420,38 +411,16 @@
       await new Promise(r => setTimeout(r, 100)); tries++;
     }
 
-   /* ══════════════════════════════════════════
-      ROTATION PREMIUM — seed toutes les 30 min
-      Même seed = même affichage pour tous les
-      visiteurs au même créneau de 30 minutes.
-   ══════════════════════════════════════════ */
-   function rotatePremium(listings, max = 3) {
-     if (listings.length <= max) return listings;
-     /* Seed basé sur le créneau de 30 minutes actuel */
-     const seed  = Math.floor(Date.now() / (30 * 60 * 1000));
-     /* Shuffle déterministe avec le seed */
-     const arr   = [...listings];
-     for (let i = arr.length - 1; i > 0; i--) {
-       const j = (seed * 1664525 + i * 1013904223) % (i + 1);
-       [arr[i], arr[j]] = [arr[j], arr[i]];
-     }
-     return arr.slice(0, max);
-   }
+   /* ── Charger annonces LOCATION ── */
+let unfurnished = await SLCM_listings.getPremiumListings(false, 6);
+let furnished   = await SLCM_listings.getPremiumListings(true, 6);
 
-   /* ── Charger annonces LOCATION — premium d'abord, sinon les plus récentes ── */
-let unfurnishedAll = await SLCM_listings.getPremiumListings(false, 50); // charge 50, affiche 6
-let furnishedAll   = await SLCM_listings.getPremiumListings(true, 50);
-
-/* Rotation sur les premium, fallback si vide */
-let unfurnished = rotatePremium(unfurnishedAll, 6);
-let furnished   = rotatePremium(furnishedAll);
-
+/* Fallback indépendant si pas assez de premium */
 if (!unfurnished.length || !furnished.length) {
   const allRent = await SLCM_listings.getListings({ mode: 'rent' });
-  const residential = allRent.filter(l => ['apartment','house','studio','villa','duplex','residence'].includes(l.type));
-  if (!unfurnished.length) unfurnished = residential.filter(l => !l.furnished).slice(0, 6);
-  if (!furnished.length)   furnished   = residential.filter(l =>  l.furnished).slice(0, 3);
-  if (!unfurnished.length) unfurnished = residential.slice(0, 3);
+  if (!unfurnished.length) unfurnished = allRent.filter(l => !l.furnished).slice(0, 6);
+  if (!furnished.length)   furnished   = allRent.filter(l =>  l.furnished).slice(0, 6);
+  if (!unfurnished.length) unfurnished = allRent.slice(0, 6);
 }
 
     /* ── Charger annonces VENTE premium ── */
@@ -462,56 +431,56 @@ if (!unfurnished.length || !furnished.length) {
       }
       const client = window.SLCM_DB.client;
 
-      /* Villas & Maisons — premium d'abord avec rotation, sinon les plus récentes */
-      const { data: villasP } = await client
-        .from('listings').select('*')
-        .eq('status', 'active').eq('premium', true).eq('rent_sale', 'sale')
+      /* Villas & Maisons */
+      const { data: villasData } = await client
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .eq('premium', true)
+        .eq('rent_sale', 'sale')
         .in('type', ['villa', 'house', 'duplex'])
-        .order('created_at', { ascending: false }).limit(50);
+        .order('created_at', { ascending: false })
+        .limit(6);
 
-      let villasData = rotatePremium(villasP || []);
-      if (!villasData.length) {
-        const { data: villasAll } = await client
-          .from('listings').select('*')
-          .eq('status', 'active').eq('rent_sale', 'sale')
-          .in('type', ['villa', 'house', 'duplex'])
-          .order('created_at', { ascending: false }).limit(3);
-        villasData = villasAll || [];
-      }
-
-      /* Terrains — premium d'abord avec rotation, sinon les plus récents */
-      const { data: terrainsP } = await client
-        .from('listings').select('*')
-        .eq('status', 'active').eq('premium', true).eq('rent_sale', 'sale')
+      /* Terrains & Plots */
+      const { data: terrainsData } = await client
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .eq('premium', true)
+        .eq('rent_sale', 'sale')
         .in('type', ['plots-of-land'])
-        .order('created_at', { ascending: false }).limit(50);
+        .order('created_at', { ascending: false })
+        .limit(6);
 
-      let terrainsData = rotatePremium(terrainsP || [], 6);
-      if (!terrainsData.length) {
-        const { data: terrainsAll } = await client
-          .from('listings').select('*')
-          .eq('status', 'active').eq('rent_sale', 'sale')
-          .in('type', ['plots-of-land'])
-          .order('created_at', { ascending: false }).limit(6);
-        terrainsData = terrainsAll || [];
-      }
-
-      /* Fonds de Commerce — premium avec rotation */
-      const { data: commercialSaleRaw } = await client
+      /* Fonds de Commerce (vente) */
+      const { data: commercialSaleData } = await client
         .from('listings')
         .select('*')
         .eq('status', 'active')
         .eq('rent_sale', 'sale')
-        .eq('premium', true)
         .in('type', ['commercial', 'warehouse', 'shop'])
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(6);
 
-      const commercialSaleData = rotatePremium(commercialSaleRaw || []);
+      /* Fallback vente si pas de premium */
+      let villas = villasData || [];
+      let terrains = terrainsData || [];
+      let commercialSale = commercialSaleData || [];
 
-      const villas        = villasData   || [];
-      const terrains      = terrainsData || [];
-      const commercialSale = commercialSaleData || [];
+      if (!villas.length && !terrains.length) {
+        const { data: allSale } = await client
+          .from('listings')
+          .select('*')
+          .eq('status', 'active')
+          .eq('rent_sale', 'sale')
+          .order('created_at', { ascending: false })
+          .limit(12);
+        const all = allSale || [];
+        villas   = all.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 6);
+        terrains = all.filter(l => l.type === 'plots-of-land').slice(0, 6);
+        if (!terrains.length) terrains = all.slice(6, 12);
+      }
 
       return { villas, terrains, commercialSale };
     }
@@ -527,28 +496,23 @@ if (!unfurnished.length || !furnished.length) {
         : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
     }
 
-    /* ── Locaux commerciaux à louer — premium d'abord, sinon les plus récents ── */
+    /* ── Locaux commerciaux à louer ── */
     let triesC = 0;
     while ((!window.SLCM_DB || !window.SLCM_DB.client) && triesC < 30) {
       await new Promise(r => setTimeout(r, 100)); triesC++;
     }
-    const commClient = window.SLCM_DB.client;
-
-    const { data: commRentRaw } = await commClient
+    const { data: commercialRentData } = await window.SLCM_DB.client
       .from('listings')
       .select('*')
       .eq('status', 'active')
       .eq('rent_sale', 'rent')
-      .eq('premium', true)
       .in('type', ['commercial', 'warehouse', 'shop'])
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(6);
 
-    let commRent = rotatePremium(commRentRaw || []);
-
-    /* Fallback : si aucun commercial premium, ne rien afficher */
     const commercialRentGrid = document.getElementById('commercialRentGrid');
     if (commercialRentGrid) {
+      const commRent = commercialRentData || [];
       commercialRentGrid.innerHTML = commRent.length
         ? commRent.map(l => SLCM_listings.renderCard(l)).join('')
         : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
@@ -789,6 +753,7 @@ form.addEventListener('submit', async (e) => {
   </script>
   <script src="assets/js/footer.js" defer></script>
   <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/homepage-boost.js" defer></script>
   <script src="assets/js/favorites.js" defer></script>
   <script src="assets/js/chatbot.js" defer></script>
   <script src="assets/js/testimonials.js" defer></script>
@@ -848,6 +813,5 @@ form.addEventListener('submit', async (e) => {
     "hasMap": "https://maps.google.com/?q=Bonamoussadi+Douala+Cameroun"
   }
   </script>
-  <script src="assets/js/cookies.js" defer></script>
 </body>
 </html>
