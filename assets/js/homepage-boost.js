@@ -19,6 +19,7 @@
     const hero = document.querySelector('.hero');
     if (!hero || document.getElementById('urgencyBanner')) return;
 
+    /* Position absolute en bas du hero pour rester visible avec scroll-snap */
     const banner = document.createElement('div');
     banner.id = 'urgencyBanner';
     banner.innerHTML = `
@@ -26,10 +27,14 @@
         #urgencyBanner {
           background: linear-gradient(90deg, #ff7a00, #ff9633);
           color: #fff;
-          padding: .9rem 1rem;
+          padding: .75rem 1rem;
           overflow: hidden;
-          position: relative;
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          z-index: 5;
+          box-shadow: 0 -4px 12px rgba(0,0,0,.1);
         }
+        section.hero { position: relative; }
         #urgencyBanner .ub-track {
           display: flex; align-items: center; justify-content: center;
           gap: 2.5rem; flex-wrap: wrap;
@@ -55,7 +60,9 @@
         <span class="ub-item">⚡ Publication en 3 minutes</span>
       </div>
     `;
-    hero.parentNode.insertBefore(banner, hero.nextSibling);
+    /* S'assurer que le hero est position:relative pour position:absolute du banner */
+    hero.style.position = 'relative';
+    hero.appendChild(banner);
 
     /* Compter les annonces depuis Supabase */
     fetchStats();
