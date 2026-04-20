@@ -1,17 +1,11 @@
 /**
  * Netlify Function — og.js
- * Sert toujours du HTML avec les bonnes balises Open Graph.
- * 
- * URL : /share/:slug (route via _redirects vers /.netlify/functions/og?slug=:slug)
- * 
- * - Bots sociaux (Facebook, WhatsApp...) : lisent les balises OG ✅
- * - Humains : meta refresh + lien cliquable vers la vraie annonce ✅
+ * Sert du HTML avec les bonnes balises Open Graph pour le partage social.
  */
 
-const SUPABASE_URL  = 'https://hozlyddiqodvjguqywty.supabase.co';
-const SUPABASE_ANON = process.env.SB_PUBLIC_KEY;
-const SITE_URL      = 'https://www.selogercm.com';
-const DEFAULT_IMG   = 'https://www.selogercm.com/assets/img/og-cover.jpg';
+const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
+const SITE_URL     = 'https://www.selogercm.com';
+const DEFAULT_IMG  = 'https://www.selogercm.com/assets/img/og-cover.jpg';
 
 function escapeHtml(str) {
   return String(str || '')
@@ -27,46 +21,53 @@ function fmtPrice(n, mode) {
 }
 
 exports.handler = async function(event) {
-  /* Vérifier que la clé Supabase est bien configurée */
-  if (!SUPABASE_ANON) {
-    console.error('og.js — SB_PUBLIC_KEY not set in Netlify env vars');
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'text/html' },
-      body: '<h1>Configuration manquante</h1><p>SB_PUBLIC_KEY doit être définie.</p>',
-    };
+  const SB_KEY = process.env.SB_ANON_KEY;
+
+  /* Slug depuis /share/:slug OU ?slug= */
+  const pathMatch = event.path.match(/\/share\/([^/?]+)/);
+  const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
+  const slug      = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
+
+  console.log('og.js start — path:', event.path, '| slug:', slug, '| has_key:', !!SB_KEY);
+
+  if (!SB_KEY) {
+    console.error('og.js — SB_ANON_KEY missing');
+    return htmlResponse(genericHtml(SITE_URL));
   }
 
-  /* Récupérer le slug depuis le path /share/:slug OU query ?slug= */
-  const pathMatch  = event.path.match(/\/share\/([^/?]+)/);
-  const querySlug  = event.queryStringParameters && event.queryStringParameters.slug;
-  const slug       = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
-
-  console.log('og.js — path:', event.path, '| slug:', slug);
-
-  /* Pas de slug → page de fallback */
   if (!slug) {
     return htmlResponse(genericHtml(SITE_URL + '/annonces'));
   }
 
   const targetUrl = `${SITE_URL}/annonce/${slug}`;
 
-  /* Chercher l'annonce dans Supabase par slug */
   try {
     const apiUrl = `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}&select=title,description,price,rent_sale,city,district,type,images,ref&limit=1`;
-    
+
+    console.log('og.js — fetching:', apiUrl);
+
     const res = await fetch(apiUrl, {
       headers: {
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Accept': 'application/json',
       }
     });
 
-    const data = await res.json();
-    const ad   = data && data[0];
+    console.log('og.js — Supabase status:', res.status);
 
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('og.js — Supabase error:', res.status, errText.slice(0, 200));
+      return htmlResponse(genericHtml(targetUrl));
+    }
+
+    const data = await res.json();
+    console.log('og.js — results:', data.length);
+
+    const ad = data && data[0];
     if (!ad) {
-      console.log('og.js — annonce introuvable pour slug:', slug);
+      console.log('og.js — no listing for slug:', slug);
       return htmlResponse(genericHtml(targetUrl));
     }
 
@@ -78,10 +79,12 @@ exports.handler = async function(event) {
     const desc     = escapeHtml(`${price} · ${location} · ${descSrc}`);
     const img      = (ad.images && ad.images[0]) || DEFAULT_IMG;
 
+    console.log('og.js — returning OG for:', title);
+
     return htmlResponse(buildHtml({ title, desc, img, url: targetUrl }));
 
   } catch (err) {
-    console.error('og.js error:', err);
+    console.error('og.js — EXCEPTION:', err.message, err.stack);
     return htmlResponse(genericHtml(targetUrl));
   }
 };
