@@ -124,7 +124,6 @@ function buildHtml({ title, desc, img, url }) {
   <meta name="twitter:image"       content="${escapeHtml(img)}">
 
   <link rel="canonical" href="${escapeHtml(url)}">
-  <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}">
 
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; max-width:600px; margin:80px auto; padding:0 20px; text-align:center; color:#333; }
