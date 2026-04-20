@@ -211,7 +211,7 @@ Format de réponse OBLIGATOIRE — tu dois TOUJOURS répondre avec ce JSON et ri
   "needsMoreInfo": true si tu as besoin de plus d'infos, false sinon
 }
 
-Quartiers de Douala : Bonapriso, Akwa, Bali, Bonanjo, Deïdo, Bonamoussadi, Makepe, Kotto, Logpom, Logbessou, Bessengue, Ndogbong, PK8, Ndogpassi, Ndokoti.
+Quartiers de Douala : Akwa, Bali, Béedi, Bepanda, Bessengue, Bonamoussadi, Bonanjo, Bonapriso, Cité des Palmiers, Deïdo, Kotto, Logbessou, Logpom, Makepe, Ndogbong, Ndogpassi, Ndokoti, PK8, PK9, PK10, PK11, PK12, PK13, PK14.
 Quartiers de Yaoundé : Bastos, Nlongkak, Etoudi, Elig-Edzoa, Centre Ville, Melen.
 Ne réponds JAMAIS en dehors du format JSON.`;
 

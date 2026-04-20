@@ -8,16 +8,17 @@ const SLCM_CONFIG = {
 
   cities: {
     'Douala': [
-      'Bonapriso', 'Akwa', 'Bali', 'Bonanjo', 'Deïdo', 'Bonamoussadi',
-      'Makepe', 'Kotto', 'Logpom', 'Ndogbong', 'PK8', 'Ndogpassi', 'Ndokoti',
-      'Cité des Palmiers', 'Bepanda', 'Logbessou', 'Bessengue'
+      'Akwa', 'Bali', 'Béedi', 'Bepanda', 'Bessengue', 'Bonamoussadi',
+      'Bonanjo', 'Bonapriso', 'Cité des Palmiers', 'Deïdo', 'Kotto',
+      'Logbessou', 'Logpom', 'Makepe', 'Ndogbong', 'Ndogpassi', 'Ndokoti',
+      'PK8', 'PK9', 'PK10', 'PK11', 'PK12', 'PK13', 'PK14'
     ],
     'Yaoundé': [
-      'Bastos', 'Nlongkak', 'Etoudi', 'Elig-Edzoa', 'Centre Ville', 'Melen',
-      'Mfandena', 'Omnisports'
+      'Bastos', 'Centre Ville', 'Elig-Edzoa', 'Etoudi', 'Melen',
+      'Mfandena', 'Nlongkak', 'Omnisports'
     ],
     'Bafoussam': [
-      'Banengo', 'Djeleng', 'Famla', 'Kamkop', 'Évêché', 'Tamdja'
+      'Banengo', 'Djeleng', 'Évêché', 'Famla', 'Kamkop', 'Tamdja'
     ],
     'Autre': ['Autre quartier']
   },
@@ -75,6 +76,13 @@ const SLCM_CONFIG = {
     'Ndokoti':      [4.0450, 9.7250],
     'Logbessou':    [4.0870, 9.7780],
     'Bessengue':    [4.0620, 9.6970],
+    'Béedi':        [4.0280, 9.7050],
+    'PK9':          [4.0070, 9.7920],
+    'PK10':         [4.0020, 9.7990],
+    'PK11':         [3.9970, 9.8060],
+    'PK12':         [3.9920, 9.8130],
+    'PK13':         [3.9870, 9.8200],
+    'PK14':         [3.9820, 9.8270],
     'Bastos':       [3.8800, 11.5160],
     'Nlongkak':     [3.8720, 11.5080],
     'Etoudi':       [3.9010, 11.5240],
