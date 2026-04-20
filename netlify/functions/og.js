@@ -9,7 +9,7 @@
  */
 
 const SUPABASE_URL  = 'https://hozlyddiqodvjguqywty.supabase.co';
-const SUPABASE_ANON = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_ANON = process.env.SB_PUBLIC_KEY;
 const SITE_URL      = 'https://www.selogercm.com';
 const DEFAULT_IMG   = 'https://www.selogercm.com/assets/img/og-cover.jpg';
 
@@ -29,11 +29,11 @@ function fmtPrice(n, mode) {
 exports.handler = async function(event) {
   /* Vérifier que la clé Supabase est bien configurée */
   if (!SUPABASE_ANON) {
-    console.error('og.js — SUPABASE_ANON_KEY not set in Netlify env vars');
+    console.error('og.js — SB_PUBLIC_KEY not set in Netlify env vars');
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'text/html' },
-      body: '<h1>Configuration manquante</h1><p>SUPABASE_ANON_KEY doit être définie.</p>',
+      body: '<h1>Configuration manquante</h1><p>SB_PUBLIC_KEY doit être définie.</p>',
     };
   }
 
