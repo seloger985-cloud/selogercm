@@ -9,7 +9,7 @@
  */
 
 const SUPABASE_URL  = 'https://hozlyddiqodvjguqywty.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvemx5ZGRpcW9kdmpndXF5d3R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzQ5NzgsImV4cCI6MjA1OTI1MDk3OH0.nRbbqF9SpwxztK0LI2BWWZwk39phGdCnO9MgIbmcG68';
+const SUPABASE_ANON = process.env.SUPABASE_ANON_KEY;
 const SITE_URL      = 'https://www.selogercm.com';
 const DEFAULT_IMG   = 'https://www.selogercm.com/assets/img/og-cover.jpg';
 
@@ -27,6 +27,16 @@ function fmtPrice(n, mode) {
 }
 
 exports.handler = async function(event) {
+  /* Vérifier que la clé Supabase est bien configurée */
+  if (!SUPABASE_ANON) {
+    console.error('og.js — SUPABASE_ANON_KEY not set in Netlify env vars');
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/html' },
+      body: '<h1>Configuration manquante</h1><p>SUPABASE_ANON_KEY doit être définie.</p>',
+    };
+  }
+
   /* Récupérer le slug depuis le path /share/:slug OU query ?slug= */
   const pathMatch  = event.path.match(/\/share\/([^/?]+)/);
   const querySlug  = event.queryStringParameters && event.queryStringParameters.slug;
