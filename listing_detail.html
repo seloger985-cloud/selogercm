@@ -925,8 +925,27 @@
         const waBtn = document.getElementById('waBtn');
         const tgBtn = document.getElementById('tgBtn');
 
+        /* ── Récupérer le numéro WhatsApp du propriétaire/agent depuis Supabase ── */
+        let ownerPhone = '237650840714'; /* fallback SE LOGER CM */
+        if (ad.owner_id && window.SLCM_DB?.client) {
+          try {
+            const { data: ownerProfile } = await window.SLCM_DB.client
+              .from('profiles')
+              .select('agent_phone, phone')
+              .eq('id', ad.owner_id)
+              .single();
+            const rawPhone = ownerProfile?.agent_phone || ownerProfile?.phone;
+            if (rawPhone) {
+              /* Nettoyer le numéro (garder juste les chiffres) */
+              const cleaned = rawPhone.replace(/[^0-9]/g, '');
+              /* S'assurer du préfixe 237 (Cameroun) */
+              ownerPhone = cleaned.startsWith('237') ? cleaned : '237' + cleaned;
+            }
+          } catch (e) { console.warn('Owner phone fetch failed:', e); }
+        }
+
         if (waBtn) {
-          waBtn.href = 'https://wa.me/237650840714?text=' + waMsg;
+          waBtn.href = 'https://wa.me/' + ownerPhone + '?text=' + waMsg;
           if (window.SLCM_notify) {
             waBtn.addEventListener('click', () => {
               SLCM_notify.onWhatsAppClick(title, ad.city || '', price);
@@ -956,11 +975,8 @@
 ` +
             `Quand êtes-vous disponible ?`
           );
-          /* Numéro de l'agent si disponible, sinon SE LOGER CM */
-          const agentPhone = window._currentAdOwnerId
-            ? (document.getElementById('agentName')?.dataset?.phone || '237650840714')
-            : '237650840714';
-          visiteBtn.href = 'https://wa.me/' + agentPhone.replace(/[^0-9]/g, '') + '?text=' + visiteMsg;
+          /* Utilise le numéro du propriétaire récupéré ci-dessus */
+          visiteBtn.href = 'https://wa.me/' + ownerPhone + '?text=' + visiteMsg;
         }
 
         /* ── Liens de partage social ── */

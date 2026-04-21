@@ -299,17 +299,27 @@
 
 <!-- Modal KYC -->
 <div class="modal-overlay" id="kycOverlay">
-  <div class="modal-box" style="max-width:460px">
+  <div class="modal-box" style="max-width:480px">
     <h2><i class="fas fa-id-card" style="color:var(--orange);margin-right:.4rem"></i> Vérification d'identité</h2>
-    <p style="font-size:.85rem;color:#666;margin-bottom:1.2rem;line-height:1.6">
-      Importez une photo de votre CNI (recto). Votre document sera examiné par notre équipe sous 24-48h.
+    <p style="font-size:.85rem;color:#666;margin-bottom:1rem;line-height:1.6">
+      Importez les <strong>deux faces de votre CNI</strong> (recto et verso). Vos documents seront examinés sous 24-48h.
     </p>
-    <div class="upload-zone" id="kycDropZone">
+
+    <label style="display:block;font-size:.78rem;font-weight:700;color:#555;margin-bottom:.4rem;">📄 Recto de la CNI</label>
+    <div class="upload-zone" id="kycDropZoneRecto" style="margin-bottom:1rem">
       <i class="fas fa-cloud-upload-alt"></i>
-      <p>Cliquez pour sélectionner votre CNI (JPG, PNG, PDF)</p>
-      <input type="file" id="kycFileInput" accept="image/*,.pdf">
+      <p>Cliquez pour sélectionner (JPG, PNG, PDF)</p>
+      <input type="file" id="kycFileRecto" accept="image/*,.pdf">
     </div>
-    <p style="font-size:.75rem;color:#aaa;margin-top:.5rem">Document sécurisé — visible uniquement par l'équipe SE LOGER CM</p>
+
+    <label style="display:block;font-size:.78rem;font-weight:700;color:#555;margin-bottom:.4rem;">📄 Verso de la CNI</label>
+    <div class="upload-zone" id="kycDropZoneVerso">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p>Cliquez pour sélectionner (JPG, PNG, PDF)</p>
+      <input type="file" id="kycFileVerso" accept="image/*,.pdf">
+    </div>
+
+    <p style="font-size:.75rem;color:#aaa;margin-top:.6rem">🔒 Documents sécurisés — visibles uniquement par l'équipe SE LOGER CM</p>
     <div class="modal-actions" style="margin-top:1.2rem">
       <button class="btn-cancel" onclick="closeKycUpload()">Annuler</button>
       <button class="btn-save" id="kycSubmitBtn" onclick="submitKyc()"><i class="fas fa-paper-plane"></i> Envoyer</button>
@@ -423,44 +433,69 @@
     document.getElementById('kycOverlay').classList.remove('open');
   }
 
-  let _kycFile = null;
+  let _kycFileRecto = null;
+  let _kycFileVerso = null;
   document.addEventListener('DOMContentLoaded', () => {
-    const zone = document.getElementById('kycDropZone');
-    const input = document.getElementById('kycFileInput');
-    if(zone) {
+    /* Helper : binder une zone d'upload */
+    function bindZone(zoneId, inputId, setter) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      if(!zone || !input) return;
       zone.addEventListener('click', () => input.click());
       input.addEventListener('change', () => {
-        _kycFile = input.files[0];
-        if(_kycFile) {
+        const file = input.files[0];
+        if(file) {
+          setter(file);
           zone.classList.add('has-file');
-          zone.querySelector('p').textContent = '✅ ' + _kycFile.name;
+          zone.querySelector('p').textContent = '✅ ' + file.name;
         }
       });
     }
+    bindZone('kycDropZoneRecto', 'kycFileRecto', f => _kycFileRecto = f);
+    bindZone('kycDropZoneVerso', 'kycFileVerso', f => _kycFileVerso = f);
   });
 
   async function submitKyc() {
-    if(!_kycFile) { showToast('Veuillez sélectionner un fichier.'); return; }
+    if(!_kycFileRecto || !_kycFileVerso) {
+      showToast('Veuillez sélectionner les deux faces de votre CNI (recto + verso).');
+      return;
+    }
     const btn = document.getElementById('kycSubmitBtn');
     btn.disabled = true; btn.textContent = 'Envoi...';
     try {
-      const ext  = _kycFile.name.split('.').pop();
-      const path = `kyc/${_user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await _client.storage.from('kyc-docs').upload(path, _kycFile, { upsert: true });
-      if(upErr) { showToast('Erreur upload : ' + upErr.message); return; }
-      const { data: urlData } = _client.storage.from('kyc-docs').getPublicUrl(path);
+      /* Helper : uploader un fichier */
+      async function uploadOne(file, label) {
+        const ext  = file.name.split('.').pop();
+        const path = `kyc/${_user.id}/${label}_${Date.now()}.${ext}`;
+        const { error: upErr } = await _client.storage
+          .from('kyc-docs').upload(path, file, { upsert: true });
+        if(upErr) throw new Error(`${label} : ${upErr.message}`);
+        const { data: urlData } = _client.storage.from('kyc-docs').getPublicUrl(path);
+        return urlData.publicUrl;
+      }
+
+      /* Upload recto et verso en parallèle */
+      const [rectoUrl, versoUrl] = await Promise.all([
+        uploadOne(_kycFileRecto, 'recto'),
+        uploadOne(_kycFileVerso, 'verso')
+      ]);
+
       const { error: dbErr } = await _client.from('profiles').update({
         kyc_status: 'pending',
-        kyc_doc_url: urlData.publicUrl
+        kyc_doc_url: rectoUrl,
+        kyc_doc_verso: versoUrl
       }).eq('id', _user.id);
+
       if(dbErr) { showToast('Erreur : ' + dbErr.message); return; }
+
       _profile.kyc_status = 'pending';
-      _profile.kyc_doc_url = urlData.publicUrl;
+      _profile.kyc_doc_url = rectoUrl;
+      _profile.kyc_doc_verso = versoUrl;
       closeKycUpload();
       renderKycBanner('pending');
-      showToast('Document envoyé ✅ Vérification en cours.');
+      showToast('Documents envoyés ✅ Vérification en cours.');
     } catch(e) {
-      showToast('Une erreur est survenue.');
+      showToast('Erreur upload : ' + (e.message || 'Une erreur est survenue.'));
     } finally {
       btn.disabled = false; btn.textContent = 'Envoyer';
     }
@@ -573,6 +608,5 @@
   let _toastTimer;
   function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
 </script>
-<script src="assets/js/cookies.js" defer></script>
 </body>
 </html>

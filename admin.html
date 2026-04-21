@@ -70,45 +70,239 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
   <div class="login-box">
-    <h1>Connexion Admin</h1>
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Identifiant" required />
-      <input type="password" id="password" placeholder="Mot de passe" required />
-      <button type="submit">Se connecter</button>
-      <p class="error" id="errorMsg"></p>
-    </form>
+    <!-- ÉTAPE 1 : email + mot de passe -->
+    <div id="step1">
+      <h1>Connexion Admin</h1>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Identifiant" required autocomplete="username" />
+        <input type="password" id="password" placeholder="Mot de passe" required autocomplete="current-password" />
+        <button type="submit">Se connecter</button>
+        <p class="error" id="errorMsg"></p>
+      </form>
+    </div>
+
+    <!-- ÉTAPE 2 : code MFA à 6 chiffres -->
+    <div id="step2" style="display:none">
+      <h1 style="font-size:1.3rem">🔐 Vérification</h1>
+      <p style="font-size:.85rem;color:#666;margin-bottom:1.2rem;line-height:1.5">
+        Saisissez le code à 6 chiffres généré par votre application d'authentification.
+      </p>
+      <form id="mfaForm">
+        <input type="text" id="mfaCode" placeholder="000000" required
+               maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+               style="text-align:center;font-size:1.5rem;letter-spacing:.5rem;font-weight:700" />
+        <button type="submit">Vérifier</button>
+        <p class="error" id="mfaError"></p>
+        <p style="font-size:.78rem;color:#999;margin-top:.8rem">
+          <a href="#" id="cancelMfa" style="color:#999;text-decoration:underline">← Retour à la connexion</a>
+        </p>
+      </form>
+    </div>
+
+    <!-- ÉTAPE 3 : enrôlement MFA premier login -->
+    <div id="step3" style="display:none">
+      <h1 style="font-size:1.2rem">🛡️ Sécuriser votre compte</h1>
+      <p style="font-size:.85rem;color:#666;margin-bottom:1rem;line-height:1.5">
+        Pour protéger votre compte admin, activez l'authentification à deux facteurs.
+      </p>
+      <p style="font-size:.82rem;color:#444;margin-bottom:.8rem">
+        <strong>1.</strong> Installez <em>Google Authenticator</em> ou <em>Authy</em> sur votre téléphone.<br>
+        <strong>2.</strong> Scannez ce QR code :
+      </p>
+      <div id="qrContainer" style="background:#fff;padding:1rem;border-radius:10px;margin-bottom:1rem;display:flex;justify-content:center">
+        <div id="qrLoading">Génération du QR...</div>
+      </div>
+      <p style="font-size:.78rem;color:#666;margin-bottom:.5rem">Ou saisissez ce code manuellement :</p>
+      <code id="mfaSecret" style="display:block;background:#f4f4f4;padding:.5rem;border-radius:6px;font-size:.78rem;word-break:break-all;margin-bottom:1rem"></code>
+      <p style="font-size:.85rem;color:#666;margin-bottom:.5rem">
+        <strong>3.</strong> Saisissez le code généré pour confirmer :
+      </p>
+      <form id="enrollForm">
+        <input type="text" id="enrollCode" placeholder="000000" required
+               maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+               style="text-align:center;font-size:1.5rem;letter-spacing:.5rem;font-weight:700" />
+        <button type="submit">Activer la sécurité</button>
+        <p class="error" id="enrollError"></p>
+      </form>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script>
-    const form = document.getElementById("loginForm");
-    const errorMsg = document.getElementById("errorMsg");
+    let _factorId = null;        /* ID du facteur MFA en cours */
+    let _challengeId = null;     /* ID du challenge MFA en cours */
+    let _enrollFactorId = null;  /* ID lors d'un enrôlement */
 
-    form.addEventListener("submit", async (e) => {
+    /* ── Helpers UI ── */
+    function showStep(n) {
+      document.getElementById('step1').style.display = (n === 1) ? '' : 'none';
+      document.getElementById('step2').style.display = (n === 2) ? '' : 'none';
+      document.getElementById('step3').style.display = (n === 3) ? '' : 'none';
+    }
+
+    async function waitClient() {
+      let tries = 0;
+      while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+        await new Promise(r => setTimeout(r, 100)); tries++;
+      }
+      return window.SLCM_DB?.client || null;
+    }
+
+    /* ════════════════════════════════════════════
+       ÉTAPE 1 : LOGIN EMAIL + MOT DE PASSE
+    ════════════════════════════════════════════ */
+    const loginForm = document.getElementById("loginForm");
+    const errorMsg  = document.getElementById("errorMsg");
+
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
-
-      const submitBtn = form.querySelector("button[type=submit]");
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Connexion…";
+      const btn = loginForm.querySelector("button[type=submit]");
+      btn.disabled = true; btn.textContent = "Connexion…";
       errorMsg.textContent = "";
 
       try {
-        const ok = await SLCM.loginAdmin(username, password);
-        if (ok) {
-          window.location.href = "/admin_dashboard";
+        const client = await waitClient();
+        if (!client) { errorMsg.textContent = "Erreur de connexion à la base."; return; }
+
+        /* Login Supabase (sans signOut) */
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error || !data.user) {
+          errorMsg.textContent = "Identifiants incorrects.";
+          return;
+        }
+
+        /* Vérifier le rôle admin */
+        if (data.user.user_metadata?.role !== 'admin') {
+          await client.auth.signOut();
+          errorMsg.textContent = "Accès refusé : compte non admin.";
+          return;
+        }
+
+        /* Vérifier les facteurs MFA existants */
+        const { data: factors } = await client.auth.mfa.listFactors();
+        const verifiedFactors = (factors?.totp || []).filter(f => f.status === 'verified');
+
+        if (verifiedFactors.length > 0) {
+          /* MFA déjà actif → demander le code */
+          _factorId = verifiedFactors[0].id;
+          const { data: chal } = await client.auth.mfa.challenge({ factorId: _factorId });
+          _challengeId = chal?.id;
+          showStep(2);
+          setTimeout(() => document.getElementById('mfaCode').focus(), 100);
         } else {
-          errorMsg.textContent = "Identifiants incorrects. Veuillez réessayer.";
+          /* MFA pas encore activé → enrôlement obligatoire */
+          await startEnrollment(client);
         }
       } catch (err) {
-        errorMsg.textContent = "Erreur de connexion. Réessayez.";
         console.error("[Admin] login error:", err);
+        errorMsg.textContent = "Erreur de connexion. Réessayez.";
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Se connecter";
+        btn.disabled = false; btn.textContent = "Se connecter";
+      }
+    });
+
+    /* ════════════════════════════════════════════
+       ÉTAPE 2 : VÉRIFICATION CODE MFA
+    ════════════════════════════════════════════ */
+    const mfaForm = document.getElementById("mfaForm");
+    const mfaError = document.getElementById("mfaError");
+
+    mfaForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const code = document.getElementById("mfaCode").value.trim();
+      const btn = mfaForm.querySelector("button[type=submit]");
+      btn.disabled = true; btn.textContent = "Vérification…";
+      mfaError.textContent = "";
+
+      try {
+        const client = await waitClient();
+        const { data, error } = await client.auth.mfa.verify({
+          factorId: _factorId,
+          challengeId: _challengeId,
+          code: code
+        });
+        if (error) {
+          mfaError.textContent = "Code incorrect. Réessayez.";
+          document.getElementById("mfaCode").value = "";
+          return;
+        }
+        /* Succès → redirection */
+        window.location.href = "/admin_dashboard";
+      } catch (err) {
+        console.error("[Admin] MFA verify:", err);
+        mfaError.textContent = "Erreur de vérification.";
+      } finally {
+        btn.disabled = false; btn.textContent = "Vérifier";
+      }
+    });
+
+    document.getElementById("cancelMfa").addEventListener("click", async (e) => {
+      e.preventDefault();
+      const client = await waitClient();
+      if (client) await client.auth.signOut();
+      _factorId = null; _challengeId = null;
+      showStep(1);
+    });
+
+    /* ════════════════════════════════════════════
+       ÉTAPE 3 : ENRÔLEMENT MFA (premier login)
+    ════════════════════════════════════════════ */
+    async function startEnrollment(client) {
+      showStep(3);
+      try {
+        const { data, error } = await client.auth.mfa.enroll({ factorType: 'totp' });
+        if (error) throw error;
+        _enrollFactorId = data.id;
+        const qrSvg = data.totp.qr_code;  /* SVG inline */
+        const secret = data.totp.secret;
+
+        document.getElementById("qrContainer").innerHTML = qrSvg;
+        document.getElementById("mfaSecret").textContent = secret;
+        setTimeout(() => document.getElementById('enrollCode').focus(), 100);
+      } catch (err) {
+        console.error("[Admin] MFA enroll:", err);
+        document.getElementById("qrContainer").innerHTML =
+          '<p style="color:red;font-size:.85rem">Erreur : ' + (err.message || 'Impossible de générer le QR') + '</p>';
+      }
+    }
+
+    const enrollForm = document.getElementById("enrollForm");
+    const enrollError = document.getElementById("enrollError");
+
+    enrollForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const code = document.getElementById("enrollCode").value.trim();
+      const btn = enrollForm.querySelector("button[type=submit]");
+      btn.disabled = true; btn.textContent = "Activation…";
+      enrollError.textContent = "";
+
+      try {
+        const client = await waitClient();
+        /* Challenge + verify pour confirmer l'enrôlement */
+        const { data: chal, error: chalErr } = await client.auth.mfa.challenge({ factorId: _enrollFactorId });
+        if (chalErr) throw chalErr;
+        const { error: verErr } = await client.auth.mfa.verify({
+          factorId: _enrollFactorId,
+          challengeId: chal.id,
+          code: code
+        });
+        if (verErr) {
+          enrollError.textContent = "Code incorrect. Vérifiez votre app et réessayez.";
+          document.getElementById("enrollCode").value = "";
+          return;
+        }
+        /* Succès → MFA activé, redirection vers dashboard */
+        alert("✅ Sécurité activée ! Conservez votre app d'authentification.");
+        window.location.href = "/admin_dashboard";
+      } catch (err) {
+        console.error("[Admin] enroll verify:", err);
+        enrollError.textContent = "Erreur d'activation : " + (err.message || 'Réessayez.');
+      } finally {
+        btn.disabled = false; btn.textContent = "Activer la sécurité";
       }
     });
   </script>

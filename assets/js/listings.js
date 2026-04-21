@@ -52,18 +52,29 @@ const SLCM_listings = (() => {
   /* ── Annonces premium (pour l'accueil) ──────────────────────────── */
   async function getPremiumListings(furnished = false, limit = 6) {
     const client = await sb();
+    /* Récupérer TOUS les premium pour pouvoir tourner */
     const { data, error } = await client
       .from('listings')
       .select('*')
       .eq('status', 'active')
       .eq('premium', true)
       .eq('furnished', furnished)
-      .eq('rent_sale', 'rent')
-      .in('type', ['apartment', 'house', 'studio', 'villa', 'duplex', 'residence'])
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .order('created_at', { ascending: false });
     if (error) { console.error('getPremiumListings:', error); return []; }
-    return data || [];
+    /* Rotation déterministe : change toutes les 30 minutes */
+    return rotatePremium(data || [], limit);
+  }
+
+  /* Rotation déterministe basée sur l'heure (tranche de 30 min) */
+  function rotatePremium(arr, limit) {
+    if (!arr.length) return [];
+    if (arr.length <= limit) return arr;
+    /* Seed = nombre de tranches de 30 min depuis epoch */
+    const seed = Math.floor(Date.now() / (30 * 60 * 1000));
+    /* Décalage circulaire basé sur le seed */
+    const offset = seed % arr.length;
+    const rotated = [...arr.slice(offset), ...arr.slice(0, offset)];
+    return rotated.slice(0, limit);
   }
 
   /* ── Lire une annonce par ID ─────────────────────────────────────── */
@@ -158,35 +169,29 @@ const SLCM_listings = (() => {
 
   /* ── Générer une card HTML ──────────────────────────────────────── */
   function renderCard(listing, { showFav = true } = {}) {
-    const img      = (listing.images && listing.images[0]) || 'assets/img/no-image.png';
-    const title    = listing.title || listing.title_fr || 'Annonce';
-    const mode     = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
+    const img   = (listing.images && listing.images[0]) || 'assets/img/no-image.png';
+    const title = listing.title || listing.title_fr || 'Annonce';
+    const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
-
-    /* Badge — style inline pour fonctionner sur toutes les pages */
-    const badgeBase = 'position:absolute;top:8px;left:8px;border-radius:999px;padding:.15rem .5rem;font-size:.68rem;font-weight:800;color:#fff;z-index:2;letter-spacing:.03em';
     const badge = listing.premium
-      ? `<div style="${badgeBase};background:#ff7a00">PREMIUM</div>`
+      ? '<div class="listing-badge premium">PREMIUM</div>'
       : listing.furnished
-        ? `<div style="${badgeBase};background:#111">Meublé</div>`
+        ? '<div class="listing-badge">Meublé</div>'
         : '';
-
-    /* Bouton favori */
     const fav = showFav
-      ? `<button class="fav-btn" data-id="${listing.id}" title="Ajouter aux favoris" onclick="event.preventDefault()"
-           style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;color:#ff7a00;z-index:2">
+      ? `<button class="fav-btn" data-id="${listing.id}" title="Ajouter aux favoris" onclick="event.preventDefault()">
            <i class="far fa-heart"></i>
          </button>` : '';
 
     return `
-      <div class="listing-card" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s">
-        <a href="/annonce/${listing.slug || listing.id}" style="text-decoration:none;color:inherit;display:block">
-          <div style="position:relative;height:240px;background:#eee;overflow:hidden">
-            <img src="${img}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">
+      <div class="listing-card">
+        <a href="/annonce?id=${listing.id}" style="text-decoration:none;color:inherit">
+          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
+            <img src="${img}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
             ${badge}
             ${fav}
           </div>
-          <div style="padding:1rem">
+          <div class="listing-body" style="padding:1rem">
             <div style="font-weight:800;font-size:.95rem;color:#111;margin-bottom:.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
             <div style="font-size:.82rem;color:#888;margin-bottom:.4rem">
               <i class="fas fa-map-marker-alt" style="color:#ff7a00"></i>
