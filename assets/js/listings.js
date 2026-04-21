@@ -52,13 +52,16 @@ const SLCM_listings = (() => {
   /* ── Annonces premium (pour l'accueil) ──────────────────────────── */
   async function getPremiumListings(furnished = false, limit = 6) {
     const client = await sb();
-    /* Récupérer TOUS les premium pour pouvoir tourner */
+    /* Récupérer TOUS les premium LOCATION de type résidentiel uniquement
+       (exclut les locaux commerciaux, terrains, fonds de commerce) */
     const { data, error } = await client
       .from('listings')
       .select('*')
       .eq('status', 'active')
       .eq('premium', true)
       .eq('furnished', furnished)
+      .eq('rent_sale', 'rent')
+      .in('type', ['apartment', 'house', 'studio', 'villa', 'duplex'])
       .order('created_at', { ascending: false });
     if (error) { console.error('getPremiumListings:', error); return []; }
     /* Rotation déterministe : change toutes les 30 minutes */
