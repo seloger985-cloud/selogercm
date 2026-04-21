@@ -896,7 +896,7 @@
       `;
 
       /* ══ Liens contact avec infos du bien ══ */
-      setTimeout(() => {
+      setTimeout(async () => {
         const price   = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
         const mode    = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';
         const location = [ad.district, ad.city].filter(Boolean).join(', ');
