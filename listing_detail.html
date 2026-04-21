@@ -739,7 +739,7 @@
     /* ══════════════════════════════════════
        RENDU COMPLET
     ══════════════════════════════════════ */
-    function renderDetail(ad) {
+    async function renderDetail(ad) {
       const images  = (ad.images && ad.images.length > 0) ? ad.images : ['assets/img/no-image.png'];
       const title   = ad.title_en || ad.title_fr || 'Listing';
       const mode    = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';

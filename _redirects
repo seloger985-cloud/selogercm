@@ -12,13 +12,14 @@
 /connexion         /signin.html          200
 /mon-espace        /dashboard.html       200
 /agent             /agent.html           200
-/agent-profile     /agent-profile.html   200
+/agent-profile     /agent-dashboard.html 200
+/agent-dashboard   /agent-dashboard.html 200
 /admin             /admin_dashboard.html 200
 /favoris           /favorites.html       200
 /reset-password    /reset-password.html  200
 /profil-agent      /profil-agent.html    200
 
-# OG tags pour partage social — passer le slug en query string à la fonction
+# OG tags pour partage social
 /share/:slug       /.netlify/functions/og?slug=:slug  200
 /share             /.netlify/functions/og             200
 
