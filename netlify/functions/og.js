@@ -23,17 +23,15 @@ function fmtPrice(n, mode) {
 exports.handler = async function(event) {
   const SB_KEY = process.env.SB_ANON_KEY;
 
-  /* Slug depuis /share/:slug OU ?slug= */
-  const rawUrl = event.rawUrl || event.path;
-  const match  = rawUrl.match(/\/annonce\/([^/?]+)/) || rawUrl.match(/slug=([^&]+)/);
+  // 🔥 Slug robuste depuis /share/:slug ou ?slug=
+  const rawUrl = event.rawUrl || '';
+  const match = rawUrl.match(/\/share\/([^/?]+)/) || rawUrl.match(/slug=([^&]+)/);
   const slug = match ? decodeURIComponent(match[1]) : null;
-  const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
-  const slug      = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
 
-  console.log('og.js start — path:', event.path, '| slug:', slug, '| has_key:', !!SB_KEY);
+  console.log('og.js start — slug:', slug, '| has_key:', !!SB_KEY);
 
   if (!SB_KEY) {
-    console.error('og.js — SB_ANON_KEY missing');
+    console.error('SB_ANON_KEY missing');
     return htmlResponse(genericHtml(SITE_URL));
   }
 
@@ -42,10 +40,9 @@ exports.handler = async function(event) {
   }
 
   const targetUrl = `${SITE_URL}/annonce/${slug}`;
-  try {
-    const apiUrl = `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}&select=title,description,price,rent_sale,city,district,type,images,ref&limit=1`;
 
-    console.log('og.js — fetching:', apiUrl);
+  try {
+    const apiUrl = `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}&select=title,description,price,rent_sale,city,district,type,images&limit=1`;
 
     const res = await fetch(apiUrl, {
       headers: {
@@ -55,20 +52,15 @@ exports.handler = async function(event) {
       }
     });
 
-    console.log('og.js — Supabase status:', res.status);
-
     if (!res.ok) {
-      const errText = await res.text();
-      console.error('og.js — Supabase error:', res.status, errText.slice(0, 200));
+      console.error('Supabase error:', res.status);
       return htmlResponse(genericHtml(targetUrl));
     }
 
     const data = await res.json();
-    console.log('og.js — results:', data.length);
-
     const ad = data && data[0];
+
     if (!ad) {
-      console.log('og.js — no listing for slug:', slug);
       return htmlResponse(genericHtml(targetUrl));
     }
 
@@ -76,18 +68,23 @@ exports.handler = async function(event) {
     const price    = fmtPrice(ad.price, ad.rent_sale);
     const location = [ad.district, ad.city].filter(Boolean).join(', ');
     const mode     = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
-    const descSrc  = ad.description ? ad.description.slice(0, 150) : `${mode} sur SE LOGER CM`;
-    const desc = escapeHtml(`${price} · ${location}. ${mode} sur Se Loger CM. Contact rapide WhatsApp.`
-   );
+
+    const desc = escapeHtml(
+      `${price} · ${location}. ${mode}. Contact rapide sur WhatsApp.`
+    );
+
     const img = (ad.images?.[0] || DEFAULT_IMG)
-     .replace('http://', 'https://');
+      .replace('http://', 'https://');
 
-    console.log('og.js — returning OG for:', title);
-
-    return htmlResponse(buildHtml({ title, desc, img, url: targetUrl }));
+    return htmlResponse(buildHtml({
+      title,
+      desc,
+      img,
+      url: targetUrl
+    }));
 
   } catch (err) {
-    console.error('og.js — EXCEPTION:', err.message, err.stack);
+    console.error('EXCEPTION:', err.message);
     return htmlResponse(genericHtml(targetUrl));
   }
 };
@@ -97,7 +94,7 @@ function htmlResponse(html) {
     statusCode: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      'Cache-Control': 'no-cache',
     },
     body: html,
   };
@@ -112,19 +109,19 @@ function buildHtml({ title, desc, img, url }) {
   <meta name="description" content="${desc}">
 
   <meta property="og:type" content="article">
-  <meta property="og:url"          content="${escapeHtml(url)}">
-  <meta property="og:title"        content="${title} | SE LOGER CM">
-  <meta property="og:description"  content="${desc}">
-  <meta property="og:image"        content="${escapeHtml(img)}">
-  <meta property="og:image:width"  content="1200">
+  <meta property="og:url" content="${escapeHtml(url)}">
+  <meta property="og:title" content="${title} | SE LOGER CM">
+  <meta property="og:description" content="${desc}">
+  <meta property="og:image" content="${escapeHtml(img)}">
+  <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:site_name"    content="SE LOGER CM">
-  <meta property="og:locale"       content="fr_CM">
+  <meta property="og:site_name" content="SE LOGER CM">
+  <meta property="og:locale" content="fr_CM">
 
-  <meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:title"       content="${title} | SE LOGER CM">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title} | SE LOGER CM">
   <meta name="twitter:description" content="${desc}">
-  <meta name="twitter:image"       content="${escapeHtml(img)}">
+  <meta name="twitter:image" content="${escapeHtml(img)}">
 
   <link rel="canonical" href="${escapeHtml(url)}">
 
@@ -138,8 +135,15 @@ function buildHtml({ title, desc, img, url }) {
   <img src="${escapeHtml(img)}" alt="${title}">
   <h1>${title}</h1>
   <p>${desc}</p>
-  <p>Redirection en cours... <a href="${escapeHtml(url)}">Cliquez ici si la page ne s'affiche pas.</a></p>
-  <script>window.location.href = ${JSON.stringify(url)};</script>
+
+  <p>
+    <a href="${escapeHtml(url)}">Voir l’annonce</a>
+  </p>
+
+  <!-- 🔥 redirection propre sans casser Facebook -->
+  <noscript>
+    <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}">
+  </noscript>
 </body>
 </html>`;
 }
@@ -147,7 +151,7 @@ function buildHtml({ title, desc, img, url }) {
 function genericHtml(url) {
   return buildHtml({
     title: 'SE LOGER CM',
-    desc: 'Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.',
+    desc: 'Trouvez votre bien immobilier à Douala et au Cameroun.',
     img: DEFAULT_IMG,
     url
   });
