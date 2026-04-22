@@ -8,10 +8,10 @@ const SLCM_CONFIG = {
 
   cities: {
     'Douala': [
-      'Akwa', 'Bali', 'Béedi', 'Bepanda', 'Bessengue', 'Bonamoussadi',
+      'Akwa', 'Bali', 'Béedi', 'Bepanda', 'Bessengue', 'Bonabéri', 'Bonadiwoto (Grand Mall)', 'Bonamoussadi',
       'Bonanjo', 'Bonapriso', 'Cité des Palmiers', 'Deïdo', 'Kotto',
       'Logbessou', 'Logpom', 'Makepe', 'Ndogbong', 'Ndogpassi', 'Ndokoti',
-      'PK8', 'PK9', 'PK10', 'PK11', 'PK12', 'PK13', 'PK14'
+      'PK8', 'PK9', 'PK10', 'PK11', 'PK12', 'PK13', 'PK14', 'Yassa'
     ],
     'Yaoundé': [
       'Bastos', 'Centre Ville', 'Elig-Edzoa', 'Etoudi', 'Melen',
