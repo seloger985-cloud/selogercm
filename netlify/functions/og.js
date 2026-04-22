@@ -25,7 +25,8 @@ exports.handler = async function(event) {
 
   /* Slug depuis /share/:slug OU ?slug= */
   const rawUrl = event.rawUrl || event.path;
-  const pathMatch = rawUrl.match(/\/share\/([^/?]+)/);
+  const match  = rawUrl.match(/\/annonce\/([^/?]+)/) || rawUrl.match(/slug=([^&]+)/);
+  const slug = match ? decodeURIComponent(match[1]) : null;
   const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
   const slug      = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
 
@@ -41,7 +42,6 @@ exports.handler = async function(event) {
   }
 
   const targetUrl = `${SITE_URL}/annonce/${slug}`;
-
   try {
     const apiUrl = `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}&select=title,description,price,rent_sale,city,district,type,images,ref&limit=1`;
 
