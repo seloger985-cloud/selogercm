@@ -3,7 +3,13 @@
   to = "/.netlify/functions/og"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/share"
+  to = "/share/"
+  status = 301
+
 [[headers]]
   for = "/share/*"
   [headers.values]
-    Cache-Control = "public, max-age=600"
+    Cache-Control = "public, max-age=0, must-revalidate"
