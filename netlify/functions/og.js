@@ -24,7 +24,8 @@ exports.handler = async function(event) {
   const SB_KEY = process.env.SB_ANON_KEY;
 
   /* Slug depuis /share/:slug OU ?slug= */
-  const pathMatch = event.path.match(/\/share\/([^/?]+)/);
+  const rawUrl = event.rawUrl || event.path;
+  const pathMatch = rawUrl.match(/\/share\/([^/?]+)/);
   const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
   const slug      = pathMatch ? decodeURIComponent(pathMatch[1]) : (querySlug || null);
 
@@ -76,8 +77,10 @@ exports.handler = async function(event) {
     const location = [ad.district, ad.city].filter(Boolean).join(', ');
     const mode     = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const descSrc  = ad.description ? ad.description.slice(0, 150) : `${mode} sur SE LOGER CM`;
-    const desc     = escapeHtml(`${price} · ${location} · ${descSrc}`);
-    const img      = (ad.images && ad.images[0]) || DEFAULT_IMG;
+    const desc = escapeHtml(`${price} · ${location}. ${mode} sur Se Loger CM. Contact rapide WhatsApp.`
+   );
+    const img = (ad.images?.[0] || DEFAULT_IMG)
+     .replace('http://', 'https://');
 
     console.log('og.js — returning OG for:', title);
 
@@ -108,7 +111,7 @@ function buildHtml({ title, desc, img, url }) {
   <title>${title} | SE LOGER CM</title>
   <meta name="description" content="${desc}">
 
-  <meta property="og:type"         content="website">
+  <meta property="og:type" content="article">
   <meta property="og:url"          content="${escapeHtml(url)}">
   <meta property="og:title"        content="${title} | SE LOGER CM">
   <meta property="og:description"  content="${desc}">

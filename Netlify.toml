@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/share/*"
+  to = "/.netlify/functions/og"
+  status = 200
+  force = true
+[[headers]]
+  for = "/share/*"
+  [headers.values]
+    Cache-Control = "public, max-age=600"
