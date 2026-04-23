@@ -505,14 +505,10 @@ if (!unfurnished.length || !furnished.length) {
      .from('listings')
      .select('*')
      .eq('status', 'active')
-     .eq('premium', true)
      .eq('rent_sale', 'sale')
-     .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
+     .in('type', ['commercial', 'warehouse', 'shop'])
      .order('created_at', { ascending: false })
      .limit(6);
-
-    const commercialRentGrid = document.getElementById('commercialRentGrid');
-    if (commercialRentGrid) {
       const commRent = commercialRentData || [];
       commercialRentGrid.innerHTML = commRent.length
         ? commRent.map(l => SLCM_listings.renderCard(l)).join('')
