@@ -8,9 +8,3 @@
   for = "/share/*"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/og-image/*"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-    X-Robots-Tag = "noindex"
