@@ -274,6 +274,27 @@
     .share-li   { background: #0a66c2; color: #fff; }
     .share-copy { background: #f0f0f0; color: #333; }
     .share-copy.copied { background: #e8f5e9; color: #2e7d32; }
+
+    .mobile-share-inline {
+      display: none;
+      margin: 1rem 0 1.15rem;
+      padding: .9rem;
+      border-radius: 14px;
+      background: #fff8f0;
+      border: 1px solid #ffe1bf;
+    }
+    .mobile-share-inline .share-block {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .mobile-share-inline .share-btns { gap: .45rem; }
+    .mobile-share-inline .share-btn { min-width: 0; flex: 1 1 30%; }
+
+    @media (max-width: 768px) {
+      .mobile-share-inline { display: block; }
+      .contact-panel .share-block { display: none; }
+    }
     /* ── Modal Profil Agent ── */
     .agent-modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -583,13 +604,14 @@
       const adTitle    = ad.title || ad.title_en || 'Annonce immobilière';
       const adCity     = [ad.district, ad.city].filter(Boolean).join(', ') || 'Douala';
       const adPrice    = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
-      const adMode     = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
+      const adMode     = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
       const adImg      = (ad.images && ad.images[0]) || 'https://www.selogercm.com/assets/img/og-cover.jpg';
       const adUrl      = `https://www.selogercm.com/annonce/${ad.slug || ad.id}`;
-      const adDesc     = `${adTitle} — ${adCity} — ${adPrice} ${adMode}. ${ad.description ? ad.description.slice(0, 120) + '…' : 'Annonce immobilière vérifiée par SE LOGER CM.'}`;
+      const adHeadline = `${adTitle} — ${adPrice} — ${adCity}`;
+      const adDesc     = `Disponible maintenant à ${adCity}. ${adPrice} ${adMode.toLowerCase()}. Contact rapide sur WhatsApp via SE LOGER CM.`;
 
       /* Title */
-      document.title = `${adTitle} — ${adCity} | SE LOGER CM`;
+      document.title = `${adHeadline} | SE LOGER CM`;
 
       /* Meta description */
       const metaDesc = document.querySelector('meta[name="description"]');
@@ -600,7 +622,7 @@
         const el = document.querySelector(`meta[property="${prop}"]`);
         if (el) el.setAttribute('content', val);
       };
-      setOG('og:title',       `${adTitle} — ${adCity} | SE LOGER CM`);
+      setOG('og:title',       `${adHeadline} | SE LOGER CM`);
       setOG('og:description', adDesc);
       setOG('og:image',       adImg);
       setOG('og:url',         adUrl);
@@ -610,11 +632,11 @@
         const el = document.querySelector(`meta[name="${name}"]`);
         if (el) el.setAttribute('content', val);
       };
-      setTW('twitter:title',       `${adTitle} — ${adCity} | SE LOGER CM`);
+      setTW('twitter:title',       `${adHeadline} | SE LOGER CM`);
       setTW('twitter:description', adDesc);
       setTW('twitter:image',       adImg);
 
-      document.title = `${adTitle} — ${adCity} | SE LOGER CM`;
+      document.title = `${adHeadline} | SE LOGER CM`;
 
       /* ── Annonces similaires ── */
       loadSimilarListings(ad);
@@ -823,6 +845,23 @@
                 </div>` : ''}
               </div>
 
+              <div class="mobile-share-inline">
+                <div class="share-block">
+                  <h4><i class="fas fa-share-alt"></i> Partager rapidement</h4>
+                  <div class="share-btns">
+                    <a id="shareFbTop" class="share-btn share-fb" href="#" target="_blank" rel="noopener">
+                      <i class="fab fa-facebook-f"></i> Facebook
+                    </a>
+                    <a id="shareWaTop" class="share-btn share-wa" href="#" target="_blank" rel="noopener">
+                      <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                    <button id="shareCopyTop" class="share-btn share-copy" onclick="copyListingLink('shareCopyTop')">
+                      <i class="fas fa-link"></i> Copier
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div class="specs">${specsHtml}</div>
 
               ${descHtml}
@@ -908,19 +947,16 @@
         window._currentListingTitle = title;
 
         const waMsg = encodeURIComponent(
-          `🏠 *${title}*\n` +
-          `${'─'.repeat(30)}\n` +
+          `Bonjour, cette annonce est-elle toujours disponible ?\n\n` +
+          `🏠 ${title}\n` +
           `📍 ${location}\n` +
-          `💰 *${price}* ${mode === 'À vendre' ? '' : '/mois'}\n` +
+          `💰 ${price}${mode === 'À vendre' ? '' : ' /mois'}\n` +
           `🔑 Réf: ${ref}\n` +
-          `🔗 ${listingUrl}\n` +
-          `${'─'.repeat(30)}\n` +
-          `Bonjour, je suis intéressé(e) par ce bien.\n` +
-          `Pouvez-vous me donner plus d'informations ?`
+          `🔗 ${listingUrl}`
         );
 
         const tgMsg = encodeURIComponent(
-          `Bonjour, je suis intéressé(e) par: ${title} - ${location} - ${price} (Réf: ${ref}) ${listingUrl}`
+          `Bonjour, cette annonce est-elle toujours disponible ? ${title} - ${location} - ${price} (Réf: ${ref}) ${listingUrl}`
         );
 
         const waBtn = document.getElementById('waBtn');
@@ -981,15 +1017,21 @@
         }
 
         /* ── Liens de partage social ── */
-        const shareText = encodeURIComponent(`${title} — ${price} — ${location}`);
+        const shareText = encodeURIComponent(`À voir : ${title} — ${price} — ${location}`);
         const shareUrl  = encodeURIComponent(listingShare); /* OG tags pour Facebook/LinkedIn */
         const shareUrlWa = encodeURIComponent(listingShare);  /* URL OG aussi pour WhatsApp */
 
         const shareFb = document.getElementById('shareFb');
         if (shareFb) shareFb.href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
 
+        const shareFbTop = document.getElementById('shareFbTop');
+        if (shareFbTop) shareFbTop.href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+
         const shareWaEl = document.getElementById('shareWa');
         if (shareWaEl) shareWaEl.href = `https://wa.me/?text=${shareText}%20${shareUrlWa}`;
+
+        const shareWaTop = document.getElementById('shareWaTop');
+        if (shareWaTop) shareWaTop.href = `https://wa.me/?text=${shareText}%20${shareUrlWa}`;
 
         const shareLi = document.getElementById('shareLi');
         if (shareLi) shareLi.href = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`;
@@ -1305,16 +1347,28 @@
 
     /* Fermeture */
     /* ── Copier le lien ── */
-    function copyListingLink() {
+    function copyListingLink(buttonId = 'shareCopy') {
       const url = window._currentListingUrl || window.location.href;
       navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('shareCopy');
-        btn.classList.add('copied');
-        btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+        const ids = [buttonId];
+        if (buttonId === 'shareCopy') ids.push('shareCopyTop');
+        if (buttonId === 'shareCopyTop') ids.push('shareCopy');
+
+        ids.forEach((id) => {
+          const btn = document.getElementById(id);
+          if (!btn) return;
+          btn.classList.add('copied');
+          btn.innerHTML = '<i class="fas fa-check"></i> Lien prêt à partager ✅';
+        });
+
         setTimeout(() => {
-          btn.classList.remove('copied');
-          btn.innerHTML = '<i class="fas fa-link"></i> Copier';
-        }, 2000);
+          ids.forEach((id) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.remove('copied');
+            btn.innerHTML = '<i class="fas fa-link"></i> Copier';
+          });
+        }, 2200);
       });
     }
 
