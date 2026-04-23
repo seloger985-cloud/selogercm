@@ -501,14 +501,15 @@ if (!unfurnished.length || !furnished.length) {
     while ((!window.SLCM_DB || !window.SLCM_DB.client) && triesC < 30) {
       await new Promise(r => setTimeout(r, 100)); triesC++;
     }
-    const { data: commercialRentData } = await window.SLCM_DB.client
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .eq('rent_sale', 'rent')
-      .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
-      .order('created_at', { ascending: false })
-      .limit(6);
+    const { data: commercialSaleData } = await client
+     .from('listings')
+     .select('*')
+     .eq('status', 'active')
+     .eq('premium', true)
+     .eq('rent_sale', 'sale')
+     .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
+     .order('created_at', { ascending: false })
+     .limit(6);
 
     const commercialRentGrid = document.getElementById('commercialRentGrid');
     if (commercialRentGrid) {
