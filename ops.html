@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OPS — Répertoire & Routage | SE LOGER CM</title>
+  <style>
+    :root{--orange:#ff7a00;--bg:#f6f7f9;--white:#fff;--line:#e5e7eb;--muted:#6b7280}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111}
+    header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:10}
+    .nav{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+    .wrap{max-width:1100px;margin:0 auto;padding:22px 18px 48px}
+    .hero,.card{background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.04)}
+    .hero{padding:22px;margin-bottom:18px} .hero h1{margin:0 0 6px;font-size:28px} .hero p{margin:0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1.25fr .9fr;gap:18px}
+    .card{padding:18px} .label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+    .input,.select,.textarea{width:100%;padding:12px 14px;border:1px solid #d1d5db;border-radius:12px;font:inherit;background:#fff}
+    .search-row{display:grid;grid-template-columns:1fr auto;gap:10px}
+    .btn{background:var(--orange);color:#fff;border:none;padding:12px 16px;border-radius:12px;font-weight:800;cursor:pointer}
+    .btn.secondary{background:#fff;color:#111;border:1px solid #d1d5db}
+    .btn.ghost{background:#fff;color:#111;border:1px dashed #d1d5db}
+    .muted{color:var(--muted)} .small{font-size:13px}
+    .list{display:grid;gap:12px;margin-top:14px}
+    .item{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+    .title{font-weight:900;margin-bottom:6px}
+    .meta{font-size:13px;color:#6b7280;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .pill{display:inline-block;background:#f3f4f6;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px}
+    .pill.ok{background:#ecfdf5;color:#166534;border-color:#bbf7d0}
+    .pill.warn{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+    .pill.danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .empty{padding:18px;border:1px dashed #d1d5db;border-radius:14px;color:#6b7280;text-align:center}
+    .hidden{display:none!important} .status{margin-top:10px;font-size:13px;color:#6b7280}
+    .section-title{font-size:18px;font-weight:900;margin:0 0 12px}
+    @media(max-width:860px){.grid,.row,.search-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header><div class="nav"><div><strong>SE LOGER CM — OPS privé</strong></div><div class="muted small">Recherche annonce → agent réel</div></div></header>
+<main class="wrap">
+  <section class="hero">
+    <h1>Répertoire & Routage privé</h1>
+    <p>Visible uniquement aux admins internes. Les users publics ne voient rien.</p>
+    <div id="authStatus" class="status">Vérification accès…</div>
+  </section>
+
+  <div id="app" class="grid hidden">
+    <section class="card">
+      <h2 class="section-title">Recherche annonce</h2>
+      <label class="label" for="search">Référence, titre ou quartier</label>
+      <div class="search-row">
+        <input id="search" class="input" placeholder="Ex : SL26-DLA-174815, Akwa, Ndogbong…" />
+        <button id="searchBtn" class="btn">Rechercher</button>
+      </div>
+      <div class="actions">
+        <button id="quickNew" class="btn secondary">Nouveaux</button>
+        <button id="quickTransferred" class="btn secondary">Transférés</button>
+        <button id="quickUnmapped" class="btn ghost">Sans mapping</button>
+      </div>
+      <div id="results" class="list"></div>
+    </section>
+
+    <aside class="card">
+      <h2 class="section-title">Affectation privée</h2>
+      <div id="details" class="empty">Sélectionne une annonce pour voir ou modifier le contact réel.</div>
+      <div id="detailsPane" class="hidden">
+        <div class="title" id="dTitle"></div>
+        <div class="meta" id="dMeta"></div>
+
+        <div class="row">
+          <div>
+            <label class="label">Agent réel</label>
+            <select id="agentSelect" class="select"></select>
+          </div>
+          <div>
+            <label class="label">Statut lead</label>
+            <select id="leadStatus" class="select">
+              <option value="new">Nouveau</option>
+              <option value="transferred">Transféré</option>
+              <option value="closed">Clos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label class="label">Zone macro</label>
+            <input id="zoneMacro" class="input" placeholder="Ex : Ndokoti cluster" />
+          </div>
+          <div>
+            <label class="label">Sous-zone</label>
+            <input id="subzone" class="input" placeholder="Ex : Ndogbong" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label class="label">Notes internes</label>
+          <textarea id="leadNotes" class="textarea" rows="4" placeholder="Notes privées de routage"></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="saveMap" class="btn">Enregistrer</button>
+          <button id="copyPhone" class="btn secondary">Copier numéro</button>
+          <button id="openWa" class="btn secondary">Ouvrir WhatsApp agent</button>
+        </div>
+
+        <div id="agentCard" class="item" style="margin-top:12px"></div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
+<script>
+(() => {
+  let client = null;
+  let currentUser = null;
+  let agents = [];
+  let currentListing = null;
+
+  const authStatus = document.getElementById('authStatus');
+  const app = document.getElementById('app');
+  const resultsEl = document.getElementById('results');
+  const details = document.getElementById('details');
+  const detailsPane = document.getElementById('detailsPane');
+
+  function esc(v){return String(v ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));}
+
+  async function init() {
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+      await new Promise(r => setTimeout(r, 100)); tries++;
+    }
+    client = window.SLCM_DB?.client;
+    if (!client) { authStatus.textContent = "Connexion Supabase indisponible."; return; }
+
+    const { data: sessionData } = await client.auth.getSession();
+    currentUser = sessionData?.session?.user || null;
+    if (!currentUser) { authStatus.textContent = "Connecte-toi d'abord. Cette page est privée."; return; }
+
+    const { data: adminRow } = await client
+      .from('internal_admins')
+      .select('user_id, email')
+      .or(`user_id.eq.${currentUser.id},email.eq.${currentUser.email}`)
+      .limit(1);
+
+    if (!adminRow || !adminRow.length) {
+      authStatus.textContent = "Accès refusé. Ajoute ton compte dans internal_admins.";
+      return;
+    }
+
+    authStatus.textContent = `Connecté en privé : ${currentUser.email}`;
+    app.classList.remove('hidden');
+    await loadAgents();
+    await searchListings('');
+  }
+
+  async function loadAgents() {
+    const { data } = await client.from('internal_agents').select('*').order('active', { ascending: false }).order('name', { ascending: true });
+    agents = data || [];
+    document.getElementById('agentSelect').innerHTML =
+      `<option value="">Choisir un agent réel</option>` +
+      agents.map(a => `<option value="${a.id}">${esc(a.name)}${a.zone_macro ? ' — ' + esc(a.zone_macro) : ''}</option>`).join('');
+  }
+
+  function listingCard(v) {
+    const statusClass = v.lead_status === 'transferred' ? 'ok' : (v.lead_status === 'closed' ? 'danger' : 'warn');
+    const statusLabel = v.lead_status === 'transferred' ? 'Transféré' : (v.lead_status === 'closed' ? 'Clos' : 'Nouveau');
+    return `<div class="item" data-id="${v.listing_id}">
+      <div class="title">${esc(v.title || 'Annonce')}</div>
+      <div class="meta">
+        <span>Ref: ${esc(v.ref || '-')}</span>
+        <span>${esc(v.district || '')}${v.city ? ', ' + esc(v.city) : ''}</span>
+        <span>${esc(v.type || '')}</span>
+      </div>
+      <div>
+        <span class="pill ${statusClass}">${statusLabel}</span>
+        ${v.internal_agent_name ? `<span class="pill">Agent: ${esc(v.internal_agent_name)}</span>` : `<span class="pill">Sans mapping</span>`}
+        ${v.subzone ? `<span class="pill">${esc(v.subzone)}</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  async function searchListings(term, filter = null) {
+    resultsEl.innerHTML = '<div class="empty">Recherche…</div>';
+    let query = client.from('internal_listing_ops_view').select('*').order('created_at', { ascending: false }).limit(30);
+    if (term && term.trim()) {
+      const q = term.trim();
+      query = query.or(`ref.ilike.%${q}%,title.ilike.%${q}%,district.ilike.%${q}%`);
+    }
+    if (filter === 'new') query = query.eq('lead_status', 'new');
+    if (filter === 'transferred') query = query.eq('lead_status', 'transferred');
+
+    const { data } = await query;
+    let rows = data || [];
+    if (filter === 'unmapped') rows = rows.filter(r => !r.internal_agent_id);
+
+    if (!rows.length) { resultsEl.innerHTML = '<div class="empty">Aucun résultat.</div>'; return; }
+    resultsEl.innerHTML = rows.map(listingCard).join('');
+    resultsEl.querySelectorAll('.item').forEach(el => {
+      el.addEventListener('click', () => {
+        const row = rows.find(r => r.listing_id === el.dataset.id);
+        if (row) openDetails(row);
+      });
+    });
+  }
+
+  function openDetails(v) {
+    currentListing = v;
+    details.classList.add('hidden');
+    detailsPane.classList.remove('hidden');
+    document.getElementById('dTitle').textContent = v.title || 'Annonce';
+    document.getElementById('dMeta').innerHTML = `<span>Ref: ${esc(v.ref || '-')}</span><span>${esc(v.district || '')}${v.city ? ', ' + esc(v.city) : ''}</span><span>${esc(v.type || '')}</span>`;
+    document.getElementById('agentSelect').value = v.internal_agent_id || '';
+    document.getElementById('leadStatus').value = v.lead_status || 'new';
+    document.getElementById('zoneMacro').value = v.zone_macro || '';
+    document.getElementById('subzone').value = v.subzone || '';
+    document.getElementById('leadNotes').value = v.lead_notes || '';
+    renderAgentCard(v.internal_agent_id);
+  }
+
+  function renderAgentCard(agentId) {
+    const box = document.getElementById('agentCard');
+    const a = agents.find(x => x.id === agentId);
+    if (!a) { box.innerHTML = '<div class="muted">Aucun agent réel lié pour le moment.</div>'; return; }
+    box.innerHTML = `<div class="title">${esc(a.name)}</div>
+      <div class="meta">${a.phone ? `<span>Tél: ${esc(a.phone)}</span>` : ''}${a.whatsapp ? `<span>WA: ${esc(a.whatsapp)}</span>` : ''}${a.zone_macro ? `<span>Zone: ${esc(a.zone_macro)}</span>` : ''}</div>
+      ${a.zones_fines ? `<div class="small muted">Sous-zones: ${esc(a.zones_fines)}</div>` : ''}
+      ${a.notes ? `<div class="small" style="margin-top:6px">${esc(a.notes)}</div>` : ''}`;
+  }
+
+  async function saveMapping() {
+    if (!currentListing) return;
+    const payload = {
+      listing_id: currentListing.listing_id,
+      internal_agent_id: document.getElementById('agentSelect').value || null,
+      lead_status: document.getElementById('leadStatus').value || 'new',
+      zone_macro: document.getElementById('zoneMacro').value.trim() || null,
+      subzone: document.getElementById('subzone').value.trim() || null,
+      lead_notes: document.getElementById('leadNotes').value.trim() || null
+    };
+    const { error } = await client.from('internal_listing_map').upsert([payload], { onConflict: 'listing_id' });
+    if (error) { alert('Erreur enregistrement: ' + error.message); return; }
+    alert('Mapping enregistré.');
+    renderAgentCard(payload.internal_agent_id);
+    await searchListings(document.getElementById('search').value.trim());
+  }
+
+  function copyPhone() {
+    const agentId = document.getElementById('agentSelect').value;
+    const a = agents.find(x => x.id === agentId);
+    const phone = a?.whatsapp || a?.phone || '';
+    if (!phone) { alert('Aucun numéro disponible.'); return; }
+    navigator.clipboard.writeText(phone);
+    alert('Numéro copié.');
+  }
+
+  function openWhatsAppAgent() {
+    const agentId = document.getElementById('agentSelect').value;
+    const a = agents.find(x => x.id === agentId);
+    const phone = (a?.whatsapp || a?.phone || '').replace(/[^\d+]/g, '');
+    if (!phone) { alert('Aucun WhatsApp disponible.'); return; }
+    const msg = encodeURIComponent(`Bonjour ${a.name}, lead SeLogerCM pour l'annonce ${currentListing?.ref || ''}.`);
+    window.open(`https://wa.me/${phone.replace('+','')}?text=${msg}`, '_blank');
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', () => searchListings(document.getElementById('search').value.trim()));
+  document.getElementById('search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchListings(document.getElementById('search').value.trim()); } });
+  document.getElementById('quickNew').addEventListener('click', () => searchListings('', 'new'));
+  document.getElementById('quickTransferred').addEventListener('click', () => searchListings('', 'transferred'));
+  document.getElementById('quickUnmapped').addEventListener('click', () => searchListings('', 'unmapped'));
+  document.getElementById('saveMap').addEventListener('click', saveMapping);
+  document.getElementById('copyPhone').addEventListener('click', copyPhone);
+  document.getElementById('openWa').addEventListener('click', openWhatsAppAgent);
+  document.getElementById('agentSelect').addEventListener('change', e => renderAgentCard(e.target.value));
+
+  init();
+})();
+</script>
+</body>
+</html>
