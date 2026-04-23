@@ -1,14 +1,214 @@
 /**
  * Netlify Function — og.js
- * Stable OG endpoint for /share/:slug
+ * Version finale absolue
+ * IMPORTANT :
+ * - Facebook / WhatsApp doivent rester sur /share/:slug
+ * - Aucune redirection vers /annonce/:slug
+ * - og:url = /share/:slug
  */
-const SUPABASE_URL='https://hozlyddiqodvjguqywty.supabase.co';
-const SITE_URL='https://www.selogercm.com';
-const DEFAULT_OG_IMAGE='https://hozlyddiqodvjguqywty.supabase.co/storage/v1/object/public/listing-images/listings/listing_1776010205589/photo_0_1776010205589.webp';
-function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function price(v,m){const a=Number(v||0).toLocaleString('fr-FR')+' FCFA';return m==='sale'?a:a+'/mois'}
-function slug(event){const raw=event.rawUrl||'';const path=event.path||'';return decodeURIComponent((raw.match(/\/share\/([^/?#]+)/)?.[1]||path.match(/\/share\/([^/?#]+)/)?.[1]||event.queryStringParameters?.slug||'').trim())||null}
-function abs(u){if(!u) return DEFAULT_OG_IMAGE;u=String(u);if(u.startsWith('https://')) return u;if(u.startsWith('http://')) return u.replace('http://','https://');if(u.startsWith('/')) return SITE_URL+u;return SITE_URL+'/'+u}
-exports.handler=async(event)=>{const SB_KEY=process.env.SB_ANON_KEY;const s=slug(event);const canon=s?`${SITE_URL}/annonce/${s}`:`${SITE_URL}/annonces`;if(!SB_KEY||!s)return resp(html('SE LOGER CM','Trouvez votre bien immobilier à Douala et au Cameroun.',DEFAULT_OG_IMAGE,canon));try{const api=`${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(s)}&select=title,description,price,rent_sale,city,district,images&limit=1`;const r=await fetch(api,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,Accept:'application/json'}});if(!r.ok) throw new Error('api');const arr=await r.json();const ad=arr[0];if(!ad) throw new Error('none');const t=e(ad.title||'Annonce immobilière');const d=e([price(ad.price,ad.rent_sale),[ad.district,ad.city].filter(Boolean).join(', '),(ad.description||'Disponible sur SE LOGER CM').replace(/\s+/g,' ').slice(0,120)].filter(Boolean).join(' · '));const img=e(abs(Array.isArray(ad.images)&&ad.images[0]?ad.images[0]:DEFAULT_OG_IMAGE));return resp(html(t,d,img,canon));}catch(err){return resp(html('Annonce immobilière','Annonce immobilière sur SE LOGER CM.',DEFAULT_OG_IMAGE,canon));}};
-function resp(body){return {statusCode:200,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache, no-store, must-revalidate'},body}}
-function html(title,desc,img,url){return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${title} | SE LOGER CM</title><meta name="description" content="${desc}"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="article"><meta property="og:site_name" content="SE LOGER CM"><meta property="og:locale" content="fr_CM"><meta property="og:url" content="${e(url)}"><meta property="og:title" content="${title} | SE LOGER CM"><meta property="og:description" content="${desc}"><meta property="og:image" content="${img}"><meta property="og:image:secure_url" content="${img}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${title} | SE LOGER CM"><meta name="twitter:description" content="${desc}"><meta name="twitter:image" content="${img}"><link rel="canonical" href="${e(url)}"></head><body><p><a href="${e(url)}">Voir l'annonce</a></p></body></html>`}
+
+const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
+const SITE_URL = 'https://selogercm.com';
+
+const DEFAULT_OG_IMAGE =
+  'https://hozlyddiqodvjguqywty.supabase.co/storage/v1/object/public/listing-images/listings/listing_1776010205589/photo_0_1776010205589.webp';
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function fmtPrice(n, mode) {
+  const price = Number(n || 0).toLocaleString('fr-FR') + ' FCFA';
+  return mode === 'sale' ? price : price + '/mois';
+}
+
+exports.handler = async function (event) {
+  const SB_KEY = process.env.SB_ANON_KEY;
+
+  const rawUrl = event.rawUrl || '';
+  const match =
+    rawUrl.match(/\/share\/([^/?]+)/) ||
+    rawUrl.match(/slug=([^&]+)/);
+
+  const slug = match ? decodeURIComponent(match[1]) : null;
+
+  if (!slug) {
+    return htmlResponse(
+      buildHtml({
+        title: 'SE LOGER CM',
+        desc: 'Trouvez votre bien immobilier au Cameroun.',
+        img: DEFAULT_OG_IMAGE,
+        url: `${SITE_URL}/share/home`,
+        viewUrl: `${SITE_URL}`
+      })
+    );
+  }
+
+  const shareUrl = `${SITE_URL}/share/${slug}`;
+  const realUrl = `${SITE_URL}/annonce/${slug}`;
+
+  if (!SB_KEY) {
+    return htmlResponse(
+      buildHtml({
+        title: 'SE LOGER CM',
+        desc: 'Trouvez votre bien immobilier au Cameroun.',
+        img: DEFAULT_OG_IMAGE,
+        url: shareUrl,
+        viewUrl: realUrl
+      })
+    );
+  }
+
+  try {
+    const apiUrl =
+      `${SUPABASE_URL}/rest/v1/listings` +
+      `?slug=eq.${encodeURIComponent(slug)}` +
+      `&select=title,description,price,rent_sale,city,district,images` +
+      `&limit=1`;
+
+    const res = await fetch(apiUrl, {
+      headers: {
+        apikey: SB_KEY,
+        Authorization: 'Bearer ' + SB_KEY,
+        Accept: 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error('Supabase error ' + res.status);
+    }
+
+    const data = await res.json();
+    const ad = data && data[0];
+
+    if (!ad) {
+      throw new Error('Listing not found');
+    }
+
+    const title = ad.title || 'Annonce immobilière';
+
+    const price = fmtPrice(ad.price, ad.rent_sale);
+
+    const location = [ad.district, ad.city]
+      .filter(Boolean)
+      .join(', ');
+
+    const mode =
+      ad.rent_sale === 'sale'
+        ? 'À vendre'
+        : 'À louer';
+
+    const desc = `${price} · ${location}. ${mode}. Contact rapide WhatsApp.`;
+
+    const img =
+      (ad.images && ad.images[0]) ||
+      DEFAULT_OG_IMAGE;
+
+    return htmlResponse(
+      buildHtml({
+        title,
+        desc,
+        img,
+        url: shareUrl,     // 🔥 CRUCIAL : /share/
+        viewUrl: realUrl   // lien humain
+      })
+    );
+  } catch (e) {
+    return htmlResponse(
+      buildHtml({
+        title: 'SE LOGER CM',
+        desc: 'Trouvez votre bien immobilier au Cameroun.',
+        img: DEFAULT_OG_IMAGE,
+        url: shareUrl,
+        viewUrl: realUrl
+      })
+    );
+  }
+};
+
+function htmlResponse(html) {
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache'
+    },
+    body: html
+  };
+}
+
+function buildHtml({ title, desc, img, url, viewUrl }) {
+  const t = escapeHtml(title);
+  const d = escapeHtml(desc);
+  const i = escapeHtml(img);
+  const u = escapeHtml(url);
+  const v = escapeHtml(viewUrl);
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>${t}</title>
+
+<meta name="description" content="${d}">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="${t}">
+<meta property="og:description" content="${d}">
+<meta property="og:image" content="${i}">
+<meta property="og:image:secure_url" content="${i}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="${u}">
+<meta property="og:site_name" content="SE LOGER CM">
+<meta property="og:locale" content="fr_CM">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${t}">
+<meta name="twitter:description" content="${d}">
+<meta name="twitter:image" content="${i}">
+
+<link rel="canonical" href="${u}">
+
+<style>
+body{
+font-family:Arial,sans-serif;
+max-width:700px;
+margin:60px auto;
+padding:20px;
+text-align:center;
+color:#222;
+}
+img{
+max-width:100%;
+border-radius:12px;
+}
+a{
+display:inline-block;
+margin-top:20px;
+padding:12px 18px;
+background:#ff7a00;
+color:#fff;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<img src="${i}" alt="${t}">
+<h1>${t}</h1>
+<p>${d}</p>
+
+<a href="${v}">
+Voir l'annonce
+</a>
+
+</body>
+</html>`;
+}
