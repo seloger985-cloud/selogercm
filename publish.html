@@ -143,6 +143,7 @@
           <option value="duplex">Duplex</option>
           <option value="warehouse">Entrepôt</option>
           <option value="shop">Boutique / Local commercial</option>
+          <option value="fonds-commerce">Fonds de commerce</option>
           <option value="plots-of-land">Terrain</option>
         </select>
       </div>
@@ -198,6 +199,22 @@
             <input id="prixM2" type="number" readonly class="input" placeholder="Calculé auto" style="background:#f5f5f5;color:#888">
           </div>
         </div>
+      </div>
+
+
+      <!-- Champs fonds de commerce -->
+      <div id="businessFields" style="display:none;grid-column:1/-1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div>
+            <label for="businessRent" style="font-weight:700;display:block;margin-bottom:.25rem">Loyer mensuel (FCFA)</label>
+            <input id="businessRent" type="number" min="0" class="input" placeholder="Ex : 300 000">
+          </div>
+          <div>
+            <label for="businessActivity" style="font-weight:700;display:block;margin-bottom:.25rem">Activité</label>
+            <input id="businessActivity" class="input" placeholder="Ex : Restaurant, salon, pressing...">
+          </div>
+        </div>
+        <small style="display:block;margin-top:.5rem;color:#888">💡 Pour un fonds de commerce, renseignez le prix du fonds ci-dessus, puis le loyer mensuel et l'activité.</small>
       </div>
 
       <!-- Champs terrain -->
@@ -337,6 +354,8 @@
         if (d.hauteur)     document.getElementById('hauteur').value     = d.hauteur;
         if (d.charges)     document.getElementById('charges').value     = d.charges;
         if (d.caution)     document.getElementById('caution').value     = d.caution;
+        if (d.business_rent) document.getElementById('businessRent').value = d.business_rent;
+        if (d.business_activity) document.getElementById('businessActivity').value = d.business_activity;
 
         /* Ville & quartier */
         if (d.city) {
@@ -408,6 +427,7 @@
     document.getElementById('furnished').addEventListener('change', syncPricePerDay);
 
     function syncMode(){
+      const isBusiness = document.getElementById('type').value === 'fonds-commerce';
       if(currentMode==='rent'){
         modeRentBtn.classList.add('active'); modeSaleBtn.classList.remove('active');
         priceHint.textContent='Location : fourchette typique 100 000 – 600 000 FCFA';
@@ -416,10 +436,12 @@
         document.getElementById('titreFoncierField').style.display = 'none';
       }else{
         modeSaleBtn.classList.add('active'); modeRentBtn.classList.remove('active');
-        priceHint.textContent='Vente : < 15M • 15–50M • 50–100M • > 100M FCFA';
-        document.getElementById('cautionField').style.display = 'none';
+        priceHint.textContent = isBusiness
+          ? 'Cession : renseignez le prix du fonds, le loyer mensuel et l’activité'
+          : 'Vente : < 15M • 15–50M • 50–100M • > 100M FCFA';
+        document.getElementById('cautionField').style.display = isBusiness ? 'block' : 'none';
         document.getElementById('chargesField').style.display = 'none';
-        document.getElementById('titreFoncierField').style.display = 'block';
+        document.getElementById('titreFoncierField').style.display = isBusiness ? 'none' : 'block';
       }
     }
     modeRentBtn.addEventListener('click',()=>{currentMode='rent';syncMode();syncPricePerDay();});
@@ -533,23 +555,33 @@
     const typeSelect = document.getElementById('type');
     const commercialTypes = ['warehouse', 'shop'];
     const terrainTypes = ['plots-of-land'];
+    const businessTypes = ['fonds-commerce'];
 
     function updateTypeFields() {
       const val = typeSelect.value;
       const isCommercial = commercialTypes.includes(val);
       const isTerrain    = terrainTypes.includes(val);
+      const isBusiness   = businessTypes.includes(val);
 
       document.getElementById('commercialFields').style.display = isCommercial ? 'block' : 'none';
       document.getElementById('terrainFields').style.display    = isTerrain    ? 'block' : 'none';
-      document.getElementById('bedroomsField').style.display    = (isCommercial || isTerrain) ? 'none'  : 'block';
-      document.getElementById('bathroomsField').style.display   = (isCommercial || isTerrain) ? 'none'  : 'block';
-      document.getElementById('bedrooms').required = !(isCommercial || isTerrain);
+      document.getElementById('businessFields').style.display   = isBusiness ? 'block' : 'none';
+      document.getElementById('bedroomsField').style.display    = (isCommercial || isTerrain || isBusiness) ? 'none'  : 'block';
+      document.getElementById('bathroomsField').style.display   = (isCommercial || isTerrain || isBusiness) ? 'none'  : 'block';
+      document.getElementById('bedrooms').required = !(isCommercial || isTerrain || isBusiness);
 
-      /* Masquer meublé / prix journalier pour terrain */
+      /* Masquer meublé / prix journalier pour terrain & fonds de commerce */
       const furnishedRow = document.getElementById('furnished')?.closest('.checkline');
-      if (furnishedRow) furnishedRow.style.display = isTerrain ? 'none' : '';
+      if (furnishedRow) furnishedRow.style.display = (isTerrain || isBusiness) ? 'none' : '';
       const pricePerDayField = document.getElementById('pricePerDayField');
-      if (pricePerDayField && isTerrain) pricePerDayField.style.display = 'none';
+      if (pricePerDayField && (isTerrain || isBusiness)) pricePerDayField.style.display = 'none';
+
+      const priceLabel = document.querySelector('label[for="price"]');
+      if (priceLabel) {
+        priceLabel.innerHTML = isBusiness ? 'Prix du fonds (FCFA)' : (currentMode === 'sale' ? 'Prix de vente (FCFA)' : 'Prix mensuel (FCFA)');
+      }
+
+      syncMode();
     }
     typeSelect.addEventListener('change', updateTypeFields);
 
@@ -738,6 +770,11 @@
         /* Hauteur — numeric */
         hauteur:       document.getElementById('hauteur').value
                          ? Number(document.getElementById('hauteur').value) : null,
+
+        /* Fonds de commerce */
+        business_rent: document.getElementById('businessRent').value
+                         ? Number(document.getElementById('businessRent').value) : null,
+        business_activity: document.getElementById('businessActivity').value.trim() || null,
 
         /* Booléens */
         furnished:     document.getElementById('furnished').checked,

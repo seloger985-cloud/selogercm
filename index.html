@@ -240,7 +240,7 @@
       <section class="snap section-soft" aria-label="Fonds de Commerce">
         <div class="container px pt pb">
           <h2 class="section-title">Fonds de Commerce</h2>
-          <p class="section-sub">Boutiques • Locaux commerciaux à acquérir</p>
+          <p class="section-sub">Boutiques • Locaux commerciaux • Fonds de commerce à acquérir</p>
           <div id="commercialSaleGrid" class="grid grid-3" aria-live="polite"></div>
         </div>
       </section>
@@ -459,7 +459,7 @@ if (!unfurnished.length || !furnished.length) {
         .select('*')
         .eq('status', 'active')
         .eq('rent_sale', 'sale')
-        .in('type', ['commercial', 'warehouse', 'shop'])
+        .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -506,7 +506,7 @@ if (!unfurnished.length || !furnished.length) {
       .select('*')
       .eq('status', 'active')
       .eq('rent_sale', 'rent')
-      .in('type', ['commercial', 'warehouse', 'shop'])
+      .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
       .order('created_at', { ascending: false })
       .limit(6);
 
