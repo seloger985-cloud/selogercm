@@ -902,8 +902,9 @@
         const location = [ad.district, ad.city].filter(Boolean).join(', ');
         const ref     = ad.ref || (ad.id ? ad.id.substring(0, 8).toUpperCase() : '');
         const listingUrl  = `https://selogercm.com/annonce/${ad.slug || ad.id}`;
-        const listingShare = `https://selogercm.com/share/${ad.slug || ad.id}`; /* URL OG pour partage social (Facebook, LinkedIn) */
-        window._currentListingUrl = listingUrl;
+        const listingShare = `https://selogercm.com/share/${ad.slug || ad.id}`; /* URL OG pour partage social (Facebook, LinkedIn, WhatsApp, Copier) */
+        window._currentListingUrl = listingShare;
+        window._currentViewUrl = listingUrl;
         window._currentListingTitle = title;
 
         const waMsg = encodeURIComponent(
@@ -982,7 +983,7 @@
         /* ── Liens de partage social ── */
         const shareText = encodeURIComponent(`${title} — ${price} — ${location}`);
         const shareUrl  = encodeURIComponent(listingShare); /* OG tags pour Facebook/LinkedIn */
-        const shareUrlWa = encodeURIComponent(listingUrl);  /* URL directe pour WhatsApp/Telegram */
+        const shareUrlWa = encodeURIComponent(listingShare);  /* URL OG aussi pour WhatsApp */
 
         const shareFb = document.getElementById('shareFb');
         if (shareFb) shareFb.href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
