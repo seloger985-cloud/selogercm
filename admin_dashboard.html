@@ -334,6 +334,26 @@
           openBoostModal(id);
           return;
         }
+        if (btn.classList.contains('b-video')) {
+          const current = ad.video_url || '';
+          const promptMsg = current
+            ? 'URL vidéo actuelle :\n' + current + '\n\nColle une nouvelle URL pour modifier, ou laisse vide et OK pour supprimer.'
+            : 'Colle l\'URL publique de la vidéo (bucket Supabase listing-videos) :';
+          const input = window.prompt(promptMsg, current);
+          if (input === null) return; // Annulé
+          const trimmed = input.trim();
+          // Validation basique : vide OU URL http(s)
+          if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+            alert('URL invalide. Doit commencer par http:// ou https://');
+            return;
+          }
+          const newValue = trimmed || null;
+          const { error } = await window.SLCM_DB.client.from('listings')
+            .update({ video_url: newValue }).eq('id', id);
+          if (error) { alert('Erreur: ' + error.message); return; }
+          await render();
+          return;
+        }
         if (btn.classList.contains('toggle-premium')) {
           const { error } = await window.SLCM_DB.client.from('listings')
             .update({ premium: !ad.premium }).eq('id', id);
@@ -372,11 +392,20 @@
         (ad.rentSale === 'sale' ? 'For Sale' : 'To Rent')
       ].filter(Boolean).join(' • ');
       const badge = ad.premium ? '<div class="badge premium">PREMIUM</div>' : (ad.furnished ? '<div class="badge">Furnished</div>' : '<div class="badge">Standard</div>');
+      const hasVideo = !!(ad.video_url && String(ad.video_url).trim());
+      const videoIndicator = hasVideo
+        ? '<div class="badge" style="position:absolute;bottom:.5rem;right:.5rem;background:#ef4444;color:#fff">🎬 REEL</div>'
+        : '';
+      const videoBtnLabel = hasVideo ? '🎬 Vidéo ✓' : '🎬 Ajouter vidéo';
+      const videoBtnStyle = hasVideo
+        ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5'
+        : 'background:#f3f4f6;color:#374151;border:1px solid #d1d5db';
 
       return `
         <article class="card" data-id="${ad.id}">
           <div class="thumb">
             ${badge}
+            ${videoIndicator}
             <img src="${img}" alt="${escapeHtml(title)}">
           </div>
           <div class="body">
@@ -386,6 +415,7 @@
             <div class="actions">
               <button class="b-outline toggle-premium">${ad.premium ? 'Remove Premium' : 'Make Premium'}</button>
               <button class="b-outline toggle-furn">${ad.furnished ? 'Set Unfurnished' : 'Set Furnished'}</button>
+              <button class="b-video" style="${videoBtnStyle}">${videoBtnLabel}</button>
               <button class="b-boost" style="background:#fff4e8;color:#ff7a00;border:1px solid #ffd4a8">
                 ${ad.boost_expires_at && new Date(ad.boost_expires_at) > new Date() ? '🔥 Boosté' : '⚡ Boost'}
               </button>
