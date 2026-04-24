@@ -1,77 +1,97 @@
-const { createClient } = require('@supabase/supabase-js');
+const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
+const SB_KEY = process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const SITE = 'https://selogercm.com';
+const DEFAULT_IMG = `${SITE}/assets/img/og-cover.jpg`;
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-function esc(v=''){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-function firstImage(listing){
-  if (!listing) return null;
-  if (Array.isArray(listing.images) && listing.images.length) return listing.images[0];
-  if (typeof listing.images === 'string'){
-    try{
-      const arr = JSON.parse(listing.images);
-      if (Array.isArray(arr) && arr.length) return arr[0];
-    }catch(e){}
-  }
-  return listing.image_url || listing.thumbnail_url || null;
+function esc(v = '') {
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-exports.handler = async (event) => {
-  try{
-    const path = event.path || '';
-    const slug = decodeURIComponent(path.replace('/share/','').replace(/^\/+/, '').trim());
+function firstImage(ad) {
+  if (Array.isArray(ad.images) && ad.images.length) return ad.images[0];
+  return DEFAULT_IMG;
+}
 
-    const site = 'https://selogercm.com';
-    const canonical = `${site}/share/${slug}`;
-    const target = `${site}/annonce/${slug}`;
+exports.handler = async function(event) {
+  const path = event.path || '';
+  const slug = decodeURIComponent(path.replace('/share/', '').split('?')[0]);
 
-    let title = 'SE LOGER CM | Immobilier Cameroun';
-    let description = 'Découvrez cette annonce immobilière sur SeLogerCM.';
-    let image = 'https://selogercm.com/assets/img/og-cover.jpg';
+  const targetUrl = `${SITE}/annonce/${slug}`;
+  const shareUrl = `${SITE}/share/${slug}`;
 
-    if (SUPABASE_URL && SUPABASE_ANON_KEY && slug){
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { data } = await supabase
-        .from('listings')
-        .select('*')
-        .or(`slug.eq.${slug},share_slug.eq.${slug}`)
-        .limit(1)
-        .maybeSingle();
+  let title = 'SE LOGER CM | Immobilier Cameroun';
+  let desc = 'Découvrez cette annonce immobilière sur SE LOGER CM.';
+  let img = DEFAULT_IMG;
 
-      if (data){
-        const price = data.price ? `${Number(data.price).toLocaleString('fr-FR')} FCFA` : '';
-        title = `${data.title || 'Annonce'} | SE LOGER CM`;
-        description = `${data.district || ''}${data.city ? ' - ' + data.city : ''}${price ? ' • ' + price : ''}`.trim();
-        image = firstImage(data) || image;
+  try {
+    if (SB_KEY && slug) {
+      const apiUrl =
+        `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}` +
+        `&select=title,description,price,city,district,images&limit=1`;
+
+      const res = await fetch(apiUrl, {
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${SB_KEY}`,
+          Accept: 'application/json'
+        }
+      });
+
+      const data = await res.json();
+      const ad = data && data[0];
+
+      if (ad) {
+        const price = ad.price ? Number(ad.price).toLocaleString('fr-FR') + ' FCFA' : '';
+        const location = [ad.district, ad.city].filter(Boolean).join(', ');
+
+        title = `${ad.title || 'Annonce immobilière'} | SE LOGER CM`;
+        desc = `${price}${location ? ' · ' + location : ''}. Contact rapide WhatsApp.`;
+        img = firstImage(ad);
       }
     }
+  } catch (e) {
+    console.error('OG error:', e.message);
+  }
 
-    const html = `<!DOCTYPE html><html lang="fr"><head>
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
 <meta charset="utf-8">
 <title>${esc(title)}</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="SE LOGER CM">
+<meta name="description" content="${esc(desc)}">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="${esc(shareUrl)}">
 <meta property="og:title" content="${esc(title)}">
-<meta property="og:description" content="${esc(description)}">
-<meta property="og:image" content="${esc(image)}">
-<meta property="og:url" content="${esc(canonical)}">
-<meta property="og:locale" content="fr_FR">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="${esc(img)}">
+<meta property="og:site_name" content="SE LOGER CM">
+<meta property="og:locale" content="fr_CM">
+
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
-<meta name="twitter:description" content="${esc(description)}">
-<meta name="twitter:image" content="${esc(image)}">
-<meta http-equiv="refresh" content="0; url=${esc(target)}">
-<link rel="canonical" href="${esc(canonical)}">
-</head><body><p>Redirection...</p></body></html>`;
+<meta name="twitter:description" content="${esc(desc)}">
+<meta name="twitter:image" content="${esc(img)}">
 
-    return {
-      statusCode: 200,
-      headers: {"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-cache, no-store, must-revalidate"},
-      body: html
-    };
-  }catch(e){
-    return {statusCode:500, body:'OG function error'};
-  }
+<link rel="canonical" href="${esc(shareUrl)}">
+<meta http-equiv="refresh" content="0; url=${esc(targetUrl)}">
+</head>
+<body>
+<p>Redirection...</p>
+<p><a href="${esc(targetUrl)}">Ouvrir l’annonce</a></p>
+</body>
+</html>`;
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    },
+    body: html
+  };
 };
