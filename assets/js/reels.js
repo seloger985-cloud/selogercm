@@ -426,6 +426,14 @@ const SLCM_reels = (() => {
   /* ── Init ────────────────────────────────────────────────────────── */
   async function init() {
     injectStyles();
+
+    /* Attendre que Supabase soit prêt (pattern cohérent avec index.html) */
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+
     reels = await loadReels();
     buildSection();
     window.addEventListener('resize', handleResize);
