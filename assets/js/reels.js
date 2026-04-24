@@ -145,7 +145,10 @@ const SLCM_reels = (() => {
           position: absolute; top: 0; left: 0; right: 0; z-index: 20;
           margin: 0; padding: 1rem;
           background: linear-gradient(180deg, rgba(0,0,0,.6) 0%, transparent 100%);
+          /* Laisser les taps traverser le header vers les boutons vidéo en dessous */
+          pointer-events: none;
         }
+        #reelsSection .reels-header > * { pointer-events: auto; }
         #reelsSection .reels-title { font-size: 1.1rem; color: #fff; }
         #reelsSection .reels-sub { display: none; }
         #reelsSection .reels-track {
@@ -214,11 +217,23 @@ const SLCM_reels = (() => {
       }
       #reelsSection .reel-sound {
         position: absolute; top: 1rem; right: 1rem;
-        width: 36px; height: 36px; border-radius: 50%;
+        width: 40px; height: 40px; border-radius: 50%;
         background: rgba(0,0,0,.5); color: #fff;
-        border: none; cursor: pointer; font-size: .9rem;
+        border: none; cursor: pointer; font-size: .95rem;
         display: flex; align-items: center; justify-content: center;
         backdrop-filter: blur(6px);
+        z-index: 25;
+        /* Empêche la sélection et les gestes natifs d'interférer */
+        -webkit-tap-highlight-color: rgba(255,255,255,.2);
+        touch-action: manipulation;
+        user-select: none;
+      }
+      /* Cible de tap élargie sur mobile (zone invisible autour du bouton) */
+      @media (max-width: ${MOBILE_BREAKPOINT - 1}px) {
+        #reelsSection .reel-sound {
+          width: 48px; height: 48px;
+          top: 4.5rem; /* Sous le header pour éviter tout chevauchement */
+        }
       }
 
       /* ══ Empty state (aucune vidéo en base) : on cache la section ══ */
@@ -337,9 +352,9 @@ const SLCM_reels = (() => {
       setupMobileAutoplay(track);
     }
 
-    /* Bouton son (commun) */
+    /* Bouton son (commun) — gère à la fois click et touchend pour Android Chrome */
     track.querySelectorAll('.reel-sound').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      const toggleSound = (e) => {
         e.stopPropagation();
         e.preventDefault();
         const card = btn.closest('.reel-card');
@@ -349,7 +364,17 @@ const SLCM_reels = (() => {
         btn.innerHTML = video.muted
           ? '<i class="fas fa-volume-mute"></i>'
           : '<i class="fas fa-volume-up"></i>';
-      });
+        btn.setAttribute('aria-label', video.muted ? 'Activer le son' : 'Couper le son');
+        /* Si on unmute et que la vidéo était en pause, relance */
+        if (!video.muted && video.paused) {
+          const p = video.play();
+          if (p && p.catch) p.catch(() => {});
+        }
+      };
+      /* touchend pour mobile (déclenche plus fiablement sur Android Chrome) */
+      btn.addEventListener('touchend', toggleSound, { passive: false });
+      /* click pour desktop (et fallback mobile) */
+      btn.addEventListener('click', toggleSound);
     });
   }
 
