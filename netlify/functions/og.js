@@ -1,64 +1,97 @@
-// netlify/functions/og.js
+const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
+const SB_KEY = process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const SITE = 'https://selogercm.com';
+const DEFAULT_IMG = `${SITE}/assets/img/og-cover.jpg`;
 
-exports.handler = async (event) => {
+function esc(v = '') {
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function firstImage(ad) {
+  if (Array.isArray(ad.images) && ad.images.length) return ad.images[0];
+  return DEFAULT_IMG;
+}
+
+exports.handler = async function(event) {
+  const path = event.path || '';
+  const slug = decodeURIComponent(path.replace('/share/', '').split('?')[0]);
+
+  const targetUrl = `${SITE}/annonce/${slug}`;
+  const shareUrl = `${SITE}/share/${slug}`;
+
+  let title = 'SE LOGER CM | Immobilier Cameroun';
+  let desc = 'Découvrez cette annonce immobilière sur SE LOGER CM.';
+  let img = DEFAULT_IMG;
+
   try {
-    const path = event.path || "";
-    const slug = path.replace("/share/", "").trim();
+    if (SB_KEY && slug) {
+      const apiUrl =
+        `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}` +
+        `&select=title,description,price,city,district,images&limit=1`;
 
-    const site = "https://selogercm.com";
-    const pageUrl = `${site}/share/${slug}`;
+      const res = await fetch(apiUrl, {
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${SB_KEY}`,
+          Accept: 'application/json'
+        }
+      });
 
-    // Image OG stable (JPG/PNG recommandé pour WhatsApp)
-    const ogImage =
-      "https://hozlyddiqodvjguqywty.supabase.co/storage/v1/object/public/listing-images/listings/listing_1776010205589/photo_0_1776010205589.webp";
+      const data = await res.json();
+      const ad = data && data[0];
 
-    const title = "SE LOGER CM | Immobilier Cameroun";
-    const description =
-      "Découvrez cette annonce immobilière sur SeLogerCM : location, vente, studios, appartements, villas et plus.";
+      if (ad) {
+        const price = ad.price ? Number(ad.price).toLocaleString('fr-FR') + ' FCFA' : '';
+        const location = [ad.district, ad.city].filter(Boolean).join(', ');
 
-    const html = `
-<!DOCTYPE html>
+        title = `${ad.title || 'Annonce immobilière'} | SE LOGER CM`;
+        desc = `${price}${location ? ' · ' + location : ''}. Contact rapide WhatsApp.`;
+        img = firstImage(ad);
+      }
+    }
+  } catch (e) {
+    console.error('OG error:', e.message);
+  }
+
+  const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>${title}</title>
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
 
-<meta property="og:type" content="website">
+<meta property="og:type" content="article">
+<meta property="og:url" content="${esc(shareUrl)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="${esc(img)}">
 <meta property="og:site_name" content="SE LOGER CM">
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${description}">
-<meta property="og:image" content="${ogImage}">
-<meta property="og:url" content="${pageUrl}">
-<meta property="og:locale" content="fr_FR">
+<meta property="og:locale" content="fr_CM">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${title}">
-<meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${ogImage}">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(desc)}">
+<meta name="twitter:image" content="${esc(img)}">
 
-<meta http-equiv="refresh" content="0; url=${site}/annonce/${slug}">
-<link rel="canonical" href="${pageUrl}">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="canonical" href="${esc(shareUrl)}">
+<meta http-equiv="refresh" content="0; url=${esc(targetUrl)}">
 </head>
-
-<body style="font-family:Arial,sans-serif;padding:30px">
-<p>Redirection vers l'annonce...</p>
-<p><a href="${site}/annonce/${slug}">Cliquer ici</a></p>
+<body>
+<p>Redirection...</p>
+<p><a href="${esc(targetUrl)}">Ouvrir l’annonce</a></p>
 </body>
 </html>`;
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-      },
-      body: html,
-    };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: "OG error",
-    };
-  }
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    },
+    body: html
+  };
 };
