@@ -253,6 +253,35 @@ const SLCM_reels = (() => {
           backdrop-filter: blur(4px);
           pointer-events: none;
         }
+        /* B2 — Indicateur 'Voir les annonces' mobile (juste sous la bande) */
+        #reelsSection .reels-cta-next {
+          margin: .9rem 1rem 0;
+          background: rgba(255,255,255,.08);
+          border: 1px solid rgba(255,255,255,.15);
+          color: #fff;
+          padding: .55rem 1rem;
+          border-radius: 999px;
+          font-size: .8rem;
+          font-weight: 600;
+          display: flex; align-items: center; justify-content: center;
+          gap: .4rem;
+          cursor: pointer;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: rgba(255,255,255,.1);
+          width: calc(100% - 2rem);
+          transition: background .2s;
+        }
+        #reelsSection .reels-cta-next:active {
+          background: rgba(255,255,255,.15);
+        }
+        #reelsSection .reels-cta-next .arrow {
+          display: inline-block;
+          animation: reelsCtaArrow 1.6s ease-in-out infinite;
+        }
+        @keyframes reelsCtaArrow {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(3px); }
+        }
       }
 
       /* ══════ VIEWER MODAL (mobile, plein écran) ══════ */
@@ -543,21 +572,41 @@ const SLCM_reels = (() => {
       </div>
       <div class="reels-strip" id="reelsStrip">
         ${reels.map((r, i) => renderMobileThumb(r, i)).join('')}
-      </div>`;
+      </div>
+      <button class="reels-cta-next" type="button" id="reelsCtaNext">
+        Voir les annonces <span class="arrow">↓</span>
+      </button>`;
 
     bindMobileInteractions();
   }
 
   function bindMobileInteractions() {
     const strip = document.getElementById('reelsStrip');
-    if (!strip) return;
-    strip.querySelectorAll('.reel-thumb').forEach(thumb => {
-      thumb.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idx = parseInt(thumb.dataset.index, 10);
-        openViewer(idx);
+    if (strip) {
+      strip.querySelectorAll('.reel-thumb').forEach(thumb => {
+        thumb.addEventListener('click', (e) => {
+          e.preventDefault();
+          const idx = parseInt(thumb.dataset.index, 10);
+          openViewer(idx);
+        });
       });
-    });
+    }
+    /* B2 — Bouton 'Voir les annonces' qui scroll vers la section suivante */
+    const ctaNext = document.getElementById('reelsCtaNext');
+    if (ctaNext) {
+      ctaNext.addEventListener('click', () => {
+        const reelsAnchor = document.getElementById('reelsSection');
+        /* Cherche le prochain bloc de contenu après la section Reels.
+           Skip le bandeau orange si présent (homepage-boost l'injecte juste après). */
+        let target = reelsAnchor?.nextElementSibling;
+        if (target && target.id === 'urgencyBanner') {
+          target = target.nextElementSibling;
+        }
+        if (target && target.scrollIntoView) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
   }
 
   /* ════════════════════ VIEWER MODAL ════════════════════ */
