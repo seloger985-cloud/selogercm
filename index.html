@@ -189,6 +189,11 @@
       </div>
     </section>
 
+    <!-- ══ REELS VISITES EXPRESS ══ -->
+    <!-- Ancre vide : reels.js peuple cette section au runtime depuis Supabase. -->
+    <!-- Si aucune annonce n'a de video_url, la section reste masquée (.is-empty). -->
+    <section id="reelsSection" aria-label="Visites Express en vidéo"></section>
+
     <!-- SECTIONS LOCATION (visibles par défaut) -->
     <div id="rentSections">
       <!-- Top Unfurnished -->
@@ -726,14 +731,10 @@ form.addEventListener('submit', async (e) => {
   document.addEventListener('slcm:langchange', (e) => {
     const lang = e.detail.lang;
 
-    /* Hero title */
+    /* Hero title — slogan figé en anglais quelle que soit la langue (identité de marque) */
     const heroTitle = document.querySelector('.hero-title');
     if (heroTitle) {
-      const texts = {
-        fr: ['Solutions Uniques,', 'Vie Intelligente'],
-        en: ['Unique Solutions,', 'Smart Living']
-      };
-      const lines = texts[lang] || texts.en;
+      const lines = ['Unique Solutions,', 'Smart Living'];
       heroTitle.innerHTML = lines.map(l => `<span class="line">${l}</span>`).join('');
     }
 
@@ -759,6 +760,7 @@ form.addEventListener('submit', async (e) => {
   <script src="assets/js/footer.js" defer></script>
   <script src="assets/js/nav.js" defer></script>
   <script src="assets/js/homepage-boost.js" defer></script>
+  <script src="assets/js/reels.js" defer></script>
   <script src="assets/js/favorites.js" defer></script>
   <script src="assets/js/chatbot.js" defer></script>
   <script src="assets/js/testimonials.js" defer></script>
