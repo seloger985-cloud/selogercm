@@ -101,7 +101,24 @@ const SLCM_reels = (() => {
     if (error) { console.error('[reels] loadReels:', error); return []; }
     const pool = (data || []).filter(r => r.video_url && r.video_url.trim());
 
-    return isMobile ? applyMobileQuota(pool) : pool.slice(0, DESKTOP_LIMIT);
+    /* Rotation A1 : décalage circulaire du pool global toutes les 6h.
+       Pattern cohérent avec rotatePremium dans listings.js (mais 6h au lieu de 30 min,
+       car les reels n'ont pas besoin de tourner aussi vite que les annonces premium). */
+    const rotated = rotatePool(pool);
+
+    return isMobile ? applyMobileQuota(rotated) : rotated.slice(0, DESKTOP_LIMIT);
+  }
+
+  /* Rotation déterministe basée sur l'heure (tranches de 6h).
+     Préserve l'ordre relatif (premium d'abord, puis date) en faisant juste
+     un décalage circulaire — donc tous les reels gardent leur "rang" mais
+     un reel différent est en tête à chaque tranche. */
+  function rotatePool(arr) {
+    if (arr.length <= 1) return arr;
+    const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+    const seed = Math.floor(Date.now() / SIX_HOURS_MS);
+    const offset = seed % arr.length;
+    return [...arr.slice(offset), ...arr.slice(0, offset)];
   }
 
   /* ════════════════════ STYLES ════════════════════ */
@@ -621,7 +638,7 @@ const SLCM_reels = (() => {
     return `
       <div class="viewer-slide" data-index="${index}">
         <video class="viewer-video" src="${escapeHtml(r.video_url)}"
-               playsinline muted loop preload="metadata" poster="${poster}"></video>
+               playsinline muted preload="metadata" poster="${poster}"></video>
         <div class="viewer-counter">${index + 1} / ${reels.length}</div>
         <button class="viewer-close" aria-label="Fermer" type="button">×</button>
         ${premiumBadge}
@@ -680,14 +697,49 @@ const SLCM_reels = (() => {
     });
 
     const slides = viewer.querySelectorAll('.viewer-slide');
+
+    /* D2 — Auto-passage au reel suivant après 1 loop complet.
+       Compte les lectures terminées par slide, à la 2e scroll vers le suivant. */
+    const playCountByIndex = new Map(); // index → nombre de fois où ended a fiér
+    slides.forEach(slide => {
+      const video = slide.querySelector('.viewer-video');
+      const idx = parseInt(slide.dataset.index, 10);
+      if (!video) return;
+      video.addEventListener('ended', () => {
+        const count = (playCountByIndex.get(idx) || 0) + 1;
+        playCountByIndex.set(idx, count);
+        if (count < 2) {
+          /* 1ère fin → on relance pour 1 loop */
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        } else {
+          /* 2e fin → passage automatique au slide suivant (s'il existe) */
+          const nextSlide = slides[idx + 1];
+          if (nextSlide) {
+            nextSlide.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            /* Dernier reel : on boucle sur lui-même (pas de revenir au début) */
+            video.currentTime = 0;
+            video.play().catch(() => {});
+          }
+        }
+      });
+    });
+
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           const video = entry.target.querySelector('.viewer-video');
           if (!video) return;
+          const idx = parseInt(entry.target.dataset.index, 10);
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+            /* Reset du compteur quand on arrive sur un slide :
+               permet de re-bénéficier du loop si l'utilisateur swipe back ou
+               re-arrive après l'auto-passage */
+            playCountByIndex.set(idx, 0);
+            video.currentTime = 0;
             video.play().catch(() => {});
-            viewerIndex = parseInt(entry.target.dataset.index, 10);
+            viewerIndex = idx;
           } else {
             video.pause();
           }
