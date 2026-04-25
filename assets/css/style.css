@@ -116,6 +116,16 @@ header {
   color: var(--black);
 }
 
+.hero-kicker {
+  margin: 0 0 .75rem;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #ff7a00;
+  opacity: .92;
+}
+
 .hero-title {
   font-size: 3rem;
   line-height: 1.2;
@@ -411,6 +421,7 @@ footer .inner {
     align-items: flex-start;
   }
   .hero-wrap { margin-bottom: 1.5rem; }
+  .hero-kicker { font-size: .68rem; letter-spacing: .08em; margin-bottom: .55rem; }
   .hero-title { font-size: 2rem; line-height: 1.15; }
   .hero-sub   { font-size: .95rem; margin-top: .75rem; }
 
@@ -521,8 +532,3 @@ body.publish .form-card {
   height: auto;
   min-height: auto;
 }
-
-
-
-
-

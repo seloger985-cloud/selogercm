@@ -118,6 +118,9 @@
     <section class="snap hero" aria-label="Home">
       <div class="container px pt pb">
         <div class="hero-wrap">
+          <p class="hero-kicker" data-i18n="kicker">
+            Agence immobilière au Cameroun · Location · Vente · Investissement
+          </p>
           <h1 class="hero-title" data-i18n="headline">
             <span class="line">Unique Solutions,</span>
             <span class="line">Smart Living</span>
@@ -728,14 +731,10 @@ form.addEventListener('submit', async (e) => {
   document.addEventListener('slcm:langchange', (e) => {
     const lang = e.detail.lang;
 
-    /* Hero title */
+    /* Hero title — slogan figé en anglais quelle que soit la langue (identité de marque) */
     const heroTitle = document.querySelector('.hero-title');
     if (heroTitle) {
-      const texts = {
-        fr: ['Solutions Uniques,', 'Vie Intelligente'],
-        en: ['Unique Solutions,', 'Smart Living']
-      };
-      const lines = texts[lang] || texts.en;
+      const lines = ['Unique Solutions,', 'Smart Living'];
       heroTitle.innerHTML = lines.map(l => `<span class="line">${l}</span>`).join('');
     }
 

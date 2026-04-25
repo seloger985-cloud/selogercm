@@ -13,13 +13,16 @@
   if (path !== '/' && path !== '/index.html' && path !== '') return;
 
   /* ══════════════════════════════════════
-     1. BANDEAU URGENCE — sous le hero
+     1. BANDEAU URGENCE — entre Reels et annonces
   ══════════════════════════════════════ */
   function buildUrgencyBanner() {
+    /* On injecte APRÈS la section Reels pour que la transition orange→reels noir
+       devienne reels noir → orange → annonces grises (plus fluide narrativement) */
+    const reelsSection = document.getElementById('reelsSection');
     const hero = document.querySelector('.hero');
-    if (!hero || document.getElementById('urgencyBanner')) return;
+    const anchor = reelsSection || hero; /* Fallback : hero si reels indisponible */
+    if (!anchor || document.getElementById('urgencyBanner')) return;
 
-    /* Position absolute en bas du hero pour rester visible avec scroll-snap */
     const banner = document.createElement('div');
     banner.id = 'urgencyBanner';
     banner.innerHTML = `
@@ -29,13 +32,11 @@
           color: #fff;
           padding: 1.1rem 1rem;
           overflow: hidden;
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
+          position: relative;
           z-index: 5;
-          box-shadow: 0 -8px 24px rgba(255,122,0,.25);
-          border-top: 2px solid rgba(255,255,255,.15);
+          box-shadow: 0 4px 16px rgba(255,122,0,.18);
+          border-bottom: 2px solid rgba(255,255,255,.15);
         }
-        section.hero { position: relative; }
         #urgencyBanner .ub-track {
           font-size: .92rem !important;
           gap: 2.5rem !important;
@@ -74,9 +75,19 @@
         <span class="ub-item">⚡ Publication en 3 minutes</span>
       </div>
     `;
-    /* S'assurer que le hero est position:relative pour position:absolute du banner */
-    hero.style.position = 'relative';
-    hero.appendChild(banner);
+    /* Insertion : juste après la section Reels (ou en fallback à la fin du hero
+       si Reels est absent par exemple en cas d'erreur de chargement) */
+    if (reelsSection) {
+      reelsSection.insertAdjacentElement('afterend', banner);
+    } else if (hero) {
+      /* Fallback historique : position absolute en bas du hero */
+      banner.style.position = 'absolute';
+      banner.style.bottom = '0';
+      banner.style.left = '0';
+      banner.style.right = '0';
+      hero.style.position = 'relative';
+      hero.appendChild(banner);
+    }
 
     /* Compter les annonces depuis Supabase */
     fetchStats();
