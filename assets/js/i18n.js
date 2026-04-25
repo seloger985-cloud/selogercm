@@ -18,7 +18,8 @@
   const TRANSLATIONS = {
 
     /* ── Index / Hero ── */
-    headline:    { fr: 'Solutions Uniques,\nVie Intelligente',  en: 'Unique Solutions,\nSmart Living' },
+    headline:    { fr: 'Unique Solutions,\nSmart Living',  en: 'Unique Solutions,\nSmart Living' },
+    kicker:      { fr: 'Agence immobilière & Marketplace au Cameroun', en: 'Real estate agency & Marketplace in Cameroon' },
     sub:         { fr: 'Que vous achetiez, publiiez ou louiez, nous sommes là à chaque étape.', en: 'Whether you\'re buying, listing, or renting, we\'re here to help every step of the way.' },
     publishAd:   { fr: 'Publier une annonce', en: 'List your ad' },
 
