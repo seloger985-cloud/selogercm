@@ -982,23 +982,28 @@
 
     /* ── Peuplement des selects depuis SLCM_CONFIG ── */
     function populateSelects() {
-      if (!window.SLCM_CONFIG) return;
+      if (typeof SLCM_CONFIG === 'undefined') {
+        console.error('[reel-first] SLCM_CONFIG non disponible. Vérifie que assets/js/config.js est chargé.');
+        return;
+      }
 
       /* Types */
       fType.innerHTML = '<option value="">— Choisir —</option>' +
-        window.SLCM_CONFIG.propertyTypes.map(t =>
+        SLCM_CONFIG.propertyTypes.map(t =>
           `<option value="${t.value}">${t.labelFR}</option>`
         ).join('');
 
       /* Villes */
-      const cities = Object.keys(window.SLCM_CONFIG.cities);
+      const cities = Object.keys(SLCM_CONFIG.cities);
       fCity.innerHTML = '<option value="">— Choisir —</option>' +
         cities.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
     /* ── Quartiers dépendants de la ville ── */
     fCity.addEventListener('change', () => {
-      window.SLCM_CONFIG.fillDistricts(fDist, fCity.value, '— Choisir un quartier —');
+      if (typeof SLCM_CONFIG !== 'undefined') {
+        SLCM_CONFIG.fillDistricts(fDist, fCity.value, '— Choisir un quartier —');
+      }
     });
 
     /* ── Mode loc/vente : afficher/cacher le toggle meublé ── */
