@@ -135,6 +135,9 @@
             <option value="false">Non-premium</option>
           </select>
           <button id="resetFilters" class="btn btn-ghost">Reset</button>
+          <button id="openReelFirst" class="btn" style="background:#ef4444;color:#fff;font-weight:700;margin-left:auto">
+            🎬 + Reel
+          </button>
         </div>
       </div>
 
@@ -225,6 +228,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
+  <script src="assets/js/config.js"></script>
   <script>
     // ===== Guard: admin only =====
     document.addEventListener('DOMContentLoaded', async () => {
@@ -665,6 +669,676 @@
 
     await renderBlogList();
   });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MODALE CRÉATION ANNONCE REEL-FIRST
+       Workflow admin pour publier une annonce vidéo en quelques clics.
+       Génère automatiquement 4 posters candidats depuis la vidéo.
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <style>
+    #reelFirstOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 99998;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 2rem 1rem;
+    }
+    #reelFirstOverlay.is-open { display: flex; }
+    body.rf-modal-open { overflow: hidden !important; }
+
+    #reelFirstOverlay .rf-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,.4);
+      overflow: hidden;
+    }
+    #reelFirstOverlay .rf-header {
+      padding: 1rem 1.25rem;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #reelFirstOverlay .rf-header h2 {
+      margin: 0; font-size: 1.1rem; font-weight: 800;
+    }
+    #reelFirstOverlay .rf-close {
+      background: rgba(255,255,255,.2);
+      border: none; color: #fff;
+      width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; font-size: 1.2rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #reelFirstOverlay .rf-body {
+      padding: 1.25rem;
+      max-height: calc(100vh - 4rem - 60px);
+      overflow-y: auto;
+    }
+    #reelFirstOverlay .rf-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;
+      margin-bottom: .75rem;
+    }
+    #reelFirstOverlay .rf-field { margin-bottom: .75rem; }
+    #reelFirstOverlay .rf-field label {
+      display: block; font-size: .8rem; font-weight: 700;
+      color: #444; margin-bottom: .25rem;
+    }
+    #reelFirstOverlay .rf-field input,
+    #reelFirstOverlay .rf-field select,
+    #reelFirstOverlay .rf-field textarea {
+      width: 100%;
+      padding: .55rem .7rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .9rem;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    #reelFirstOverlay .rf-field textarea {
+      resize: vertical; min-height: 60px;
+    }
+    #reelFirstOverlay .rf-charcount {
+      font-size: .7rem; color: #888;
+      text-align: right; margin-top: .15rem;
+    }
+    #reelFirstOverlay .rf-charcount.is-over { color: #ef4444; font-weight: 700; }
+
+    #reelFirstOverlay .rf-checkbox {
+      display: flex; align-items: center; gap: .5rem;
+      cursor: pointer; font-size: .85rem; font-weight: 600;
+      padding: .5rem; background: #f9fafb; border-radius: 8px;
+    }
+    #reelFirstOverlay .rf-checkbox input { width: auto; margin: 0; }
+
+    #reelFirstOverlay .rf-drop {
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: #fafafa;
+    }
+    #reelFirstOverlay .rf-drop:hover,
+    #reelFirstOverlay .rf-drop.is-dragover {
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+    #reelFirstOverlay .rf-drop.has-file {
+      border-color: #16a34a; background: #f0fdf4;
+    }
+    #reelFirstOverlay .rf-drop-icon {
+      font-size: 2rem; margin-bottom: .25rem;
+    }
+    #reelFirstOverlay .rf-drop-label {
+      font-size: .9rem; font-weight: 700; color: #555;
+    }
+    #reelFirstOverlay .rf-drop-hint {
+      font-size: .75rem; color: #888; margin-top: .35rem;
+    }
+    #reelFirstOverlay .rf-drop input[type=file] { display: none; }
+
+    #reelFirstOverlay .rf-posters {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+    #reelFirstOverlay .rf-posters.is-visible { display: grid; }
+    #reelFirstOverlay .rf-poster {
+      aspect-ratio: 9 / 16;
+      background: #000;
+      border: 3px solid transparent;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .2s, transform .15s;
+    }
+    #reelFirstOverlay .rf-poster:hover { transform: scale(1.03); }
+    #reelFirstOverlay .rf-poster.is-selected { border-color: #ef4444; }
+    #reelFirstOverlay .rf-poster img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    #reelFirstOverlay .rf-poster-label {
+      position: absolute; bottom: 4px; left: 4px;
+      background: rgba(0,0,0,.7); color: #fff;
+      font-size: .65rem; padding: 1px 5px; border-radius: 3px;
+    }
+
+    #reelFirstOverlay .rf-status {
+      margin-top: .75rem; padding: .6rem .8rem;
+      border-radius: 8px; font-size: .85rem;
+      display: none;
+    }
+    #reelFirstOverlay .rf-status.is-info {
+      display: block; background: #dbeafe; color: #1e40af;
+    }
+    #reelFirstOverlay .rf-status.is-error {
+      display: block; background: #fee2e2; color: #991b1b; font-weight: 700;
+    }
+    #reelFirstOverlay .rf-status.is-success {
+      display: block; background: #d1fae5; color: #065f46; font-weight: 700;
+    }
+
+    #reelFirstOverlay .rf-actions {
+      margin-top: 1rem;
+      display: flex; gap: .5rem; justify-content: flex-end;
+    }
+    #reelFirstOverlay .rf-btn {
+      padding: .65rem 1.1rem;
+      border: none; border-radius: 8px;
+      font-weight: 700; font-size: .9rem;
+      cursor: pointer;
+    }
+    #reelFirstOverlay .rf-btn-cancel {
+      background: #f3f4f6; color: #374151;
+    }
+    #reelFirstOverlay .rf-btn-publish {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      color: #fff;
+    }
+    #reelFirstOverlay .rf-btn:disabled {
+      opacity: .5; cursor: not-allowed;
+    }
+  </style>
+
+  <div id="reelFirstOverlay" aria-hidden="true">
+    <div class="rf-modal" role="dialog" aria-labelledby="rfTitle">
+      <div class="rf-header">
+        <h2 id="rfTitle">🎬 Nouvelle annonce Reel</h2>
+        <button class="rf-close" id="rfClose" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="rf-body">
+
+        <div class="rf-field">
+          <label for="rfFieldTitle">Titre de l'annonce *</label>
+          <input id="rfFieldTitle" type="text" placeholder="Ex: Studio meublé Bonamoussadi" maxlength="120">
+        </div>
+
+        <div class="rf-row">
+          <div class="rf-field">
+            <label for="rfFieldType">Type *</label>
+            <select id="rfFieldType">
+              <option value="">— Choisir —</option>
+              <!-- Peuplé dynamiquement depuis SLCM_CONFIG -->
+            </select>
+          </div>
+          <div class="rf-field">
+            <label for="rfFieldMode">Mode *</label>
+            <select id="rfFieldMode">
+              <option value="rent">Location</option>
+              <option value="sale">Vente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rf-row">
+          <div class="rf-field">
+            <label for="rfFieldCity">Ville *</label>
+            <select id="rfFieldCity">
+              <option value="">— Choisir —</option>
+              <!-- Peuplé dynamiquement depuis SLCM_CONFIG -->
+            </select>
+          </div>
+          <div class="rf-field">
+            <label for="rfFieldDistrict">Quartier *</label>
+            <select id="rfFieldDistrict">
+              <option value="">— Choisir d'abord la ville —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rf-row">
+          <div class="rf-field">
+            <label for="rfFieldPrice">Prix (FCFA) *</label>
+            <input id="rfFieldPrice" type="number" min="0" step="1000" placeholder="250000">
+          </div>
+          <div class="rf-field" id="rfFurnishedWrap">
+            <label>Meublé</label>
+            <label class="rf-checkbox">
+              <input id="rfFieldFurnished" type="checkbox">
+              <span>Oui, l'annonce est meublée</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="rf-field">
+          <label for="rfFieldDesc">Description (optionnel)</label>
+          <textarea id="rfFieldDesc" maxlength="200" placeholder="Petite description courte (max 200 caractères)"></textarea>
+          <div class="rf-charcount" id="rfDescCount">0 / 200</div>
+        </div>
+
+        <div class="rf-field">
+          <label>Vidéo (.mp4, max 15 Mo) *</label>
+          <label class="rf-drop" id="rfDrop" for="rfFile">
+            <div class="rf-drop-icon">🎬</div>
+            <div class="rf-drop-label" id="rfDropLabel">Glisser-déposer ou cliquer pour choisir</div>
+            <div class="rf-drop-hint" id="rfDropHint">MP4 vertical 9:16 recommandé · max 15 Mo</div>
+            <input id="rfFile" type="file" accept="video/mp4,.mp4">
+          </label>
+        </div>
+
+        <div class="rf-posters" id="rfPosters">
+          <!-- Peuplé dynamiquement après génération -->
+        </div>
+
+        <div class="rf-status" id="rfStatus"></div>
+
+        <div class="rf-actions">
+          <button class="rf-btn rf-btn-cancel" id="rfCancel" type="button">Annuler</button>
+          <button class="rf-btn rf-btn-publish" id="rfPublish" type="button" disabled>Publier l'annonce</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     LOGIQUE REEL-FIRST
+     ═══════════════════════════════════════════════════════════════ */
+  (function() {
+    'use strict';
+
+    const MAX_SIZE = 15 * 1024 * 1024; // 15 Mo
+    const POSTER_FRAMES = [0.05, 0.25, 0.50, 0.75]; // % de la durée
+    const POSTER_LABELS = ['Début', '1/4', 'Milieu', '3/4'];
+
+    /* État local */
+    let selectedFile = null;
+    let posterDataUrls = []; // base64 des 4 frames générées
+    let selectedPosterIdx = -1;
+
+    /* Refs DOM */
+    const overlay  = document.getElementById('reelFirstOverlay');
+    const openBtn  = document.getElementById('openReelFirst');
+    const closeBtn = document.getElementById('rfClose');
+    const cancelBtn = document.getElementById('rfCancel');
+    const publishBtn = document.getElementById('rfPublish');
+
+    const fTitle = document.getElementById('rfFieldTitle');
+    const fType  = document.getElementById('rfFieldType');
+    const fMode  = document.getElementById('rfFieldMode');
+    const fCity  = document.getElementById('rfFieldCity');
+    const fDist  = document.getElementById('rfFieldDistrict');
+    const fPrice = document.getElementById('rfFieldPrice');
+    const fFurn  = document.getElementById('rfFieldFurnished');
+    const fFurnWrap = document.getElementById('rfFurnishedWrap');
+    const fDesc  = document.getElementById('rfFieldDesc');
+    const descCount = document.getElementById('rfDescCount');
+
+    const drop      = document.getElementById('rfDrop');
+    const fileInput = document.getElementById('rfFile');
+    const dropLabel = document.getElementById('rfDropLabel');
+    const dropHint  = document.getElementById('rfDropHint');
+    const postersEl = document.getElementById('rfPosters');
+    const statusEl  = document.getElementById('rfStatus');
+
+    /* ── Peuplement des selects depuis SLCM_CONFIG ── */
+    function populateSelects() {
+      if (!window.SLCM_CONFIG) return;
+
+      /* Types */
+      fType.innerHTML = '<option value="">— Choisir —</option>' +
+        window.SLCM_CONFIG.propertyTypes.map(t =>
+          `<option value="${t.value}">${t.labelFR}</option>`
+        ).join('');
+
+      /* Villes */
+      const cities = Object.keys(window.SLCM_CONFIG.cities);
+      fCity.innerHTML = '<option value="">— Choisir —</option>' +
+        cities.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    /* ── Quartiers dépendants de la ville ── */
+    fCity.addEventListener('change', () => {
+      window.SLCM_CONFIG.fillDistricts(fDist, fCity.value, '— Choisir un quartier —');
+    });
+
+    /* ── Mode loc/vente : afficher/cacher le toggle meublé ── */
+    fMode.addEventListener('change', () => {
+      fFurnWrap.style.display = fMode.value === 'rent' ? '' : 'none';
+      if (fMode.value !== 'rent') fFurn.checked = false;
+    });
+
+    /* ── Compteur de caractères description ── */
+    fDesc.addEventListener('input', () => {
+      const len = fDesc.value.length;
+      descCount.textContent = `${len} / 200`;
+      descCount.classList.toggle('is-over', len > 200);
+    });
+
+    /* ══ Ouverture / fermeture modale ══ */
+    function openModal() {
+      populateSelects();
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('rf-modal-open');
+      resetForm();
+    }
+    function closeModal() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('rf-modal-open');
+      resetForm();
+    }
+    function resetForm() {
+      fTitle.value = '';
+      fType.value = '';
+      fMode.value = 'rent';
+      fCity.value = '';
+      fDist.innerHTML = '<option value="">— Choisir d\'abord la ville —</option>';
+      fPrice.value = '';
+      fFurn.checked = false;
+      fFurnWrap.style.display = '';
+      fDesc.value = '';
+      descCount.textContent = '0 / 200';
+      descCount.classList.remove('is-over');
+      selectedFile = null;
+      posterDataUrls = [];
+      selectedPosterIdx = -1;
+      drop.classList.remove('has-file');
+      dropLabel.textContent = 'Glisser-déposer ou cliquer pour choisir';
+      dropHint.textContent = 'MP4 vertical 9:16 recommandé · max 15 Mo';
+      fileInput.value = '';
+      postersEl.classList.remove('is-visible');
+      postersEl.innerHTML = '';
+      statusEl.className = 'rf-status';
+      statusEl.textContent = '';
+      publishBtn.disabled = true;
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+
+    /* ══ Drag & drop fichier ══ */
+    drop.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      drop.classList.add('is-dragover');
+    });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-dragover'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drop.classList.remove('is-dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    /* ══ Validation + génération posters ══ */
+    function handleFile(file) {
+      /* Reset précédent */
+      posterDataUrls = [];
+      selectedPosterIdx = -1;
+      postersEl.classList.remove('is-visible');
+      postersEl.innerHTML = '';
+      publishBtn.disabled = true;
+
+      /* Validation type */
+      if (!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')) {
+        showStatus('error', 'Format non supporté. Utilise un fichier .mp4');
+        return;
+      }
+      /* Validation taille */
+      if (file.size > MAX_SIZE) {
+        const sizeMo = (file.size / 1024 / 1024).toFixed(1);
+        showStatus('error', `Vidéo trop lourde (${sizeMo} Mo). Max 15 Mo. Utilise HandBrake ou Veed.io pour compresser.`);
+        return;
+      }
+
+      selectedFile = file;
+      drop.classList.add('has-file');
+      const sizeMo = (file.size / 1024 / 1024).toFixed(1);
+      dropLabel.textContent = `✓ ${file.name}`;
+      dropHint.textContent = `${sizeMo} Mo · génération des aperçus...`;
+      showStatus('info', '⏳ Génération des aperçus...');
+
+      generatePosters(file)
+        .then(urls => {
+          posterDataUrls = urls;
+          renderPosters();
+          dropHint.textContent = `${sizeMo} Mo · choisis un aperçu ci-dessous`;
+          statusEl.className = 'rf-status';
+        })
+        .catch(err => {
+          showStatus('error', 'Impossible de générer les aperçus : ' + (err.message || err));
+        });
+    }
+
+    /* ── Génère 4 frames depuis la vidéo via canvas ── */
+    function generatePosters(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const video = document.createElement('video');
+        video.preload = 'auto';
+        video.muted = true;
+        video.playsInline = true;
+        video.src = url;
+
+        const cleanup = () => URL.revokeObjectURL(url);
+
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('Timeout lors du chargement de la vidéo'));
+        }, 15000);
+
+        video.addEventListener('loadedmetadata', async () => {
+          clearTimeout(timeout);
+          const dur = video.duration;
+          if (!dur || !isFinite(dur)) {
+            cleanup();
+            reject(new Error('Durée de la vidéo invalide'));
+            return;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width  = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+
+          const results = [];
+          for (let i = 0; i < POSTER_FRAMES.length; i++) {
+            try {
+              const targetTime = dur * POSTER_FRAMES[i];
+              await seekTo(video, targetTime);
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              results.push(canvas.toDataURL('image/jpeg', 0.85));
+            } catch (e) {
+              /* Frame impossible : on met null, on continue */
+              results.push(null);
+            }
+          }
+          cleanup();
+          /* On filtre les frames null mais on garde l'index original via les labels */
+          if (results.every(r => !r)) {
+            reject(new Error('Aucune frame n\'a pu être extraite. Vérifie le format de la vidéo.'));
+          } else {
+            resolve(results);
+          }
+        });
+
+        video.addEventListener('error', () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Vidéo illisible. Vérifie que c\'est un .mp4 H.264 valide.'));
+        });
+      });
+    }
+
+    function seekTo(video, time) {
+      return new Promise((resolve, reject) => {
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', onError);
+          resolve();
+        };
+        const onError = (e) => {
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', onError);
+          reject(e);
+        };
+        video.addEventListener('seeked', onSeeked);
+        video.addEventListener('error', onError);
+        const seekTimeout = setTimeout(() => {
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', onError);
+          reject(new Error('seek timeout'));
+        }, 5000);
+        const cleanupTimeout = () => clearTimeout(seekTimeout);
+        video.addEventListener('seeked', cleanupTimeout, { once: true });
+        video.currentTime = time;
+      });
+    }
+
+    function renderPosters() {
+      postersEl.innerHTML = posterDataUrls.map((url, i) => {
+        if (!url) return '';
+        return `
+          <div class="rf-poster" data-index="${i}">
+            <img src="${url}" alt="Aperçu ${POSTER_LABELS[i]}">
+            <div class="rf-poster-label">${POSTER_LABELS[i]}</div>
+          </div>`;
+      }).join('');
+      postersEl.classList.add('is-visible');
+
+      postersEl.querySelectorAll('.rf-poster').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.index, 10);
+          selectedPosterIdx = idx;
+          postersEl.querySelectorAll('.rf-poster').forEach(p => p.classList.remove('is-selected'));
+          el.classList.add('is-selected');
+          publishBtn.disabled = false;
+        });
+      });
+
+      /* Auto-sélection du 1er aperçu valide */
+      const firstValid = postersEl.querySelector('.rf-poster');
+      if (firstValid) firstValid.click();
+    }
+
+    function showStatus(type, msg) {
+      statusEl.className = 'rf-status is-' + type;
+      statusEl.textContent = msg;
+    }
+
+    /* ══ Publication ══ */
+    publishBtn.addEventListener('click', async () => {
+      /* Validation */
+      const errors = [];
+      if (!fTitle.value.trim()) errors.push('titre');
+      if (!fType.value) errors.push('type');
+      if (!fCity.value) errors.push('ville');
+      if (!fDist.value) errors.push('quartier');
+      if (!fPrice.value || Number(fPrice.value) <= 0) errors.push('prix');
+      if (!selectedFile) errors.push('vidéo');
+      if (selectedPosterIdx < 0 || !posterDataUrls[selectedPosterIdx]) errors.push('aperçu');
+      if (fDesc.value.length > 200) errors.push('description trop longue');
+
+      if (errors.length) {
+        showStatus('error', 'Champs manquants/invalides : ' + errors.join(', '));
+        return;
+      }
+
+      publishBtn.disabled = true;
+      const supabase = await window.SLCM_DB.init();
+      if (!supabase) {
+        showStatus('error', 'Connexion Supabase indisponible');
+        publishBtn.disabled = false;
+        return;
+      }
+
+      try {
+        /* 1. Upload vidéo */
+        showStatus('info', '⏳ Upload de la vidéo...');
+        const videoExt = 'mp4';
+        const stamp = Date.now();
+        const slug = slugify(fTitle.value);
+        const videoPath = `reels/${stamp}-${slug}.${videoExt}`;
+        const { error: vErr } = await supabase.storage
+          .from('listing-videos')
+          .upload(videoPath, selectedFile, { cacheControl: '3600', upsert: false });
+        if (vErr) throw new Error('Vidéo : ' + vErr.message);
+        const { data: vUrl } = supabase.storage.from('listing-videos').getPublicUrl(videoPath);
+
+        /* 2. Upload poster (base64 → blob) */
+        showStatus('info', '⏳ Upload du poster...');
+        const posterBlob = dataURLtoBlob(posterDataUrls[selectedPosterIdx]);
+        const posterPath = `reels/${stamp}-${slug}-poster.jpg`;
+        const { error: pErr } = await supabase.storage
+          .from('listing-images')
+          .upload(posterPath, posterBlob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
+        if (pErr) throw new Error('Poster : ' + pErr.message);
+        const { data: pUrl } = supabase.storage.from('listing-images').getPublicUrl(posterPath);
+
+        /* 3. Créer la ligne listings */
+        showStatus('info', '⏳ Création de l\'annonce...');
+        const payload = {
+          title: fTitle.value.trim(),
+          description: fDesc.value.trim() || null,
+          type: fType.value,
+          rent_sale: fMode.value,
+          city: fCity.value,
+          district: fDist.value,
+          price: Number(fPrice.value),
+          furnished: fMode.value === 'rent' ? !!fFurn.checked : false,
+          premium: false,
+          status: 'active',
+          images: [pUrl.publicUrl],
+          video_url: vUrl.publicUrl,
+          slug: `${slug}-${stamp}`,
+          created_at: new Date().toISOString()
+        };
+        const { error: insErr } = await supabase.from('listings').insert([payload]);
+        if (insErr) throw new Error('Insertion : ' + insErr.message);
+
+        /* 4. Succès */
+        showStatus('success', '✓ Annonce publiée avec succès ! Elle apparaît maintenant sur la homepage.');
+        setTimeout(() => {
+          closeModal();
+          /* Rafraîchir la liste des annonces dans l'admin si la fonction existe */
+          if (typeof render === 'function') render();
+        }, 1500);
+      } catch (e) {
+        showStatus('error', 'Erreur : ' + e.message);
+        publishBtn.disabled = false;
+      }
+    });
+
+    /* ── Helpers ── */
+    function slugify(str) {
+      return String(str).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 50);
+    }
+
+    function dataURLtoBlob(dataUrl) {
+      const arr = dataUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      return new Blob([u8arr], { type: mime });
+    }
+  })();
   </script>
 </body>
 </html>
