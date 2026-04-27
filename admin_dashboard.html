@@ -138,6 +138,9 @@
           <button id="openReelFirst" class="btn" style="background:#ef4444;color:#fff;font-weight:700;margin-left:auto">
             🎬 + Reel
           </button>
+          <button id="openReceipt" class="btn" style="background:#16a34a;color:#fff;font-weight:700">
+            🧾 + Reçu
+          </button>
         </div>
       </div>
 
@@ -229,6 +232,9 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/config.js"></script>
+  <!-- Libs pour génération PDF des reçus (chargées en defer pour ne pas ralentir l'admin) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script>
     // ===== Guard: admin only =====
     document.addEventListener('DOMContentLoaded', async () => {
@@ -1343,6 +1349,873 @@
       while (n--) u8arr[n] = bstr.charCodeAt(n);
       return new Blob([u8arr], { type: mime });
     }
+  })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SYSTÈME DE REÇUS SE LOGER CM
+       Saisie + génération PDF (jsPDF + html2canvas) + archivage Supabase
+       Style visuel calqué sur Facture_SE_LOGER_CM.html (cohérence de marque)
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <style>
+    /* ──── Modale saisie reçu ──── */
+    #receiptOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 99998;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 2rem 1rem;
+    }
+    #receiptOverlay.is-open { display: flex; }
+    body.rcpt-modal-open { overflow: hidden !important; }
+
+    #receiptOverlay .rcpt-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,.4);
+      overflow: hidden;
+    }
+    #receiptOverlay .rcpt-header {
+      padding: 1rem 1.25rem;
+      background: linear-gradient(90deg, #16a34a, #22c55e);
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #receiptOverlay .rcpt-header h2 {
+      margin: 0; font-size: 1.1rem; font-weight: 800;
+    }
+    #receiptOverlay .rcpt-close {
+      background: rgba(255,255,255,.2);
+      border: none; color: #fff;
+      width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; font-size: 1.2rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #receiptOverlay .rcpt-body {
+      padding: 1.25rem;
+      max-height: calc(100vh - 4rem - 60px);
+      overflow-y: auto;
+    }
+    #receiptOverlay .rcpt-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;
+      margin-bottom: .75rem;
+    }
+    #receiptOverlay .rcpt-field { margin-bottom: .75rem; }
+    #receiptOverlay .rcpt-field label {
+      display: block; font-size: .8rem; font-weight: 700;
+      color: #444; margin-bottom: .25rem;
+    }
+    #receiptOverlay .rcpt-field input,
+    #receiptOverlay .rcpt-field select,
+    #receiptOverlay .rcpt-field textarea {
+      width: 100%;
+      padding: .55rem .7rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .9rem;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    #receiptOverlay .rcpt-field textarea { resize: vertical; min-height: 50px; }
+    #receiptOverlay .rcpt-status {
+      margin-top: .75rem; padding: .6rem .8rem;
+      border-radius: 8px; font-size: .85rem; display: none;
+    }
+    #receiptOverlay .rcpt-status.is-info    { display: block; background: #dbeafe; color: #1e40af; }
+    #receiptOverlay .rcpt-status.is-error   { display: block; background: #fee2e2; color: #991b1b; font-weight: 700; }
+    #receiptOverlay .rcpt-status.is-success { display: block; background: #d1fae5; color: #065f46; font-weight: 700; }
+    #receiptOverlay .rcpt-actions {
+      margin-top: 1rem;
+      display: flex; gap: .5rem; justify-content: flex-end;
+    }
+    #receiptOverlay .rcpt-btn {
+      padding: .65rem 1.1rem; border: none; border-radius: 8px;
+      font-weight: 700; font-size: .9rem; cursor: pointer;
+    }
+    #receiptOverlay .rcpt-btn-cancel { background: #f3f4f6; color: #374151; }
+    #receiptOverlay .rcpt-btn-publish {
+      background: linear-gradient(90deg, #16a34a, #22c55e); color: #fff;
+    }
+    #receiptOverlay .rcpt-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ──── Section archives reçus ──── */
+    #receiptsArchive {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    #receiptsArchive .rcpt-arch-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;
+    }
+    #receiptsArchive .rcpt-arch-header h3 {
+      margin: 0; font-size: 1rem; font-weight: 800;
+    }
+    #receiptsArchive .rcpt-arch-toggle {
+      background: none; border: 1px solid #d1d5db;
+      padding: .4rem .8rem; border-radius: 8px;
+      cursor: pointer; font-size: .85rem; font-weight: 600;
+    }
+    #receiptsArchive .rcpt-arch-filters {
+      display: grid;
+      grid-template-columns: 1fr 200px 200px 200px;
+      gap: .5rem; margin-bottom: 1rem;
+    }
+    @media (max-width: 800px) {
+      #receiptsArchive .rcpt-arch-filters { grid-template-columns: 1fr; }
+    }
+    #receiptsArchive .rcpt-arch-filters input,
+    #receiptsArchive .rcpt-arch-filters select {
+      padding: .5rem .7rem; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: .85rem; font-family: inherit;
+    }
+    #receiptsArchive table {
+      width: 100%; border-collapse: collapse; font-size: .85rem;
+    }
+    #receiptsArchive th, #receiptsArchive td {
+      padding: .55rem .7rem; text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    #receiptsArchive th {
+      background: #f9fafb; font-weight: 700; color: #555;
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
+    }
+    #receiptsArchive tbody tr:hover { background: #f9fafb; }
+    #receiptsArchive .rcpt-arch-empty {
+      padding: 2rem; text-align: center; color: #888; font-style: italic;
+    }
+    #receiptsArchive .rcpt-arch-pdfbtn {
+      background: #16a34a; color: #fff;
+      border: none; padding: .35rem .7rem;
+      border-radius: 6px; cursor: pointer;
+      font-size: .75rem; font-weight: 700;
+    }
+    #receiptsArchive .rcpt-arch-pdfbtn:hover { background: #15803d; }
+    #receiptsArchive.is-collapsed table,
+    #receiptsArchive.is-collapsed .rcpt-arch-filters,
+    #receiptsArchive.is-collapsed .rcpt-arch-empty { display: none; }
+
+    /* ──── Document reçu (utilisé pour le rendu PDF) ──── */
+    #receiptDocRender {
+      position: absolute; left: -10000px; top: 0;
+      width: 720px;  /* taille fixe pour rendu PDF */
+      background: #fff; padding: 0;
+    }
+    #receiptDocRender * { box-sizing: border-box; }
+    #receiptDocRender .rdoc {
+      width: 720px; background: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif; color: #111;
+    }
+    #receiptDocRender .rdoc-header {
+      border-bottom: 3px solid #ff7a00;
+      padding: 18px 30px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    #receiptDocRender .rdoc-brand-name {
+      font-size: 23px; font-weight: 900; color: #111; letter-spacing: -0.5px;
+    }
+    #receiptDocRender .rdoc-brand-tagline {
+      font-size: 11px; color: #888; font-style: italic; margin-top: 2px;
+    }
+    #receiptDocRender .rdoc-brand-rccm {
+      font-size: 10px; color: #bbb; margin-top: 2px;
+    }
+    #receiptDocRender .rdoc-label {
+      font-size: 23px; font-weight: 900; color: #111; letter-spacing: 2px;
+      text-align: right;
+    }
+    #receiptDocRender .rdoc-num {
+      font-size: 12px; color: #ff7a00; font-weight: 700; margin-top: 3px;
+      text-align: right;
+    }
+    #receiptDocRender .rdoc-date {
+      font-size: 11px; color: #999; margin-top: 2px; text-align: right;
+    }
+    #receiptDocRender .rdoc-body { padding: 18px 30px; }
+    #receiptDocRender .rdoc-parties {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;
+    }
+    #receiptDocRender .rdoc-party {
+      background: #f7f8fa; border-radius: 7px; padding: 12px 14px;
+      border-left: 4px solid #ff7a00;
+    }
+    #receiptDocRender .rdoc-party.payer { border-left-color: #111; }
+    #receiptDocRender .rdoc-party-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: #999; margin-bottom: 4px;
+    }
+    #receiptDocRender .rdoc-party-name {
+      font-size: 13px; font-weight: 800; color: #111; margin-bottom: 3px;
+    }
+    #receiptDocRender .rdoc-party-detail {
+      font-size: 11px; color: #666; line-height: 1.55;
+    }
+    #receiptDocRender .rdoc-party-detail span { display: block; }
+    #receiptDocRender .rdoc-amount-block {
+      background: #fff8f0;
+      border: 1px solid #ffe0b2;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    #receiptDocRender .rdoc-amount-label {
+      font-size: 10px; font-weight: 700; color: #999;
+      text-transform: uppercase; letter-spacing: .1em;
+    }
+    #receiptDocRender .rdoc-amount-value {
+      font-size: 28px; font-weight: 900; color: #ff7a00;
+      margin: 6px 0 4px;
+    }
+    #receiptDocRender .rdoc-amount-words {
+      font-size: 11px; color: #666; font-style: italic;
+    }
+    #receiptDocRender .rdoc-details-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px;
+    }
+    #receiptDocRender .rdoc-details-table td {
+      padding: 7px 12px; border-bottom: 1px solid #f0f0f0;
+    }
+    #receiptDocRender .rdoc-details-table td:first-child {
+      font-weight: 700; color: #555; width: 40%;
+      background: #fafafa;
+      text-transform: uppercase; font-size: 10px; letter-spacing: .04em;
+    }
+    #receiptDocRender .rdoc-footer {
+      padding: 14px 30px 18px;
+      border-top: 1px solid #f0f0f0;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      font-size: 11px; color: #666;
+    }
+    #receiptDocRender .rdoc-footer-place { font-style: italic; }
+    #receiptDocRender .rdoc-footer-sig {
+      text-align: right;
+    }
+    #receiptDocRender .rdoc-footer-sig-label {
+      font-size: 10px; color: #999; margin-bottom: 4px;
+    }
+    #receiptDocRender .rdoc-footer-sig-name {
+      font-size: 11px; font-weight: 700; color: #111;
+    }
+    #receiptDocRender .rdoc-bottom-strip {
+      background: #111; color: #fff;
+      padding: 8px 30px;
+      font-size: 10px; text-align: center;
+      letter-spacing: .04em;
+    }
+  </style>
+
+  <!-- Modale de saisie reçu -->
+  <div id="receiptOverlay" aria-hidden="true">
+    <div class="rcpt-modal" role="dialog" aria-labelledby="rcptTitle">
+      <div class="rcpt-header">
+        <h2 id="rcptTitle">🧾 Nouveau reçu</h2>
+        <button class="rcpt-close" id="rcptClose" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="rcpt-body">
+
+        <div class="rcpt-row">
+          <div class="rcpt-field">
+            <label for="rcptPayerName">Nom du payeur *</label>
+            <input id="rcptPayerName" type="text" placeholder="Ex: Jean Mballa" maxlength="100">
+          </div>
+          <div class="rcpt-field">
+            <label for="rcptPayerPhone">Téléphone (optionnel)</label>
+            <input id="rcptPayerPhone" type="text" placeholder="(+237) 6XX XXX XXX" maxlength="30">
+          </div>
+        </div>
+
+        <div class="rcpt-row">
+          <div class="rcpt-field">
+            <label for="rcptAmount">Montant (FCFA) *</label>
+            <input id="rcptAmount" type="number" min="0" step="500" placeholder="50000">
+          </div>
+          <div class="rcpt-field">
+            <label for="rcptDate">Date du paiement *</label>
+            <input id="rcptDate" type="date">
+          </div>
+        </div>
+
+        <div class="rcpt-row">
+          <div class="rcpt-field">
+            <label for="rcptCategory">Catégorie *</label>
+            <select id="rcptCategory">
+              <option value="">— Choisir —</option>
+              <option value="commission_location">Commission location</option>
+              <option value="commission_vente">Commission vente</option>
+              <option value="frais_visite">Frais de visite</option>
+              <option value="frais_dossier">Frais de dossier</option>
+              <option value="caution">Caution</option>
+              <option value="acompte">Acompte</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="rcpt-field">
+            <label for="rcptMethod">Mode de paiement *</label>
+            <select id="rcptMethod">
+              <option value="">— Choisir —</option>
+              <option value="cash">Espèces</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="mtn_mobile_money">MTN Mobile Money</option>
+              <option value="bank_transfer">Virement bancaire</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rcpt-field">
+          <label for="rcptDescription">Description / Objet</label>
+          <textarea id="rcptDescription" maxlength="200" placeholder="Ex: Loyer Mai 2026 — Studio Bonamoussadi"></textarea>
+        </div>
+
+        <div class="rcpt-field">
+          <label for="rcptNotes">Notes internes (non imprimées)</label>
+          <textarea id="rcptNotes" maxlength="300" placeholder="Mémo perso (visible uniquement dans /admin)"></textarea>
+        </div>
+
+        <div class="rcpt-status" id="rcptStatus"></div>
+
+        <div class="rcpt-actions">
+          <button class="rcpt-btn rcpt-btn-cancel" id="rcptCancel" type="button">Annuler</button>
+          <button class="rcpt-btn rcpt-btn-publish" id="rcptGenerate" type="button">Générer le reçu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteneur invisible pour rendu PDF (déplacé en off-screen, jamais affiché à l'utilisateur) -->
+  <div id="receiptDocRender" aria-hidden="true"></div>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     LOGIQUE REÇUS — Saisie / Génération PDF / Archivage
+     ═══════════════════════════════════════════════════════════════ */
+  (function() {
+    'use strict';
+
+    /* ──── Constantes ──── */
+    const CATEGORIES = {
+      commission_location: 'Commission location',
+      commission_vente:    'Commission vente',
+      frais_visite:        'Frais de visite',
+      frais_dossier:       'Frais de dossier',
+      caution:             'Caution',
+      acompte:             'Acompte',
+      autre:               'Autre'
+    };
+    const PAYMENT_METHODS = {
+      cash:              'Espèces',
+      orange_money:      'Orange Money',
+      mtn_mobile_money:  'MTN Mobile Money',
+      bank_transfer:     'Virement bancaire'
+    };
+    const ISSUER_DEFAULT = {
+      name: 'SE LOGER CM',
+      tagline: 'Unique Solutions, Smart Living',
+      address: 'Boulevard de la République, Bonamoussadi, Douala',
+      phone: '(+237) 650 840 714',
+      email: 'armand.k@selogercm.com',
+      rccm: 'DLA-02-2024-A10-00712',
+      niu: 'PO68916714973N'
+    };
+
+    /* ──── Refs DOM ──── */
+    const overlay  = document.getElementById('receiptOverlay');
+    const openBtn  = document.getElementById('openReceipt');
+    const closeBtn = document.getElementById('rcptClose');
+    const cancelBtn = document.getElementById('rcptCancel');
+    const generateBtn = document.getElementById('rcptGenerate');
+
+    const fPayer   = document.getElementById('rcptPayerName');
+    const fPhone   = document.getElementById('rcptPayerPhone');
+    const fAmount  = document.getElementById('rcptAmount');
+    const fDate    = document.getElementById('rcptDate');
+    const fCat     = document.getElementById('rcptCategory');
+    const fMeth    = document.getElementById('rcptMethod');
+    const fDesc    = document.getElementById('rcptDescription');
+    const fNotes   = document.getElementById('rcptNotes');
+    const statusEl = document.getElementById('rcptStatus');
+
+    const renderEl = document.getElementById('receiptDocRender');
+
+    /* ──── Helpers ──── */
+    function fmtMoney(n) {
+      return Number(n || 0).toLocaleString('fr-FR') + ' FCFA';
+    }
+    function fmtDate(isoDate) {
+      if (!isoDate) return '';
+      const [y, m, d] = isoDate.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    /* Convertit un montant en lettres (français, simplifié pour FCFA) */
+    function amountInWords(n) {
+      n = Math.floor(Number(n) || 0);
+      if (n === 0) return 'zéro francs CFA';
+
+      const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
+                     'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize',
+                     'dix-sept', 'dix-huit', 'dix-neuf'];
+      const tens  = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
+
+      function below1000(num) {
+        if (num === 0) return '';
+        let result = '';
+        const h = Math.floor(num / 100);
+        const rest = num % 100;
+        if (h > 0) {
+          result += (h === 1 ? 'cent' : units[h] + ' cent') + (h > 1 && rest === 0 ? 's' : '') + ' ';
+        }
+        if (rest === 0) return result.trim();
+        if (rest < 20) {
+          result += units[rest];
+        } else {
+          const t = Math.floor(rest / 10);
+          const u = rest % 10;
+          if (t === 7 || t === 9) {
+            result += tens[t] + (t === 7 && u === 1 ? ' et ' : '-') + units[10 + u];
+          } else if (u === 0) {
+            result += tens[t] + (t === 8 ? 's' : '');
+          } else if (u === 1 && t !== 8) {
+            result += tens[t] + ' et un';
+          } else {
+            result += tens[t] + '-' + units[u];
+          }
+        }
+        return result.trim();
+      }
+
+      let result = '';
+      const millions = Math.floor(n / 1000000);
+      const thousands = Math.floor((n % 1000000) / 1000);
+      const rest = n % 1000;
+
+      if (millions > 0) {
+        result += (millions === 1 ? 'un million' : below1000(millions) + ' millions') + ' ';
+      }
+      if (thousands > 0) {
+        result += (thousands === 1 ? 'mille' : below1000(thousands) + ' mille') + ' ';
+      }
+      if (rest > 0) {
+        result += below1000(rest);
+      }
+      return result.trim() + ' francs CFA';
+    }
+
+    /* ──── Numérotation auto SL-AAAA-NNNN ──── */
+    async function getNextReceiptNumber(supabase) {
+      const year = new Date().getFullYear();
+      const prefix = `SL-${year}-`;
+      const { data, error } = await supabase
+        .from('receipts')
+        .select('receipt_number')
+        .like('receipt_number', `${prefix}%`)
+        .order('receipt_number', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      let next = 1;
+      if (data && data.length > 0) {
+        const last = data[0].receipt_number;
+        const lastNum = parseInt(last.split('-').pop(), 10) || 0;
+        next = lastNum + 1;
+      }
+      return prefix + String(next).padStart(4, '0');
+    }
+
+    /* ──── Ouverture / fermeture modale ──── */
+    function openModal() {
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('rcpt-modal-open');
+      resetForm();
+      /* Date du jour par défaut */
+      fDate.value = new Date().toISOString().substring(0, 10);
+    }
+    function closeModal() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('rcpt-modal-open');
+    }
+    function resetForm() {
+      fPayer.value = '';
+      fPhone.value = '';
+      fAmount.value = '';
+      fDate.value = '';
+      fCat.value = '';
+      fMeth.value = '';
+      fDesc.value = '';
+      fNotes.value = '';
+      statusEl.className = 'rcpt-status';
+      statusEl.textContent = '';
+      generateBtn.disabled = false;
+    }
+    function showStatus(type, msg) {
+      statusEl.className = 'rcpt-status is-' + type;
+      statusEl.textContent = msg;
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+
+    /* ──── Construction HTML du document reçu (style Facture) ──── */
+    function renderReceiptHTML(data) {
+      const amountWords = amountInWords(data.amount);
+      return `
+        <div class="rdoc">
+          <div class="rdoc-header">
+            <div>
+              <div class="rdoc-brand-name">${escapeHtml(ISSUER_DEFAULT.name)}</div>
+              <div class="rdoc-brand-tagline">${escapeHtml(ISSUER_DEFAULT.tagline)}</div>
+              <div class="rdoc-brand-rccm">RCCM : ${escapeHtml(ISSUER_DEFAULT.rccm)} — NIU : ${escapeHtml(ISSUER_DEFAULT.niu)}</div>
+            </div>
+            <div>
+              <div class="rdoc-label">REÇU</div>
+              <div class="rdoc-num">N° ${escapeHtml(data.receipt_number)}</div>
+              <div class="rdoc-date">Date : ${escapeHtml(fmtDate(data.payment_date))}</div>
+            </div>
+          </div>
+
+          <div class="rdoc-body">
+            <div class="rdoc-parties">
+              <div class="rdoc-party">
+                <div class="rdoc-party-label">Émetteur</div>
+                <div class="rdoc-party-name">${escapeHtml(ISSUER_DEFAULT.name)}</div>
+                <div class="rdoc-party-detail">
+                  <span>${escapeHtml(ISSUER_DEFAULT.address)}</span>
+                  <span>${escapeHtml(ISSUER_DEFAULT.phone)} — ${escapeHtml(ISSUER_DEFAULT.email)}</span>
+                </div>
+              </div>
+              <div class="rdoc-party payer">
+                <div class="rdoc-party-label">Reçu de</div>
+                <div class="rdoc-party-name">${escapeHtml(data.payer_name)}</div>
+                <div class="rdoc-party-detail">
+                  ${data.payer_phone ? `<span>Tél : ${escapeHtml(data.payer_phone)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="rdoc-amount-block">
+              <div class="rdoc-amount-label">Montant reçu</div>
+              <div class="rdoc-amount-value">${escapeHtml(fmtMoney(data.amount))}</div>
+              <div class="rdoc-amount-words">(${escapeHtml(amountWords)})</div>
+            </div>
+
+            <table class="rdoc-details-table">
+              <tr>
+                <td>Au titre de</td>
+                <td>${escapeHtml(CATEGORIES[data.category] || data.category)}</td>
+              </tr>
+              ${data.description ? `
+              <tr>
+                <td>Description</td>
+                <td>${escapeHtml(data.description)}</td>
+              </tr>` : ''}
+              <tr>
+                <td>Mode de paiement</td>
+                <td>${escapeHtml(PAYMENT_METHODS[data.payment_method] || data.payment_method)}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="rdoc-footer">
+            <div class="rdoc-footer-place">Fait à Douala, le ${escapeHtml(fmtDate(data.payment_date))}</div>
+            <div class="rdoc-footer-sig">
+              <div class="rdoc-footer-sig-label">Signature et cachet</div>
+              <div class="rdoc-footer-sig-name">SE LOGER CM</div>
+            </div>
+          </div>
+
+          <div class="rdoc-bottom-strip">
+            Ce reçu a été généré électroniquement par SE LOGER CM
+          </div>
+        </div>`;
+    }
+
+    /* ──── Génération PDF via html2canvas + jsPDF ──── */
+    async function generatePDF(data) {
+      /* Vérification que les libs sont chargées */
+      if (typeof html2canvas === 'undefined') {
+        throw new Error('Lib html2canvas non chargée. Recharge la page.');
+      }
+      if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+        throw new Error('Lib jsPDF non chargée. Recharge la page.');
+      }
+      const { jsPDF } = window.jspdf;
+
+      /* Render le HTML dans le conteneur off-screen */
+      renderEl.innerHTML = renderReceiptHTML(data);
+
+      /* Convertir en canvas haute résolution */
+      const canvas = await html2canvas(renderEl.querySelector('.rdoc'), {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#fff',
+        logging: false
+      });
+
+      /* Construire le PDF A4 */
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableW = pageW - margin * 2;
+      const imgRatio = canvas.height / canvas.width;
+      const imgW = usableW;
+      const imgH = imgW * imgRatio;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      /* Si le contenu dépasse la page, on la centre verticalement */
+      const yOffset = imgH < (pageH - margin * 2) ? (pageH - imgH) / 2 : margin;
+      pdf.addImage(imgData, 'JPEG', margin, yOffset, imgW, imgH);
+
+      /* Téléchargement */
+      const filename = `Recu_${data.receipt_number}_${data.payer_name.replace(/[^a-z0-9]+/gi, '_')}.pdf`;
+      pdf.save(filename);
+
+      /* Nettoyage */
+      renderEl.innerHTML = '';
+    }
+
+    /* ──── Génération + archivage ──── */
+    generateBtn.addEventListener('click', async () => {
+      /* Validation */
+      const errors = [];
+      if (!fPayer.value.trim())   errors.push('nom payeur');
+      if (!fAmount.value || Number(fAmount.value) <= 0) errors.push('montant');
+      if (!fDate.value)           errors.push('date');
+      if (!fCat.value)            errors.push('catégorie');
+      if (!fMeth.value)           errors.push('mode de paiement');
+      if (errors.length) {
+        showStatus('error', 'Champs manquants : ' + errors.join(', '));
+        return;
+      }
+
+      generateBtn.disabled = true;
+      const supabase = await window.SLCM_DB.init();
+      if (!supabase) {
+        showStatus('error', 'Connexion Supabase indisponible');
+        generateBtn.disabled = false;
+        return;
+      }
+
+      try {
+        /* 1. Générer le numéro */
+        showStatus('info', '⏳ Génération du numéro...');
+        const receiptNumber = await getNextReceiptNumber(supabase);
+
+        /* 2. Récupérer l'email de l'utilisateur connecté */
+        const { data: userData } = await supabase.auth.getUser();
+        const issuedBy = userData?.user?.email || ISSUER_DEFAULT.email;
+
+        /* 3. Préparer le payload */
+        const payload = {
+          receipt_number: receiptNumber,
+          payer_name:     fPayer.value.trim(),
+          payer_phone:    fPhone.value.trim() || null,
+          amount:         Number(fAmount.value),
+          payment_method: fMeth.value,
+          category:       fCat.value,
+          description:    fDesc.value.trim() || null,
+          payment_date:   fDate.value,
+          issued_by:      issuedBy,
+          notes:          fNotes.value.trim() || null
+        };
+
+        /* 4. Insertion en base AVANT la génération PDF (cohérence si PDF échoue) */
+        showStatus('info', '⏳ Archivage...');
+        const { error: insErr } = await supabase.from('receipts').insert([payload]);
+        if (insErr) throw new Error('Archivage : ' + insErr.message);
+
+        /* 5. Génération PDF (téléchargement automatique) */
+        showStatus('info', '⏳ Génération du PDF...');
+        await generatePDF(payload);
+
+        /* 6. Succès */
+        showStatus('success', `✓ Reçu ${receiptNumber} généré et archivé.`);
+        if (typeof window.SLCM_renderArchive === 'function') {
+          window.SLCM_renderArchive();
+        }
+        setTimeout(closeModal, 1500);
+      } catch (e) {
+        showStatus('error', 'Erreur : ' + e.message);
+        generateBtn.disabled = false;
+      }
+    });
+
+    /* ──── Section archives ──── */
+    /* Crée la section dans le DOM, au-dessus des annonces */
+    function buildArchiveSection() {
+      let section = document.getElementById('receiptsArchive');
+      if (section) return section;
+
+      section = document.createElement('section');
+      section.id = 'receiptsArchive';
+      section.classList.add('is-collapsed');
+      section.innerHTML = `
+        <div class="rcpt-arch-header">
+          <h3>🧾 Reçus archivés</h3>
+          <button class="rcpt-arch-toggle" id="rcptArchToggle" type="button">Afficher ▼</button>
+        </div>
+        <div class="rcpt-arch-filters">
+          <input id="rcptFiltSearch" type="text" placeholder="Rechercher par nom du payeur, n° reçu, description…">
+          <select id="rcptFiltCat">
+            <option value="">Toutes catégories</option>
+            ${Object.entries(CATEGORIES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}
+          </select>
+          <input id="rcptFiltFrom" type="date" title="Date de début">
+          <input id="rcptFiltTo" type="date" title="Date de fin">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>N° reçu</th>
+              <th>Date</th>
+              <th>Payeur</th>
+              <th>Catégorie</th>
+              <th>Montant</th>
+              <th>Mode</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rcptArchBody"></tbody>
+        </table>
+        <div class="rcpt-arch-empty" id="rcptArchEmpty" style="display:none;">
+          Aucun reçu trouvé pour ces critères.
+        </div>`;
+
+      /* Insertion : juste avant la section "Annonces" si elle existe, sinon en haut du body */
+      const target = document.querySelector('header')?.nextElementSibling || document.body.firstElementChild;
+      if (target && target.parentNode) {
+        target.parentNode.insertBefore(section, target.nextSibling);
+      } else {
+        document.body.appendChild(section);
+      }
+
+      /* Toggle afficher/masquer */
+      section.querySelector('#rcptArchToggle').addEventListener('click', () => {
+        const collapsed = section.classList.toggle('is-collapsed');
+        section.querySelector('#rcptArchToggle').textContent = collapsed ? 'Afficher ▼' : 'Masquer ▲';
+        if (!collapsed) renderArchive();
+      });
+
+      /* Filtres */
+      ['rcptFiltSearch', 'rcptFiltCat', 'rcptFiltFrom', 'rcptFiltTo'].forEach(id => {
+        const el = section.querySelector('#' + id);
+        if (el) el.addEventListener('input', renderArchive);
+      });
+
+      return section;
+    }
+
+    /* Charge et affiche les reçus selon les filtres */
+    async function renderArchive() {
+      const supabase = await window.SLCM_DB.init();
+      if (!supabase) return;
+
+      const search = document.getElementById('rcptFiltSearch')?.value.trim().toLowerCase() || '';
+      const cat    = document.getElementById('rcptFiltCat')?.value || '';
+      const from   = document.getElementById('rcptFiltFrom')?.value || '';
+      const to     = document.getElementById('rcptFiltTo')?.value || '';
+
+      let query = supabase.from('receipts').select('*').order('payment_date', { ascending: false }).limit(200);
+      if (cat)  query = query.eq('category', cat);
+      if (from) query = query.gte('payment_date', from);
+      if (to)   query = query.lte('payment_date', to);
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('[receipts] renderArchive:', error);
+        return;
+      }
+
+      let list = data || [];
+      /* Recherche libre côté client (nom payeur, numéro, description) */
+      if (search) {
+        list = list.filter(r =>
+          (r.payer_name || '').toLowerCase().includes(search) ||
+          (r.receipt_number || '').toLowerCase().includes(search) ||
+          (r.description || '').toLowerCase().includes(search)
+        );
+      }
+
+      const body  = document.getElementById('rcptArchBody');
+      const empty = document.getElementById('rcptArchEmpty');
+      if (!body) return;
+
+      if (list.length === 0) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      body.innerHTML = list.map(r => `
+        <tr data-id="${r.id}">
+          <td><strong>${escapeHtml(r.receipt_number)}</strong></td>
+          <td>${escapeHtml(fmtDate(r.payment_date))}</td>
+          <td>${escapeHtml(r.payer_name)}</td>
+          <td>${escapeHtml(CATEGORIES[r.category] || r.category)}</td>
+          <td><strong>${escapeHtml(fmtMoney(r.amount))}</strong></td>
+          <td>${escapeHtml(PAYMENT_METHODS[r.payment_method] || r.payment_method)}</td>
+          <td><button class="rcpt-arch-pdfbtn" data-id="${r.id}">📄 PDF</button></td>
+        </tr>`).join('');
+
+      /* Bouton réimprimer PDF */
+      body.querySelectorAll('.rcpt-arch-pdfbtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const item = list.find(r => r.id === id);
+          if (!item) return;
+          btn.disabled = true;
+          btn.textContent = '⏳';
+          try {
+            await generatePDF(item);
+            btn.textContent = '✓ PDF';
+            setTimeout(() => { btn.textContent = '📄 PDF'; btn.disabled = false; }, 1500);
+          } catch (e) {
+            btn.textContent = '✗ Erreur';
+            console.error(e);
+            setTimeout(() => { btn.textContent = '📄 PDF'; btn.disabled = false; }, 1500);
+          }
+        });
+      });
+    }
+
+    /* Initialiser la section archives au chargement */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', buildArchiveSection);
+    } else {
+      buildArchiveSection();
+    }
+
+    /* Exposer renderArchive globalement pour rafraîchissement après création */
+    window.SLCM_renderArchive = renderArchive;
   })();
   </script>
 </body>
