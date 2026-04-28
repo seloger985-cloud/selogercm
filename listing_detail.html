@@ -962,6 +962,12 @@
           }
         }
 
+        /* ── Bouton Appeler — utilise le même ownerPhone (fallback HTML si JS échoue) ── */
+        const phoneBtn = document.getElementById('phoneBtn');
+        if (phoneBtn) {
+          phoneBtn.href = 'tel:+' + ownerPhone;
+        }
+
         if (tgBtn) {
           tgBtn.href = 'https://t.me/seloger237?text=' + tgMsg;
         }
@@ -990,8 +996,8 @@
 
         /* ── Liens de partage social ── */
         const shareText = encodeURIComponent(`${title} — ${price} — ${location}`);
-        const shareUrl  = encodeURIComponent(listingShare); /* /share/ → meta og dynamiques via og.js (Facebook, LinkedIn, WhatsApp) */
-        const shareUrlWa = encodeURIComponent(listingShare); /* WhatsApp aussi sur /share/ : aperçu riche au lieu d'un lien sec */
+        const shareUrl  = encodeURIComponent(listingShare); /* OG tags pour Facebook/LinkedIn */
+        const shareUrlWa = encodeURIComponent(listingUrl);  /* URL directe pour WhatsApp/Telegram */
 
         const shareFb = document.getElementById('shareFb');
         if (shareFb) shareFb.href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
