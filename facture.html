@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facture — SE LOGER CM</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/assets/img/favicon.ico">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: Arial, Helvetica, sans-serif; color: #111; background: #f4f4f4; }
+    body {
+      min-height: 100vh; padding: 20px;
+      visibility: hidden;  /* Caché jusqu'à validation auth (anti-flash) */
+    }
+
+    /* ─── Barre d'actions (en haut, hors PDF) ─── */
+    .actions-bar {
+      max-width: 800px; margin: 0 auto 16px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .actions-bar .btn {
+      padding: 8px 16px; border: 1px solid #d1d5db;
+      background: #fff; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      font-family: inherit;
+    }
+    .actions-bar .btn:hover { background: #f9fafb; }
+    .actions-bar .btn-primary {
+      background: #ff7a00; color: #fff; border-color: #ff7a00;
+    }
+    .actions-bar .btn-primary:hover { background: #e66e00; }
+    .actions-bar .btn-secondary {
+      background: #111; color: #fff; border-color: #111;
+    }
+    .actions-bar .btn-secondary:hover { background: #333; }
+    .actions-bar .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .actions-bar .invoice-status {
+      margin-left: auto;
+      padding: 4px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+      background: #e5e7eb; color: #374151;
+    }
+    .actions-bar .invoice-status.is-emise   { background: #dbeafe; color: #1e40af; }
+    .actions-bar .invoice-status.is-payee   { background: #d1fae5; color: #065f46; }
+    .actions-bar .invoice-status.is-annulee { background: #fee2e2; color: #991b1b; }
+
+    .toast {
+      position: fixed; top: 20px; right: 20px;
+      padding: 10px 16px; border-radius: 6px;
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      z-index: 100; opacity: 0; transition: opacity .25s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.is-info    { background: #dbeafe; color: #1e40af; }
+    .toast.is-error   { background: #fee2e2; color: #991b1b; }
+    .toast.is-success { background: #d1fae5; color: #065f46; }
+
+    /* ─── Sélecteur de prestations ─── */
+    .type-selector {
+      max-width: 800px; margin: 0 auto 12px;
+      background: #fff; padding: 12px 16px; border-radius: 8px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      border: 1px solid #e5e7eb;
+    }
+    .type-selector .label {
+      font-size: 12px; font-weight: 600; color: #555;
+      margin-right: 4px;
+    }
+    .type-btn {
+      padding: 5px 12px; border: 1px solid #d1d5db;
+      background: #fff; color: #555;
+      border-radius: 999px; cursor: pointer;
+      font-size: 12px; font-weight: 500;
+      font-family: inherit; transition: all .15s;
+    }
+    .type-btn:hover { border-color: #ff7a00; color: #ff7a00; }
+    .type-btn.active {
+      background: #111; color: #fff; border-color: #111;
+    }
+
+    /* ─── Document Facture (zone imprimable / exportée en PDF) ─── */
+    .invoice {
+      max-width: 800px; margin: 0 auto;
+      background: #fff;
+      padding: 32px 36px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    /* Header épuré */
+    .inv-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding-bottom: 12px;
+      border-bottom: 1.5px solid #ff7a00;
+      margin-bottom: 18px;
+    }
+    .inv-brand-name {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+    }
+    .inv-brand-tagline {
+      font-size: 10px; color: #888; font-style: italic; margin-top: 2px;
+    }
+    .inv-brand-rccm {
+      font-size: 9px; color: #aaa; margin-top: 4px;
+    }
+    .inv-meta { text-align: right; }
+    .inv-meta-label {
+      font-size: 18px; font-weight: 600; letter-spacing: 2px;
+    }
+    .inv-meta-num {
+      font-size: 11px; color: #555; margin-top: 4px; font-weight: 500;
+    }
+    .inv-meta-date {
+      font-size: 10px; color: #888; margin-top: 2px;
+    }
+
+    /* Parties (émetteur / client) */
+    .inv-parties {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin-bottom: 16px;
+    }
+    .inv-party-label {
+      font-size: 9px; color: #888;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+    .inv-party-name {
+      font-size: 12px; font-weight: 600; margin-bottom: 2px;
+    }
+    .inv-party-detail {
+      font-size: 11px; color: #555; line-height: 1.5;
+    }
+    .inv-party-detail .editable,
+    .inv-party-detail input {
+      font-size: 11px; color: #555;
+    }
+
+    /* Référence bien */
+    .inv-ref {
+      font-size: 11px; color: #555;
+      padding-bottom: 10px;
+      border-bottom: 0.5px solid #eee;
+      margin-bottom: 12px;
+    }
+    .inv-ref .ref-item { display: inline-block; margin-right: 16px; }
+    .inv-ref .ref-item strong { color: #111; font-weight: 600; }
+
+    /* Tableau prestations */
+    table.inv-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 11px; margin-bottom: 16px;
+    }
+    table.inv-table thead th {
+      padding: 6px 4px; text-align: left;
+      font-weight: 600; font-size: 9px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1.5px solid #111;
+      color: #111;
+    }
+    table.inv-table thead th.right { text-align: right; }
+    table.inv-table tbody td {
+      padding: 8px 4px; vertical-align: top;
+      border-bottom: 0.5px solid #eee;
+    }
+    table.inv-table tbody td.right { text-align: right; }
+    table.inv-table tbody tr.empty-row td { padding: 10px 4px; }
+    table.inv-table .desc-main {
+      display: block; font-weight: 600; font-size: 11px;
+      margin-bottom: 2px;
+    }
+    table.inv-table .desc-detail1, table.inv-table .desc-detail2 {
+      display: block; font-size: 10px; color: #666;
+    }
+
+    /* Champs éditables (style discret) */
+    .editable, .num-input, .remise-input {
+      border: none; background: transparent;
+      font-family: inherit; font-size: inherit; color: inherit;
+      padding: 1px 2px;
+      border-bottom: 1px dotted #d1d5db;
+      outline: none;
+    }
+    .editable:focus, .num-input:focus, .remise-input:focus {
+      border-bottom-color: #ff7a00;
+      background: #fff8f0;
+    }
+    .num-input { text-align: right; max-width: 90px; }
+    .remise-input { text-align: right; max-width: 80px; }
+
+    .total-cell { font-weight: 600; }
+
+    /* Totaux */
+    .inv-totals {
+      display: flex; justify-content: flex-end; margin-bottom: 16px;
+    }
+    .inv-totals-table {
+      min-width: 240px; font-size: 11px;
+    }
+    .inv-totals-table .total-row {
+      display: flex; justify-content: space-between;
+      padding: 4px 0;
+    }
+    .inv-totals-table .tlabel { color: #555; }
+    .inv-totals-table .tval { font-weight: 600; }
+    .inv-totals-table .grand {
+      border-top: 1.5px solid #111;
+      margin-top: 4px; padding-top: 8px;
+    }
+    .inv-totals-table .grand .tlabel,
+    .inv-totals-table .grand .tval {
+      font-weight: 700; font-size: 13px;
+    }
+
+    /* Modalités + notes */
+    .inv-modalities {
+      font-size: 10px; color: #555; line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .inv-modalities strong {
+      color: #111; font-weight: 600;
+    }
+    .inv-notes {
+      font-size: 10px; color: #555;
+      margin-bottom: 12px;
+    }
+    .inv-notes-label {
+      font-size: 9px; color: #888;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .inv-notes textarea {
+      width: 100%; border: none; background: transparent;
+      font-family: inherit; font-size: 10px; color: #555;
+      resize: none; min-height: 30px;
+      border-bottom: 1px dotted #d1d5db;
+      padding: 2px 0; outline: none;
+    }
+    .inv-notes textarea:focus {
+      border-bottom-color: #ff7a00;
+      background: #fff8f0;
+    }
+
+    /* Footer */
+    .inv-footer {
+      border-top: 0.5px solid #eee;
+      padding-top: 8px;
+      font-size: 9px; color: #888;
+      text-align: center; line-height: 1.5;
+    }
+
+    /* Responsive (consultation seulement, le PDF reste fixe à 800px) */
+    @media (max-width: 720px) {
+      body { padding: 8px; }
+      .invoice { padding: 16px 14px; }
+      .inv-parties { grid-template-columns: 1fr; gap: 12px; }
+      .inv-header { flex-direction: column; gap: 10px; }
+      .inv-meta { text-align: left; }
+      table.inv-table { font-size: 10px; }
+      .num-input { max-width: 70px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barre d'actions (cachée en impression et lors du rendu PDF) -->
+  <div class="actions-bar" id="actionsBar">
+    <button class="btn" type="button" onclick="window.location.href='/admin'">← Retour admin</button>
+    <button class="btn btn-secondary" id="btnSave" type="button">💾 Sauvegarder</button>
+    <button class="btn btn-primary" id="btnPdf" type="button">📄 Générer PDF</button>
+    <button class="btn" id="btnReset" type="button" title="Vider le formulaire">🗑️ Reset</button>
+    <span class="invoice-status" id="invStatus">Brouillon</span>
+  </div>
+
+  <!-- Sélecteur de prestations -->
+  <div class="type-selector" id="typeSelector">
+    <span class="label">Prestations actives :</span>
+    <button class="type-btn active" type="button" data-type="location">Location</button>
+    <button class="type-btn" type="button" data-type="vente">Vente</button>
+    <button class="type-btn" type="button" data-type="visite">Visite</button>
+    <button class="type-btn" type="button" data-type="commercial">Commercial</button>
+  </div>
+
+  <!-- Document Facture (zone capturée pour PDF) -->
+  <div class="invoice" id="invoiceDoc">
+
+    <div class="inv-header">
+      <div>
+        <div class="inv-brand-name">SE LOGER CM</div>
+        <div class="inv-brand-tagline">Unique Solutions, Smart Living</div>
+        <div class="inv-brand-rccm">RCCM DLA-02-2024-A10-00712 — NIU PO68916714973N</div>
+      </div>
+      <div class="inv-meta">
+        <div class="inv-meta-label">FACTURE</div>
+        <div class="inv-meta-num" id="invNum">N° FAC-2026-XXXX</div>
+        <div class="inv-meta-date" id="invDate">Émise le —</div>
+      </div>
+    </div>
+
+    <div class="inv-parties">
+      <div>
+        <div class="inv-party-label">Émetteur</div>
+        <div class="inv-party-name">SE LOGER CM</div>
+        <div class="inv-party-detail">
+          Boulevard de la République<br>
+          Bonamoussadi, Douala<br>
+          (+237) 650 840 714<br>
+          armand.k@selogercm.com
+        </div>
+      </div>
+      <div>
+        <div class="inv-party-label">Facturé à</div>
+        <input class="editable inv-party-name" id="clientName" placeholder="Nom du client" maxlength="100" style="width:100%;font-weight:600;">
+        <div class="inv-party-detail">
+          <input class="editable" id="clientAddress" placeholder="Adresse" style="width:100%;">
+          <input class="editable" id="clientDistrict" placeholder="Quartier" style="width:100%;">
+          <input class="editable" id="clientPhone" placeholder="Téléphone" style="width:100%;">
+          <input class="editable" id="clientEmail" placeholder="Email (optionnel)" style="width:100%;">
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-ref">
+      <span class="ref-item"><strong>Bien :</strong> <input class="editable" id="propertyType" placeholder="Studio, villa..." style="min-width:120px;"></span>
+      <span class="ref-item"><strong>Quartier bien :</strong> <input class="editable" id="propertyDistrict" placeholder="Bali, Bonapriso..." style="min-width:100px;"></span>
+      <span class="ref-item"><strong>Réf :</strong> <input class="editable" id="propertyRef" placeholder="R-001" style="min-width:60px;"></span>
+    </div>
+
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th style="width:46%">Prestation &amp; description</th>
+          <th class="right" style="width:18%">Base de calcul</th>
+          <th class="right" style="width:12%">Taux</th>
+          <th class="right" style="width:24%">Montant (FCFA)</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="row-location">
+          <td>
+            <input class="editable desc-main" id="desc-location-main" placeholder="Commission de location" value="Commission de location">
+            <input class="editable desc-detail1" id="desc-location-d1" placeholder="Bien : type, superficie, quartier...">
+            <input class="editable desc-detail2" id="desc-location-d2" placeholder="Conditions, notes...">
+          </td>
+          <td class="right">
+            <input class="num-input" id="base-location" placeholder="Loyer mensuel">
+          </td>
+          <td class="right" style="font-size:10px;color:#888;">1 mois</td>
+          <td class="right"><span class="total-cell" id="total-location">—</span></td>
+        </tr>
+
+        <tr class="row-vente">
+          <td>
+            <input class="editable desc-main" id="desc-vente-main" placeholder="Commission de vente" value="Commission de vente">
+            <input class="editable desc-detail1" id="desc-vente-d1" placeholder="Bien : type, superficie, quartier...">
+            <input class="editable desc-detail2" id="desc-vente-d2" placeholder="Ex : 5% du prix de vente...">
+          </td>
+          <td class="right">
+            <input class="num-input" id="base-vente" placeholder="Prix de vente">
+          </td>
+          <td class="right">
+            <input class="num-input" id="taux-vente" placeholder="5" style="width:38px;"><span style="font-size:10px;color:#888;"> %</span>
+          </td>
+          <td class="right"><span class="total-cell" id="total-vente">—</span></td>
+        </tr>
+
+        <tr class="row-visite">
+          <td>
+            <input class="editable desc-main" id="desc-visite-main" placeholder="Frais de visite" value="Frais de visite">
+            <input class="editable desc-detail1" id="desc-visite-d1" placeholder="Bien : type, superficie, quartier...">
+            <input class="editable desc-detail2" id="desc-visite-d2" placeholder="Visite accompagnée...">
+          </td>
+          <td class="right">
+            <input class="num-input" id="base-visite" placeholder="Qté" style="width:40px;">
+          </td>
+          <td class="right">
+            <input class="num-input" id="taux-visite" placeholder="Prix unit.">
+          </td>
+          <td class="right"><span class="total-cell" id="total-visite">—</span></td>
+        </tr>
+
+        <tr class="row-commercial">
+          <td>
+            <input class="editable desc-main" id="desc-commercial-main" placeholder="Mise en location commerciale" value="Mise en location commerciale">
+            <input class="editable desc-detail1" id="desc-commercial-d1" placeholder="Bien : type, superficie, quartier...">
+            <input class="editable desc-detail2" id="desc-commercial-d2" placeholder="Conditions, notes...">
+          </td>
+          <td class="right">
+            <input class="num-input" id="base-commercial" placeholder="Loyer mensuel">
+          </td>
+          <td class="right" style="font-size:10px;color:#888;">1 mois</td>
+          <td class="right"><span class="total-cell" id="total-commercial">—</span></td>
+        </tr>
+
+        <tr class="empty-row">
+          <td>
+            <input class="editable desc-main" id="desc-libre-main" placeholder="Prestation complémentaire (optionnel)..." style="font-weight:600;">
+            <input class="editable desc-detail1" id="desc-libre-d1" placeholder="Détail...">
+          </td>
+          <td class="right"><input class="num-input" id="base-libre" placeholder="Qté / Base"></td>
+          <td class="right"><input class="num-input" id="taux-libre" placeholder="P.U / Taux"></td>
+          <td class="right"><span class="total-cell" id="total-libre">—</span></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <div class="inv-totals">
+      <div class="inv-totals-table">
+        <div class="total-row">
+          <span class="tlabel">Sous-total</span>
+          <span class="tval" id="subtotal">0 FCFA</span>
+        </div>
+        <div class="total-row">
+          <span class="tlabel">Remise</span>
+          <span class="tval">
+            <input class="remise-input" id="remise" placeholder="0" value="0">
+            <span style="font-size:10px;color:#888;">FCFA</span>
+          </span>
+        </div>
+        <div class="total-row grand">
+          <span class="tlabel">Total à payer</span>
+          <span class="tval" id="grandtotal">0 FCFA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-modalities">
+      <strong>Modalités de règlement :</strong> Paiement à réception · Mobile Money (Orange / MTN) · Virement bancaire · Espèces (reçu fourni)
+    </div>
+
+    <div class="inv-notes">
+      <div class="inv-notes-label">Notes / conditions particulières</div>
+      <textarea id="invNotes" placeholder="Conditions particulières, informations complémentaires..."></textarea>
+    </div>
+
+    <div class="inv-footer">
+      SE LOGER CM · Bonamoussadi, Douala · (+237) 650 840 714 · armand.k@selogercm.com · selogercm.com
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Libs externes (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="/assets/js/supabase.js"></script>
+  <script src="/assets/js/auth.js"></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     PROTECTION AUTH — La page facture.html est admin-only.
+     Vérification d'authentification AVANT toute autre action.
+     ═══════════════════════════════════════════════════════════════ */
+  (async function checkAuth() {
+    /* Attendre que SLCM (auth.js) soit prêt - peut prendre 1-2s au chargement */
+    let tries = 0;
+    while ((!window.SLCM || !window.SLCM.requireAdmin) && tries < 50) {
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+    if (!window.SLCM || !window.SLCM.requireAdmin) {
+      console.error('[facture] SLCM auth indisponible, redirection');
+      window.location.href = '/connexion?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+      return;
+    }
+    /* requireAdmin redirige automatiquement vers /connexion si pas autorisé */
+    const user = await window.SLCM.requireAdmin();
+    if (!user) {
+      /* requireAdmin a déjà fait la redirection, on s'arrête ici */
+      return;
+    }
+    /* Si on arrive ici : utilisateur authentifié et admin. La page peut s'utiliser. */
+    document.body.style.visibility = 'visible';
+  })();
+  </script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     LOGIQUE FACTURE — calculs + sauvegarde + PDF
+     ═══════════════════════════════════════════════════════════════ */
+  (function() {
+    'use strict';
+
+    /* ─── État ─── */
+    let currentInvoiceId   = null;     // UUID de la facture si déjà sauvegardée
+    let currentInvoiceNum  = null;     // Numéro FAC-AAAA-NNNN
+    let currentStatus      = 'brouillon';  // brouillon | emise | payee | annulee
+    const activeTypes      = new Set(['location']);  // prestations actives
+    const lineTotals       = { location:0, vente:0, visite:0, commercial:0, libre:0 };
+
+    /* ─── Helpers ─── */
+    function readNum(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      return parseFloat(String(el.value || '').replace(/\s/g,'').replace(',','.')) || 0;
+    }
+    function fmtFCFA(n) {
+      if (n === 0) return '—';
+      return n.toLocaleString('fr-FR') + ' FCFA';
+    }
+    function showToast(msg, type) {
+      const el = document.getElementById('toast');
+      el.className = 'toast is-' + (type || 'info') + ' show';
+      el.textContent = msg;
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    /* ─── Sélecteur prestations ─── */
+    function updateRows() {
+      ['location','vente','visite','commercial'].forEach(t => {
+        document.querySelectorAll('.row-' + t).forEach(r => {
+          r.style.display = activeTypes.has(t) ? '' : 'none';
+        });
+      });
+    }
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        if (activeTypes.has(type)) {
+          if (activeTypes.size === 1) return; // au moins 1 actif
+          activeTypes.delete(type);
+          btn.classList.remove('active');
+          lineTotals[type] = 0;
+        } else {
+          activeTypes.add(type);
+          btn.classList.add('active');
+        }
+        updateRows();
+        calcTotals();
+      });
+    });
+    updateRows();
+
+    /* ─── Calculs ─── */
+    function calcLine(type) {
+      let val = 0;
+      if (type === 'location' || type === 'commercial') {
+        val = readNum('base-' + type);
+      } else if (type === 'vente') {
+        const base = readNum('base-vente');
+        const taux = readNum('taux-vente');
+        val = taux > 0 ? base * taux / 100 : 0;
+      } else if (type === 'visite') {
+        const qty = readNum('base-visite');
+        const pu  = readNum('taux-visite');
+        val = qty * pu;
+      } else if (type === 'libre') {
+        const base = readNum('base-libre');
+        const taux = readNum('taux-libre');
+        val = taux > 0 ? base * taux : base;
+      }
+      lineTotals[type] = val;
+      const cell = document.getElementById('total-' + type);
+      if (cell) cell.textContent = fmtFCFA(val);
+      calcTotals();
+    }
+
+    function calcTotals() {
+      let sub = 0;
+      ['location','vente','visite','commercial'].forEach(t => {
+        if (activeTypes.has(t)) sub += lineTotals[t] || 0;
+      });
+      sub += lineTotals.libre || 0;  // ligne libre toujours comptée
+      const remise = readNum('remise');
+      const grand = Math.max(0, sub - remise);
+      document.getElementById('subtotal').textContent   = fmtFCFA(sub);
+      document.getElementById('grandtotal').textContent = fmtFCFA(grand);
+    }
+
+    /* Recalculer à chaque changement */
+    ['base-location','base-vente','taux-vente','base-visite','taux-visite',
+     'base-commercial','base-libre','taux-libre','remise'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          if (id === 'remise') { calcTotals(); return; }
+          const type = id.split('-')[1];
+          calcLine(type);
+        });
+      }
+    });
+
+    /* ─── Date du jour ─── */
+    function fmtDateFR(d) {
+      const date = d instanceof Date ? d : new Date(d);
+      const pad = n => String(n).padStart(2,'0');
+      return pad(date.getDate()) + '/' + pad(date.getMonth()+1) + '/' + date.getFullYear();
+    }
+    function setInvoiceDate(d) {
+      document.getElementById('invDate').textContent = 'Émise le ' + fmtDateFR(d);
+    }
+    setInvoiceDate(new Date());
+
+    /* ─── Statut affiché ─── */
+    function setStatusDisplay(status) {
+      currentStatus = status;
+      const el = document.getElementById('invStatus');
+      const map = {
+        brouillon: { label: 'Brouillon', cls: '' },
+        emise:     { label: 'Émise',     cls: 'is-emise' },
+        payee:     { label: 'Payée',     cls: 'is-payee' },
+        annulee:   { label: 'Annulée',   cls: 'is-annulee' }
+      };
+      const m = map[status] || map.brouillon;
+      el.textContent = m.label;
+      el.className = 'invoice-status ' + m.cls;
+    }
+
+    /* ─── Reset formulaire ─── */
+    function resetForm() {
+      if (!confirm('Vider le formulaire ? Les données non sauvegardées seront perdues.')) return;
+      document.querySelectorAll('input.editable, input.num-input, .remise-input, #invNotes').forEach(el => {
+        if (el.id === 'remise') el.value = '0';
+        else if (el.id.startsWith('desc-') && el.id.endsWith('-main')) {
+          // garde les valeurs par défaut (Commission de location, etc.)
+          const t = el.id.split('-')[1];
+          const defaults = {
+            location: 'Commission de location',
+            vente: 'Commission de vente',
+            visite: 'Frais de visite',
+            commercial: 'Mise en location commerciale'
+          };
+          el.value = defaults[t] || '';
+        } else {
+          el.value = '';
+        }
+      });
+      ['location','vente','visite','commercial','libre'].forEach(t => lineTotals[t] = 0);
+      ['location','vente','visite','commercial','libre'].forEach(t => {
+        const c = document.getElementById('total-' + t);
+        if (c) c.textContent = '—';
+      });
+      document.getElementById('subtotal').textContent = '0 FCFA';
+      document.getElementById('grandtotal').textContent = '0 FCFA';
+      currentInvoiceId = null;
+      currentInvoiceNum = null;
+      document.getElementById('invNum').textContent = 'N° FAC-' + new Date().getFullYear() + '-XXXX';
+      setInvoiceDate(new Date());
+      setStatusDisplay('brouillon');
+      showToast('Formulaire vidé', 'info');
+    }
+    document.getElementById('btnReset').addEventListener('click', resetForm);
+
+    /* ─── Numérotation auto FAC-AAAA-NNNN ─── */
+    async function getNextInvoiceNumber(supabase) {
+      const year = new Date().getFullYear();
+      const prefix = 'FAC-' + year + '-';
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('invoice_number')
+        .like('invoice_number', prefix + '%')
+        .order('invoice_number', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      let next = 1;
+      if (data && data.length > 0) {
+        const last = data[0].invoice_number;
+        const lastNum = parseInt(last.split('-').pop(), 10) || 0;
+        next = lastNum + 1;
+      }
+      return prefix + String(next).padStart(4, '0');
+    }
+
+    /* ─── Sauvegarde Supabase ─── */
+    async function saveInvoice() {
+      const clientName = document.getElementById('clientName').value.trim();
+      if (!clientName) {
+        showToast('Le nom du client est obligatoire', 'error');
+        return;
+      }
+
+      const btnSave = document.getElementById('btnSave');
+      btnSave.disabled = true;
+      btnSave.textContent = '⏳ Sauvegarde...';
+
+      try {
+        const supabase = await window.SLCM_DB.init();
+        if (!supabase) throw new Error('Connexion Supabase indisponible');
+
+        /* Construire les line_items à partir des prestations actives */
+        const lineItems = [];
+        const typeMap = {
+          location: 'Location',
+          vente: 'Vente',
+          visite: 'Visite',
+          commercial: 'Commercial'
+        };
+        ['location','vente','visite','commercial'].forEach(t => {
+          if (!activeTypes.has(t) || lineTotals[t] === 0) return;
+          lineItems.push({
+            type: t,
+            type_label: typeMap[t],
+            label: document.getElementById('desc-' + t + '-main').value.trim() || typeMap[t],
+            detail1: document.getElementById('desc-' + t + '-d1').value.trim() || null,
+            detail2: document.getElementById('desc-' + t + '-d2').value.trim() || null,
+            base: readNum('base-' + t),
+            rate: t === 'vente' ? readNum('taux-vente') : (t === 'visite' ? readNum('taux-visite') : null),
+            amount: lineTotals[t]
+          });
+        });
+        /* Ligne libre si remplie */
+        if (lineTotals.libre > 0 || document.getElementById('desc-libre-main').value.trim()) {
+          lineItems.push({
+            type: 'libre',
+            type_label: 'Autre',
+            label: document.getElementById('desc-libre-main').value.trim() || 'Autre prestation',
+            detail1: document.getElementById('desc-libre-d1').value.trim() || null,
+            detail2: null,
+            base: readNum('base-libre'),
+            rate: readNum('taux-libre'),
+            amount: lineTotals.libre
+          });
+        }
+
+        /* Calculs totaux */
+        let subtotal = 0;
+        ['location','vente','visite','commercial'].forEach(t => {
+          if (activeTypes.has(t)) subtotal += lineTotals[t] || 0;
+        });
+        subtotal += lineTotals.libre || 0;
+        const discount = readNum('remise');
+        const total = Math.max(0, subtotal - discount);
+
+        /* Récupérer email utilisateur connecté */
+        const { data: userData } = await supabase.auth.getUser();
+        const issuedBy = userData?.user?.email || 'armand.k@selogercm.com';
+
+        const payload = {
+          client_name:     clientName,
+          client_phone:    document.getElementById('clientPhone').value.trim() || null,
+          client_email:    document.getElementById('clientEmail').value.trim() || null,
+          client_address:  document.getElementById('clientAddress').value.trim() || null,
+          client_district: document.getElementById('clientDistrict').value.trim() || null,
+          property_type:   document.getElementById('propertyType').value.trim() || null,
+          property_ref:    document.getElementById('propertyRef').value.trim() || null,
+          line_items:      lineItems,
+          subtotal:        subtotal,
+          discount:        discount,
+          total:           total,
+          notes:           document.getElementById('invNotes').value.trim() || null,
+          issued_by:       issuedBy
+        };
+
+        /* Si pas encore d'ID, on insère ; sinon on update */
+        if (!currentInvoiceId) {
+          const invNum = await getNextInvoiceNumber(supabase);
+          payload.invoice_number = invNum;
+          payload.status = 'emise';
+          payload.invoice_date = new Date().toISOString().substring(0, 10);
+
+          const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
+          if (error) throw error;
+          currentInvoiceId = data.id;
+          currentInvoiceNum = data.invoice_number;
+          document.getElementById('invNum').textContent = 'N° ' + data.invoice_number;
+          setStatusDisplay('emise');
+          showToast('Facture ' + data.invoice_number + ' enregistrée', 'success');
+
+          /* Met l'URL à jour pour permettre le rechargement */
+          window.history.replaceState(null, '', '/facture.html?id=' + data.id);
+        } else {
+          const { error } = await supabase.from('invoices').update(payload).eq('id', currentInvoiceId);
+          if (error) throw error;
+          showToast('Facture mise à jour', 'success');
+        }
+      } catch (e) {
+        console.error('[facture] saveInvoice:', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = '💾 Sauvegarder';
+      }
+    }
+    document.getElementById('btnSave').addEventListener('click', saveInvoice);
+
+    /* ─── Génération PDF ─── */
+    async function generatePDF() {
+      if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+        showToast('Libs PDF en cours de chargement, réessaie dans 2s', 'error');
+        return;
+      }
+      const btnPdf = document.getElementById('btnPdf');
+      btnPdf.disabled = true;
+      btnPdf.textContent = '⏳ Génération...';
+
+      /* Cache la barre d'actions et le sélecteur pendant la capture */
+      const actionsBar = document.getElementById('actionsBar');
+      const typeSelector = document.getElementById('typeSelector');
+      actionsBar.style.display = 'none';
+      typeSelector.style.display = 'none';
+
+      try {
+        const doc = document.getElementById('invoiceDoc');
+        const canvas = await html2canvas(doc, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#fff',
+          logging: false
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const usableW = pageW - margin * 2;
+        const imgRatio = canvas.height / canvas.width;
+        const imgW = usableW;
+        const imgH = imgW * imgRatio;
+        const yOffset = imgH < (pageH - margin * 2) ? (pageH - imgH) / 2 : margin;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', margin, yOffset, imgW, imgH);
+
+        const num = currentInvoiceNum || ('FAC-' + new Date().getFullYear() + '-XXXX');
+        const clientName = (document.getElementById('clientName').value || 'client').replace(/[^a-z0-9]+/gi, '_');
+        pdf.save('Facture_' + num + '_' + clientName + '.pdf');
+        showToast('PDF généré', 'success');
+      } catch (e) {
+        console.error('[facture] generatePDF:', e);
+        showToast('Erreur PDF : ' + (e.message || e), 'error');
+      } finally {
+        actionsBar.style.display = '';
+        typeSelector.style.display = '';
+        btnPdf.disabled = false;
+        btnPdf.textContent = '📄 Générer PDF';
+      }
+    }
+    document.getElementById('btnPdf').addEventListener('click', generatePDF);
+
+    /* ─── Chargement d'une facture existante via ?id=UUID ─── */
+    async function loadInvoiceFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) return;
+
+      try {
+        const supabase = await window.SLCM_DB.init();
+        if (!supabase) return;
+
+        const { data, error } = await supabase.from('invoices').select('*').eq('id', id).single();
+        if (error || !data) {
+          showToast('Facture introuvable', 'error');
+          return;
+        }
+
+        currentInvoiceId  = data.id;
+        currentInvoiceNum = data.invoice_number;
+        document.getElementById('invNum').textContent = 'N° ' + data.invoice_number;
+        setInvoiceDate(data.invoice_date);
+        setStatusDisplay(data.status || 'emise');
+
+        document.getElementById('clientName').value     = data.client_name     || '';
+        document.getElementById('clientPhone').value    = data.client_phone    || '';
+        document.getElementById('clientEmail').value    = data.client_email    || '';
+        document.getElementById('clientAddress').value  = data.client_address  || '';
+        document.getElementById('clientDistrict').value = data.client_district || '';
+        document.getElementById('propertyType').value   = data.property_type   || '';
+        document.getElementById('propertyRef').value    = data.property_ref    || '';
+        document.getElementById('invNotes').value       = data.notes           || '';
+        document.getElementById('remise').value         = data.discount        || 0;
+
+        /* Reconstruire les line_items + activer les bons types */
+        activeTypes.clear();
+        (data.line_items || []).forEach(item => {
+          if (item.type === 'libre') {
+            document.getElementById('desc-libre-main').value = item.label || '';
+            document.getElementById('desc-libre-d1').value   = item.detail1 || '';
+            document.getElementById('base-libre').value      = item.base || '';
+            document.getElementById('taux-libre').value      = item.rate || '';
+            lineTotals.libre = item.amount || 0;
+            const c = document.getElementById('total-libre');
+            if (c) c.textContent = fmtFCFA(item.amount);
+          } else {
+            activeTypes.add(item.type);
+            document.getElementById('desc-' + item.type + '-main').value = item.label   || '';
+            document.getElementById('desc-' + item.type + '-d1').value   = item.detail1 || '';
+            document.getElementById('desc-' + item.type + '-d2').value   = item.detail2 || '';
+            document.getElementById('base-' + item.type).value           = item.base    || '';
+            if (item.type === 'vente') document.getElementById('taux-vente').value = item.rate || '';
+            if (item.type === 'visite') document.getElementById('taux-visite').value = item.rate || '';
+            lineTotals[item.type] = item.amount || 0;
+            const c = document.getElementById('total-' + item.type);
+            if (c) c.textContent = fmtFCFA(item.amount);
+          }
+        });
+
+        /* Si aucun type actif (cas extreme), réactiver location par défaut */
+        if (activeTypes.size === 0) activeTypes.add('location');
+
+        /* Mettre à jour visuellement les boutons type */
+        document.querySelectorAll('.type-btn').forEach(btn => {
+          btn.classList.toggle('active', activeTypes.has(btn.dataset.type));
+        });
+        updateRows();
+        calcTotals();
+
+        showToast('Facture ' + data.invoice_number + ' chargée', 'info');
+      } catch (e) {
+        console.error('[facture] loadInvoiceFromUrl:', e);
+      }
+    }
+
+    /* Init au chargement */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadInvoiceFromUrl);
+    } else {
+      loadInvoiceFromUrl();
+    }
+  })();
+  </script>
+</body>
+</html>
