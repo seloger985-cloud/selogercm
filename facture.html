@@ -83,12 +83,20 @@
     }
 
     /* ─── Document Facture (zone imprimable / exportée en PDF) ─── */
+    /* Dimensions A4 portrait : 210 × 297 mm (ratio ~ 1.414).
+       À 800px de largeur (notre invoice), la hauteur "1 page A4" = 800 × (297/210) ≈ 1131px.
+       On retire les marges du PDF (10mm × 2 = ~76px à scale 1) → utile ≈ 1055px.
+       On utilise flexbox pour pousser le footer en bas si le contenu est court. */
     .invoice {
       max-width: 800px; margin: 0 auto;
       background: #fff;
       padding: 32px 36px;
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      display: flex;
+      flex-direction: column;
+      min-height: 1055px;             /* ≈ hauteur utile A4 portrait à 800px de large */
+      box-sizing: border-box;
     }
 
     /* Header épuré */
@@ -176,17 +184,27 @@
       display: block; font-size: 10px; color: #666;
     }
 
-    /* Champs éditables (style discret) */
+    /* Champs éditables (style discret en édition, lisibles en consultation) */
     .editable, .num-input, .remise-input {
       border: none; background: transparent;
-      font-family: inherit; font-size: inherit; color: inherit;
+      font-family: inherit; font-size: inherit;
+      color: #111;                    /* texte noir solide pour lisibilité maximum */
+      font-weight: 500;               /* léger renforcement vs hérité (400) */
       padding: 1px 2px;
       border-bottom: 1px dotted #d1d5db;
       outline: none;
     }
+    /* Texte saisi dans les champs "détail" : un peu moins fort pour respecter la hiérarchie */
+    .desc-detail1, .desc-detail2 {
+      color: #444; font-weight: 400;
+    }
     .editable:focus, .num-input:focus, .remise-input:focus {
       border-bottom-color: #ff7a00;
       background: #fff8f0;
+    }
+    /* Placeholders en gris clair pour bien distinguer "à remplir" vs "rempli" */
+    .editable::placeholder, .num-input::placeholder, .remise-input::placeholder {
+      color: #bbb; font-weight: 400; font-style: italic;
     }
     .num-input { text-align: right; max-width: 90px; }
     .remise-input { text-align: right; max-width: 80px; }
@@ -244,12 +262,37 @@
       background: #fff8f0;
     }
 
-    /* Footer */
+    /* Footer — poussé en bas de page via flexbox (margin-top auto) */
     .inv-footer {
       border-top: 0.5px solid #eee;
       padding-top: 8px;
+      margin-top: auto;               /* clé : pousse le footer en bas si l'invoice flexbox a de l'espace */
       font-size: 9px; color: #888;
       text-align: center; line-height: 1.5;
+    }
+
+    /* ─── Mode "printing" : appliqué uniquement pendant la capture html2canvas
+       Masque les pointillés, supprime les placeholders, retire les bordures décoratives.
+       Le HTML reste identique, seul le rendu visuel change le temps de la capture. */
+    body.printing .editable,
+    body.printing .num-input,
+    body.printing .remise-input {
+      border-bottom: none !important;
+      background: transparent !important;
+    }
+    body.printing .editable::placeholder,
+    body.printing .num-input::placeholder,
+    body.printing .remise-input::placeholder {
+      color: transparent !important;     /* placeholders disparaissent dans le PDF */
+    }
+    body.printing #invNotes {
+      border-bottom: none !important;
+    }
+    body.printing #invNotes::placeholder {
+      color: transparent !important;
+    }
+    body.printing .invoice {
+      box-shadow: none !important;        /* pas d'ombre dans le PDF */
     }
 
     /* Responsive (consultation seulement, le PDF reste fixe à 800px) */
@@ -795,6 +838,9 @@
       actionsBar.style.display = 'none';
       typeSelector.style.display = 'none';
 
+      /* Active le mode "printing" : masque pointillés et placeholders dans le rendu */
+      document.body.classList.add('printing');
+
       try {
         const doc = document.getElementById('invoiceDoc');
         const canvas = await html2canvas(doc, {
@@ -807,17 +853,44 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-        const pageW = pdf.internal.pageSize.getWidth();
-        const pageH = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const usableW = pageW - margin * 2;
+        const pageW = pdf.internal.pageSize.getWidth();   // 210 mm
+        const pageH = pdf.internal.pageSize.getHeight();  // 297 mm
+        const margin = 10;                                 // marge 10mm
+        const usableW = pageW - margin * 2;                // 190 mm
+        const usableH = pageH - margin * 2;                // 277 mm
+
+        /* Calcul de la hauteur réelle de l'image dans le PDF */
         const imgRatio = canvas.height / canvas.width;
         const imgW = usableW;
-        const imgH = imgW * imgRatio;
-        const yOffset = imgH < (pageH - margin * 2) ? (pageH - imgH) / 2 : margin;
+        const imgH = imgW * imgRatio;                      // hauteur si on déploie sur largeur utile
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        pdf.addImage(imgData, 'JPEG', margin, yOffset, imgW, imgH);
+
+        if (imgH <= usableH) {
+          /* L'image tient sur 1 page : on la place en haut (pas centrée).
+             Le footer sera en bas grâce au flexbox de .invoice */
+          pdf.addImage(imgData, 'JPEG', margin, margin, imgW, imgH);
+        } else {
+          /* L'image dépasse 1 page : on la découpe en plusieurs pages.
+             Technique : ajouter l'image complète à chaque page avec un yOffset négatif
+             qui décale d'1 page vers le haut à chaque itération. */
+          let remainingH = imgH;
+          let yPos = margin;
+          let pageNum = 0;
+          while (remainingH > 0) {
+            if (pageNum > 0) {
+              pdf.addPage();
+              yPos = margin;
+            }
+            /* yOffset négatif décale l'image vers le haut pour montrer la "tranche" suivante */
+            const pageOffset = -(pageNum * usableH);
+            pdf.addImage(imgData, 'JPEG', margin, yPos + pageOffset, imgW, imgH);
+            remainingH -= usableH;
+            pageNum++;
+            /* Sécurité : pas plus de 5 pages (sinon il y a un problème) */
+            if (pageNum > 5) break;
+          }
+        }
 
         const num = currentInvoiceNum || ('FAC-' + new Date().getFullYear() + '-XXXX');
         const clientName = (document.getElementById('clientName').value || 'client').replace(/[^a-z0-9]+/gi, '_');
@@ -827,6 +900,8 @@
         console.error('[facture] generatePDF:', e);
         showToast('Erreur PDF : ' + (e.message || e), 'error');
       } finally {
+        /* Toujours retirer le mode printing et restaurer la barre d'actions */
+        document.body.classList.remove('printing');
         actionsBar.style.display = '';
         typeSelector.style.display = '';
         btnPdf.disabled = false;
