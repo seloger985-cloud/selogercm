@@ -142,9 +142,11 @@
     .inv-party-detail {
       font-size: 11px; color: #555; line-height: 1.5;
     }
+    /* Les champs éditables dans cette zone NE doivent PAS hériter du #555.
+       On ne définit ici que la taille — la couleur reste celle de .editable (#111 plus bas). */
     .inv-party-detail .editable,
     .inv-party-detail input {
-      font-size: 11px; color: #555;
+      font-size: 11px;
     }
 
     /* Référence bien */
@@ -157,10 +159,11 @@
     .inv-ref .ref-item { display: inline-block; margin-right: 16px; }
     .inv-ref .ref-item strong { color: #111; font-weight: 600; }
 
-    /* Tableau prestations */
+    /* Tableau prestations — pousse vers le bas pour centrer le corps avec margin auto */
     table.inv-table {
       width: 100%; border-collapse: collapse;
       font-size: 11px; margin-bottom: 16px;
+      margin-top: auto;       /* clé Option Y : pousse table+totaux+modalités vers le centre */
     }
     table.inv-table thead th {
       padding: 6px 4px; text-align: left;
@@ -184,26 +187,36 @@
       display: block; font-size: 10px; color: #666;
     }
 
-    /* Champs éditables (style discret en édition, lisibles en consultation) */
-    .editable, .num-input, .remise-input {
+    /* Champs éditables (style discret en édition, lisibles en consultation).
+       On utilise input.editable (au lieu de .editable seul) pour augmenter la spécificité
+       et battre les règles parent comme .inv-party-detail .editable ou table.inv-table .desc-detail1.
+       Sans ça, la couleur #111 serait écrasée par les règles plus spécifiques héritées. */
+    input.editable, input.num-input, input.remise-input {
       border: none; background: transparent;
       font-family: inherit; font-size: inherit;
-      color: #111;                    /* texte noir solide pour lisibilité maximum */
-      font-weight: 500;               /* léger renforcement vs hérité (400) */
+      color: #111 !important;          /* !important pour battre toutes les règles spécifiques */
+      font-weight: 500;
       padding: 1px 2px;
       border-bottom: 1px dotted #d1d5db;
       outline: none;
     }
-    /* Texte saisi dans les champs "détail" : un peu moins fort pour respecter la hiérarchie */
-    .desc-detail1, .desc-detail2 {
-      color: #444; font-weight: 400;
+    /* Lignes "détail" : un peu moins fort pour respecter la hiérarchie. Restent lisibles (#333). */
+    input.desc-detail1, input.desc-detail2 {
+      color: #333 !important;
+      font-weight: 400;
     }
-    .editable:focus, .num-input:focus, .remise-input:focus {
+    input.editable:focus, input.num-input:focus, input.remise-input:focus {
       border-bottom-color: #ff7a00;
       background: #fff8f0;
     }
-    /* Placeholders en gris clair pour bien distinguer "à remplir" vs "rempli" */
-    .editable::placeholder, .num-input::placeholder, .remise-input::placeholder {
+    input.editable::placeholder, input.num-input::placeholder, input.remise-input::placeholder {
+      color: #bbb; font-weight: 400; font-style: italic;
+    }
+    /* Textarea pour les notes — même traitement */
+    #invNotes {
+      color: #111 !important; font-weight: 500;
+    }
+    #invNotes::placeholder {
       color: #bbb; font-weight: 400; font-style: italic;
     }
     .num-input { text-align: right; max-width: 90px; }
@@ -243,7 +256,7 @@
     }
     .inv-notes {
       font-size: 10px; color: #555;
-      margin-bottom: 12px;
+      margin-bottom: auto;   /* clé Option Y : pousse vers le haut, crée l'espace après notes */
     }
     .inv-notes-label {
       font-size: 9px; color: #888;
@@ -262,11 +275,10 @@
       background: #fff8f0;
     }
 
-    /* Footer — poussé en bas de page via flexbox (margin-top auto) */
+    /* Footer — l'espace au-dessus est créé par .inv-notes margin-bottom: auto */
     .inv-footer {
       border-top: 0.5px solid #eee;
       padding-top: 8px;
-      margin-top: auto;               /* clé : pousse le footer en bas si l'invoice flexbox a de l'espace */
       font-size: 9px; color: #888;
       text-align: center; line-height: 1.5;
     }
