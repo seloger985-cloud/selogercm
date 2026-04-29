@@ -384,6 +384,7 @@ og.js détecte le User-Agent :
 | `netlify.toml` redirection `/share/*` → `/.netlify/functions/og` | Sans cette règle, `/share/...` retourne 404 |
 | `_headers` directive `media-src` | Si manquant, les vidéos Reels ne chargent pas |
 | Les 4 boutons de partage dans `listing_detail.html` ligne ~993 doivent **tous** pointer vers `/share/` (pas `/annonce/`) | Sinon WhatsApp scrape `/annonce/...` qui n'a que des og:tags génériques (le JS ne tourne pas pour les crawlers) |
+| ⚠️ Avant tout commit modifiant `listing_detail.html`, **vérifier la ligne `shareUrlWa = encodeURIComponent(listingShare)`** | Bug récurrent : un fichier local obsolète peut réécraser ce fix au prochain push (déjà arrivé 2 fois). Toujours partir de la version GitHub la plus récente, pas d'une copie VS Code |
 
 ### C. Tester un partage avant publication
 
@@ -398,7 +399,7 @@ og.js détecte le User-Agent :
 | Symptôme | Cause | Solution |
 |---|---|---|
 | Aperçu Facebook = logo SE LOGER générique | Cache Facebook ou redirection involontaire | Re-collecter 2x dans le Debugger |
-| WhatsApp affiche juste l'URL en texte brut | Bouton WhatsApp pointe vers `/annonce/` au lieu de `/share/` | Vérifier `listing_detail.html` ligne ~994 (`shareUrlWa = encodeURIComponent(listingShare)`) |
+| WhatsApp affiche juste l'URL en texte brut (sans image/titre) | Bouton WhatsApp pointe vers `/annonce/` au lieu de `/share/` (bug récurrent quand on push depuis une copie locale obsolète) | Vérifier `listing_detail.html` ligne ~1000 : `const shareUrlWa = encodeURIComponent(listingShare);` (et **PAS** `listingUrl`) |
 | Partage donne une page noire avec juste un lien | `og.js` plante (probablement `SB_KEY` manquant) | Vérifier les variables d'environnement Netlify : `SB_ANON_KEY` doit être définie |
 | Image de partage cassée (icône brisée) | URL Supabase de l'image inaccessible (RLS, suppression) | Vérifier que l'annonce a bien des `images[0]` valides |
 | Le Debugger Facebook montre "Chemin de redirection → homepage" | Meta refresh inconditionnel dans `og.js` | Vérifier que la condition `isCrawler ? '' : refreshTag` est bien en place |
@@ -414,6 +415,35 @@ SB_ANON_KEY = <ta clé anon Supabase>
 (Le code accepte aussi `SUPABASE_ANON_KEY` en fallback.)
 
 ⚠️ **Ne PAS nommer la variable `SUPABASE_ANON_KEY`** : Netlify Secrets Scanning peut la détecter et bloquer le build. Le nom court `SB_ANON_KEY` est volontaire.
+
+### F. Bug récurrent à connaître — Le piège du fichier obsolète
+
+**Symptôme** : après un commit modifiant `listing_detail.html`, l'aperçu WhatsApp s'affiche soudainement en texte brut (sans image ni titre), alors que ça marchait avant.
+
+**Cause** : le fichier `listing_detail.html` local (sur ton PC, dans VS Code ou ailleurs) n'est pas à jour avec la dernière version sur GitHub. Quand tu push, tu réécrases la version qui a le fix `listingShare` par une vieille version qui contient encore `listingUrl`.
+
+**Pourquoi ce bug est sournois** :
+- Le code ressemble à du code valide (rien de cassé visuellement)
+- Tous les autres boutons sociaux (Facebook, LinkedIn) continuent de marcher car eux utilisent déjà `listingShare`
+- Le bouton WhatsApp principal (`waBtn`) marche aussi car il utilise un autre code path
+- Seul le **share** WhatsApp (le bouton de partage) est affecté
+- Le bug peut passer plusieurs jours avant d'être remarqué
+
+**Procédure pour éviter** :
+1. Avant toute modif sur `listing_detail.html`, faire un `git pull` ou télécharger la version actuelle depuis GitHub
+2. Modifier UNIQUEMENT la zone qu'on veut changer
+3. Avant de push, vérifier au `grep "shareUrlWa"` que la ligne contient bien `listingShare` et pas `listingUrl`
+
+**Si le bug est détecté en prod** :
+- Ouvrir `listing_detail.html` sur GitHub.com (interface web)
+- Chercher (`Ctrl+F`) `shareUrlWa`
+- La ligne doit être : `const shareUrlWa = encodeURIComponent(listingShare);`
+- Si elle dit `listingUrl`, corriger directement dans l'éditeur GitHub web (1 mot à changer) et committer
+- Le cache WhatsApp peut servir l'ancien aperçu cassé pendant 24-48h après correction
+
+**Historique** :
+- Avril 2026 — Bug identifié pour la 1ère fois lors du déploiement du système OG dynamique
+- Avril 2026 (plus tard) — Re-apparition après push depuis copie locale obsolète
 
 ---
 
