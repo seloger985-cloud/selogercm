@@ -17,7 +17,7 @@
   /* ─── CONFIGURATION : choix des thèmes actifs ─── */
   const ACTIVE_BANNERS = {
     rent_1: 'studios_80k',          // Entre unfurnished et furnished
-    rent_2: 'Appartements et villa meublés disponibles aujourd'hui à Bonapriso',     // Entre furnished et locaux commerciaux
+    rent_2: 'Appartements_200k',     // Entre furnished et locaux commerciaux
     sale_1: 'ventes_50m',           // Entre villas et terrains
     sale_2: 'fonds_commerce_vente'  // Entre terrains et fonds de commerce
   };
