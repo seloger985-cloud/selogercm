@@ -997,7 +997,7 @@
         /* ── Liens de partage social ── */
         const shareText = encodeURIComponent(`${title} — ${price} — ${location}`);
         const shareUrl  = encodeURIComponent(listingShare); /* OG tags pour Facebook/LinkedIn */
-        const shareUrlWa = encodeURIComponent(listingUrl);  /* URL directe pour WhatsApp/Telegram */
+        const shareUrlWa = encodeURIComponent(listingShare);  /* URL directe pour WhatsApp/Telegram */
 
         const shareFb = document.getElementById('shareFb');
         if (shareFb) shareFb.href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
