@@ -14,13 +14,61 @@
 (function() {
   'use strict';
 
-  /* ─── CONFIGURATION : choix des thèmes actifs ─── */
+  /* ═══════════════════════════════════════════════════════════════
+     ZONE ÉDITORIALE — À MODIFIER POUR CHANGER LES BANDEAUX
+     ═══════════════════════════════════════════════════════════════
+     Cette zone est conçue pour être modifiée régulièrement (semaine,
+     mois) sans toucher au reste du code. 2 blocs :
+
+     1. ACTIVE_BANNERS  → quels thèmes afficher dans les 4 emplacements
+     2. EDITO_OVERRIDES → personnaliser le wording (titre, kicker, CTA)
+                          d'un thème sans toucher à son filtre SQL
+
+     Clés disponibles pour ACTIVE_BANNERS (copier-coller exactement) :
+       'studios_80k'                  Studios <80K (location non meublé)
+       'apparts_150k'                 Apparts <150K (location non meublé)
+       'apparts_familial_200k'        Apparts familiaux 3 chambres ≤200K
+       'maisons_villas_250k'          Maisons & villas à louer <250K
+       'meubles_25k_jour'             Meublés courte durée <25K/jour
+       'apparts_bonapriso_premium'    Apparts Bonapriso ≤500K
+       'entrepots_2000_m2'            Entrepôts <2000 FCFA/m²
+       'fonds_commerce_vente'         Fonds de commerce à vendre
+       'ventes_50m'                   Ventes <50M FCFA
+       'meubles_annuels_bonapriso'    Meublés annuels Bonapriso
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* 1. Choix des thèmes actifs (4 emplacements) */
   const ACTIVE_BANNERS = {
-    rent_1: 'studios_80k',          // Entre unfurnished et furnished
-    rent_2: 'Appartements_200k',     // Entre furnished et locaux commerciaux
-    sale_1: 'ventes_50m',           // Entre villas et terrains
-    sale_2: 'fonds_commerce_vente'  // Entre terrains et fonds de commerce
+    rent_1: 'studios_80k',                 // Entre unfurnished et furnished
+    rent_2: 'apparts_familial_200k',       // Entre furnished et locaux commerciaux
+    sale_1: 'ventes_50m',                  // Entre villas et terrains
+    sale_2: 'fonds_commerce_vente'         // Entre terrains et fonds de commerce
   };
+
+  /* 2. Surcharges éditoriales (optionnelles)
+     Pour personnaliser le wording d'un thème actif, décommente les lignes
+     dont tu veux changer le texte. Les autres garderont la valeur par défaut.
+     Ne touche JAMAIS à la propriété 'filter' d'un thème : modifie ici, pas
+     dans le bloc THEMES. */
+  const EDITO_OVERRIDES = {
+    /* Exemple pour le thème actuel rent_2 — décommente / adapte / supprime */
+    apparts_familial_200k: {
+      // kicker: 'Spécial famille',
+      // title: '03 chambres à moins de 200K — encore disponibles',
+      // cta: 'Voir tous'
+    }
+    /* Pour ajouter une surcharge sur un autre thème, copier ce bloc :
+    studios_80k: {
+      kicker: 'Bon plan du jour',
+      title: 'Petit budget ? Voici nos 3 studios <80K',
+      cta: 'Découvrir'
+    },
+    */
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+     FIN ZONE ÉDITORIALE — Ne pas modifier ce qui suit sans précaution
+     ═══════════════════════════════════════════════════════════════ */
 
   /* ─── DÉFINITION DES 10 THÈMES ─── */
   const THEMES = {
@@ -173,7 +221,9 @@
 
   /* ─── RENDU D'UNE VIGNETTE ─── */
   function renderTile(listing, themeKey) {
-    const photo = listing.cover_url || listing.photo1 || listing.image_url || '';
+    /* Vrai pattern photo SE LOGER CM (cohérent avec listings.js):
+       champ 'images' (tableau), fallback sur no-image.png si vide */
+    const photo = (listing.images && listing.images[0]) || '/assets/img/no-image.png';
     const district = listing.district || listing.city || 'Douala';
     const title = listing.title || (listing.type || 'Annonce');
 
@@ -193,7 +243,7 @@
     return ''
       + '<a class="slcm-banner-tile" href="' + escapeHtml(url) + '">'
       +   '<div class="slcm-banner-tile-photo">'
-      +     (photo ? '<img src="' + escapeHtml(photo) + '" alt="' + escapeHtml(title) + '" loading="lazy">' : '<span>photo</span>')
+      +     '<img src="' + escapeHtml(photo) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
       +   '</div>'
       +   '<div class="slcm-banner-tile-body">'
       +     '<p class="slcm-banner-tile-title">' + escapeHtml(title) + '</p>'
@@ -227,30 +277,54 @@
     const style = document.createElement('style');
     style.id = 'slcm-banner-styles';
     style.textContent = ''
-      + '.slcm-banner-wrapper { padding: 0 1rem; }'
-      + '.slcm-banner { max-width: 760px; margin: 0 auto 2rem; background: #fff; border: 1px solid #ffe0b2; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.04); }'
-      + '.slcm-banner-head { background: #fff7ed; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #ffe0b2; flex-wrap: wrap; }'
+      /* Wrapper : zone respiration entre 2 sections sombres + alignement avec le container du site */
+      + '.slcm-banner-wrapper { background: #fff; padding: 32px 1rem; }'
+      /* Bandeau principal : grande card cohérente avec les annonces (border-radius 16px + ombre) */
+      + '.slcm-banner { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); border: 1px solid #f3f3f3; }'
+      /* Header du bandeau : kicker + titre à gauche, bouton CTA outline à droite */
+      + '.slcm-banner-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }'
       + '.slcm-banner-titles { flex: 1; min-width: 200px; }'
-      + '.slcm-banner-kicker { font-size: 11px; color: #c2410c; margin: 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }'
-      + '.slcm-banner-title { font-size: 15px; color: #111; margin: 2px 0 0; font-weight: 600; line-height: 1.3; }'
-      + '.slcm-banner-cta { font-size: 12px; color: #ea580c; text-decoration: none; font-weight: 700; white-space: nowrap; padding: 6px 12px; border-radius: 6px; transition: background .15s; }'
-      + '.slcm-banner-cta:hover { background: rgba(234, 88, 12, 0.08); }'
-      + '.slcm-banner-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: #f0f0f0; }'
-      + '.slcm-banner-tile { background: #fff; padding: 12px; text-decoration: none; color: inherit; transition: background .15s; display: block; }'
-      + '.slcm-banner-tile:hover { background: #fafafa; }'
-      + '.slcm-banner-tile-photo { background: #f3f4f6; height: 110px; border-radius: 6px; margin-bottom: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; }'
+      + '.slcm-banner-kicker { font-size: 11px; color: #ea580c; margin: 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }'
+      + '.slcm-banner-title { font-size: 17px; color: #111; margin: 3px 0 0; font-weight: 700; line-height: 1.3; }'
+      /* CTA : bouton outline orange arrondi (style cohérent SE LOGER CM) */
+      + '.slcm-banner-cta { font-size: 12px; color: #ea580c; text-decoration: none; font-weight: 700; padding: 8px 14px; border: 1.5px solid #ea580c; border-radius: 999px; white-space: nowrap; transition: all .15s; }'
+      + '.slcm-banner-cta:hover { background: #ea580c; color: #fff; }'
+      /* Grille des vignettes : 3 mini-cards avec gap propre */
+      + '.slcm-banner-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }'
+      /* Mini-card : photo en haut + infos en bas, ombre douce, hover effect (cohérent .listing-card) */
+      + '.slcm-banner-tile { background: #fff; border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: transform .2s, box-shadow .2s; display: block; }'
+      + '.slcm-banner-tile:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.1); }'
+      /* Photo : 100px de haut, prend toute la largeur de la mini-card */
+      + '.slcm-banner-tile-photo { background: #f3f4f6; height: 110px; overflow: hidden; }'
       + '.slcm-banner-tile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }'
-      + '.slcm-banner-tile-title { font-size: 13px; margin: 0 0 2px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }'
-      + '.slcm-banner-tile-meta { font-size: 11px; color: #666; margin: 0 0 4px; }'
-      + '.slcm-banner-tile-price { font-size: 14px; color: #ea580c; margin: 0; font-weight: 700; }'
-      + '@media (max-width: 700px) { .slcm-banner-tiles { grid-template-columns: 1fr; } .slcm-banner-tile-photo { height: 90px; } .slcm-banner-head { padding: 10px 14px; } .slcm-banner-cta { padding: 4px 8px; font-size: 11px; } }';
+      /* Body : padding propre, infos hiérarchisées */
+      + '.slcm-banner-tile-body { padding: 10px 12px; }'
+      + '.slcm-banner-tile-title { font-size: 12px; margin: 0 0 2px; font-weight: 700; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }'
+      + '.slcm-banner-tile-meta { font-size: 10px; color: #999; margin: 0 0 4px; }'
+      + '.slcm-banner-tile-price { font-size: 13px; color: #ea580c; margin: 0; font-weight: 800; }'
+      /* Mobile : 1 colonne, photos plus courtes, padding réduit */
+      + '@media (max-width: 700px) { .slcm-banner-wrapper { padding: 24px 12px; } .slcm-banner { padding: 16px; } .slcm-banner-tiles { grid-template-columns: 1fr; gap: 10px; } .slcm-banner-tile-photo { height: 140px; } .slcm-banner-title { font-size: 15px; } .slcm-banner-cta { padding: 6px 10px; font-size: 11px; } }';
     document.head.appendChild(style);
   }
 
   /* ─── INSERTION D'UN BANDEAU À UN EMPLACEMENT ─── */
   async function insertBanner(themeKey, anchorSection, position) {
-    if (!themeKey || !THEMES[themeKey]) return;
-    const theme = THEMES[themeKey];
+    if (!themeKey || !THEMES[themeKey]) {
+      console.warn('[banners] Clé inconnue dans ACTIVE_BANNERS:', themeKey,
+                   '→ vérifie l\'orthographe (sensible majuscules)');
+      return;
+    }
+    /* Appliquer les surcharges éditoriales si présentes pour ce thème */
+    const baseTheme = THEMES[themeKey];
+    const override = EDITO_OVERRIDES[themeKey] || {};
+    const theme = {
+      kicker:  override.kicker  || baseTheme.kicker,
+      title:   override.title   || baseTheme.title,
+      cta:     override.cta     || baseTheme.cta,
+      ctaHref: override.ctaHref || baseTheme.ctaHref,
+      filter:  baseTheme.filter,        /* PROTÉGÉ : jamais surchargé */
+      postFilter: baseTheme.postFilter  /* PROTÉGÉ : jamais surchargé */
+    };
     const items = await fetchThemeListings(themeKey);
     if (!items.length) {
       console.log('[banners] Pas d\'annonces pour le thème:', themeKey, '→ bandeau caché');
