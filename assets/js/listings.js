@@ -173,6 +173,7 @@ const SLCM_listings = (() => {
   /* ── Générer une card HTML ──────────────────────────────────────── */
   function renderCard(listing, { showFav = true } = {}) {
     const img   = (listing.images && listing.images[0]) || 'assets/img/no-image.png';
+    const hasVideo = !!listing.video_url;
     const title = listing.title || listing.title_fr || 'Annonce';
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
@@ -187,11 +188,12 @@ const SLCM_listings = (() => {
          </button>` : '';
 
     return `
-      <div class="listing-card">
+      <div class="listing-card${hasVideo ? ' has-video' : ''}">
         <a href="/annonce?id=${listing.id}" style="text-decoration:none;color:inherit">
-          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
+         <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
             ${badge}
+            ${hasVideo ? '<div class="card-video-badge"><span class="pulse-dot"></span><i class="fas fa-video"></i> Vidéo</div>' : ''}
             ${fav}
           </div>
           <div class="listing-body" style="padding:1rem">
