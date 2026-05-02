@@ -4,11 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Toutes les annonces — SE LOGER CM</title>
-  <meta name="description" content="Parcourez toutes les annonces immobilières à Douala et au Cameroun : appartements, maisons, villas et studios à louer ou à vendre.">
-  <meta property="og:title" content="Annonces immobilières — SE LOGER CM">
+
+  <!-- SEO — mis à jour dynamiquement selon filtres -->
+  <title>Annonces immobilières Douala — Location & Vente | SE LOGER CM</title>
+  <meta name="description" content="Parcourez toutes les annonces immobilières à Douala et au Cameroun : appartements, maisons, villas et studios à louer ou à vendre. Annonces vérifiées par SE LOGER CM.">
+
+  <!-- Canonical — mise à jour dynamiquement -->
+  <link rel="canonical" href="https://selogercm.com/listings_v2.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="SE LOGER CM">
+  <meta property="og:url"         content="https://selogercm.com/listings_v2.html">
+  <meta property="og:title"       content="Annonces immobilières Douala — Location & Vente | SE LOGER CM">
   <meta property="og:description" content="Trouvez votre logement idéal à Douala. Location et vente d'appartements, maisons, villas et studios.">
-  <meta property="og:type" content="website">
+  <meta property="og:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
+  <meta property="og:locale"      content="fr_CM">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Annonces immobilières Douala — Location & Vente | SE LOGER CM">
+  <meta name="twitter:description" content="Trouvez votre logement idéal à Douala. Location et vente d'appartements, maisons, villas et studios.">
+  <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -83,7 +101,7 @@
   </header>
 
   <main class="container px pt pb">
-    <h1 style="font-size:28px;font-weight:800;margin-bottom:1rem">Toutes les annonces</h1>
+    <h1 id="pageH1" style="font-size:28px;font-weight:800;margin-bottom:1rem">Toutes les annonces immobilières à Douala</h1>
 
     <form id="searchForm" class="controls" style="border-radius:20px">
       <div class="seg">
@@ -159,6 +177,143 @@
     });
   }
 
+  /* ══════════════════════════════════════
+     SEO DYNAMIQUE — title, description, canonical, H1
+     Mis à jour selon les filtres actifs
+  ══════════════════════════════════════ */
+  function updatePageSEO(filters) {
+    /* Construire un libellé humain à partir des filtres */
+    const typeLabels = {
+      'apartment': 'appartements',
+      'house': 'maisons',
+      'studio': 'studios',
+      'villa': 'villas',
+      'duplex': 'duplex',
+      'warehouse': 'entrepôts',
+      'plots-of-land': 'terrains'
+    };
+
+    const modeLabel = filters.mode === 'sale' ? 'à vendre' : 'à louer';
+    const typeLabel = typeLabels[filters.type] || 'biens immobiliers';
+    const cityLabel = filters.city || 'Douala';
+    const districtLabel = filters.district ? ` à ${filters.district}` : '';
+    const bedroomsLabel = filters.bedrooms ? ` ${filters.bedrooms} chambres` : '';
+
+    /* Composer le titre dynamique */
+    let pageTitle, pageDesc, pageH1;
+
+    if (!filters.city && !filters.type && !filters.district && !filters.bedrooms && !filters.price) {
+      /* Cas "page sans filtre" */
+      const modeWord = filters.mode === 'sale' ? 'à vendre' : 'à louer';
+      pageTitle = `Annonces immobilières ${modeWord} à Douala — SE LOGER CM`;
+      pageDesc = `Parcourez toutes les annonces immobilières ${modeWord} à Douala et au Cameroun : appartements, maisons, villas, studios. Annonces vérifiées par SE LOGER CM.`;
+      pageH1 = `Toutes les annonces ${modeWord} à Douala`;
+    } else {
+      /* Cas "page filtrée" — construit titre richement */
+      pageTitle = `${capitalize(typeLabel)}${bedroomsLabel} ${modeLabel} à ${cityLabel}${districtLabel} | SE LOGER CM`;
+      pageDesc = `Découvrez les ${typeLabel}${bedroomsLabel} ${modeLabel} à ${cityLabel}${districtLabel} sur SE LOGER CM. Annonces vérifiées, contact direct propriétaires et agents immobiliers.`;
+      pageH1 = `${capitalize(typeLabel)}${bedroomsLabel} ${modeLabel} à ${cityLabel}${districtLabel}`;
+    }
+
+    /* Tronquer si > 60 caractères pour title */
+    if (pageTitle.length > 70) pageTitle = pageTitle.substring(0, 67) + '…';
+
+    /* Mettre à jour les balises */
+    document.title = pageTitle;
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', pageDesc);
+
+    /* Canonical URL avec filtres */
+    const canonicalUrl = buildCanonicalUrl(filters);
+    let canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link');
+      canonicalEl.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute('href', canonicalUrl);
+
+    /* Open Graph dynamique */
+    const setOG = (prop, val) => {
+      const el = document.querySelector(`meta[property="${prop}"]`);
+      if (el) el.setAttribute('content', val);
+    };
+    setOG('og:title',       pageTitle);
+    setOG('og:description', pageDesc);
+    setOG('og:url',         canonicalUrl);
+
+    /* Twitter Card dynamique */
+    const setTW = (name, val) => {
+      const el = document.querySelector(`meta[name="${name}"]`);
+      if (el) el.setAttribute('content', val);
+    };
+    setTW('twitter:title',       pageTitle);
+    setTW('twitter:description', pageDesc);
+
+    /* H1 dynamique */
+    const h1El = document.getElementById('pageH1');
+    if (h1El) h1El.textContent = pageH1;
+  }
+
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function buildCanonicalUrl(filters) {
+    const url = new URL('https://selogercm.com/listings_v2.html');
+    /* Conserver uniquement les filtres importants pour SEO */
+    if (filters.mode && filters.mode !== 'rent') url.searchParams.set('mode', filters.mode);
+    if (filters.city)     url.searchParams.set('city',     filters.city);
+    if (filters.district) url.searchParams.set('district', filters.district);
+    if (filters.type)     url.searchParams.set('type',     filters.type);
+    if (filters.bedrooms) url.searchParams.set('bedrooms', filters.bedrooms);
+    if (filters.price)    url.searchParams.set('price',    filters.price);
+    /* page= n'est PAS canonical pour SEO (sinon duplicate) */
+    return url.toString();
+  }
+
+  /* ══════════════════════════════════════
+     SCHEMA.ORG — ItemList (CollectionPage)
+     Aide Google à comprendre que c'est une liste de biens
+  ══════════════════════════════════════ */
+  function injectListingsSchema(listings, filters) {
+    if (!listings || !listings.length) {
+      /* Retire le schema si pas d'annonces */
+      const existing = document.getElementById('schema-itemlist');
+      if (existing) existing.remove();
+      return;
+    }
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": document.title,
+      "description": document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
+      "url": buildCanonicalUrl(filters),
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": listings.length,
+        "itemListElement": listings.slice(0, 10).map((listing, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "url": `https://selogercm.com/annonce/${listing.slug || listing.id}`,
+          "name": listing.title || listing.title_fr || 'Annonce immobilière'
+        }))
+      }
+    };
+
+    let scriptEl = document.getElementById('schema-itemlist');
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.type = 'application/ld+json';
+      scriptEl.id = 'schema-itemlist';
+      document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify(schema, null, 2);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const grid  = document.getElementById('resultsGrid');
     const empty = document.getElementById('emptyState');
@@ -205,6 +360,7 @@
     const PER_PAGE = 12;
     let _allListings = [];
     let _currentPage = 1;
+    let _currentFilters = {};
 
     function renderPage(page) {
       _currentPage = page;
@@ -272,6 +428,8 @@
 
     /* Charger et afficher */
     async function loadAndRender(filters) {
+      _currentFilters = filters;
+
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#aaa">
         <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
         <p style="margin-top:.75rem">Chargement des annonces…</p></div>`;
@@ -279,7 +437,13 @@
       document.getElementById('pagination').style.display = 'none';
       document.getElementById('paginationInfo').style.display = 'none';
 
+      /* ── SEO dynamique : MAJ title, description, canonical, H1 ── */
+      updatePageSEO(filters);
+
       _allListings = await SLCM_listings.getListings(filters);
+
+      /* ── Schema.org ItemList ── */
+      injectListingsSchema(_allListings, filters);
 
       if (!_allListings.length) {
         grid.innerHTML = '';
