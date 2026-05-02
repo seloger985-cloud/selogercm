@@ -9,20 +9,23 @@
   <title>Annonce immobilière — SE LOGER CM</title>
   <meta name="description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
 
+  <!-- Canonical — mise à jour dynamiquement après chargement -->
+  <link rel="canonical" href="https://selogercm.com/">
+
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
   <meta property="og:type"        content="website">
   <meta property="og:site_name"   content="SE LOGER CM">
-  <meta property="og:url"         content="https://www.selogercm.com/">
+  <meta property="og:url"         content="https://selogercm.com/">
   <meta property="og:title"       content="Annonce immobilière — SE LOGER CM">
   <meta property="og:description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
-  <meta property="og:image"       content="https://www.selogercm.com/assets/img/og-cover.jpg">
+  <meta property="og:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
   <meta property="og:locale"      content="fr_CM">
 
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image">
   <meta name="twitter:title"       content="Annonce immobilière — SE LOGER CM">
   <meta name="twitter:description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
-  <meta name="twitter:image"       content="https://www.selogercm.com/assets/img/og-cover.jpg">
+  <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -579,13 +582,13 @@
 
       renderDetail(ad);
 
-      /* ── SEO dynamique ── */
+     /* ── SEO dynamique ── */
       const adTitle    = ad.title || ad.title_en || 'Annonce immobilière';
       const adCity     = [ad.district, ad.city].filter(Boolean).join(', ') || 'Douala';
       const adPrice    = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
       const adMode     = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
-      const adImg      = (ad.images && ad.images[0]) || 'https://www.selogercm.com/assets/img/og-cover.jpg';
-      const adUrl      = `https://www.selogercm.com/annonce/${ad.slug || ad.id}`;
+      const adImg      = (ad.images && ad.images[0]) || 'https://selogercm.com/assets/img/og-cover.jpg';
+      const adUrl      = `https://selogercm.com/annonce/${ad.slug || ad.id}`;
       const adDesc     = ad.type === 'fonds-commerce'
         ? `${adTitle} — ${adCity} — Prix du fonds : ${adPrice}.${ad.business_rent ? ' Loyer : ' + (ad.business_rent || 0).toLocaleString('fr-FR') + ' FCFA/mois.' : ''} ${ad.description ? ad.description.slice(0, 120) + '…' : 'Annonce vérifiée par SE LOGER CM.'}`
         : `${adTitle} — ${adCity} — ${adPrice} ${adMode}. ${ad.description ? ad.description.slice(0, 120) + '…' : 'Annonce immobilière vérifiée par SE LOGER CM.'}`;
@@ -596,6 +599,15 @@
       /* Meta description */
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) metaDesc.setAttribute('content', adDesc);
+
+      /* Canonical URL — empêche le duplicate content */
+      let canonicalEl = document.querySelector('link[rel="canonical"]');
+      if (!canonicalEl) {
+        canonicalEl = document.createElement('link');
+        canonicalEl.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalEl);
+      }
+      canonicalEl.setAttribute('href', adUrl);
 
       /* Open Graph */
       const setOG = (prop, val) => {
@@ -616,12 +628,105 @@
       setTW('twitter:description', adDesc);
       setTW('twitter:image',       adImg);
 
-      document.title = `${adTitle} — ${adCity} | SE LOGER CM`;
+      /* ── Schema.org JSON-LD : RealEstateListing ── */
+      injectListingSchema(ad, adTitle, adCity, adImg, adUrl, adDesc);
 
       /* ── Annonces similaires ── */
       loadSimilarListings(ad);
     }
+    /* ══════════════════════════════════════
+       SCHEMA.ORG — RealEstateListing
+       Génère un JSON-LD structuré pour Google
+    ══════════════════════════════════════ */
+    function injectListingSchema(ad, adTitle, adCity, adImg, adUrl, adDesc) {
+      /* Map type Supabase → Schema.org type */
+      const typeMap = {
+        'apartment':     'Apartment',
+        'studio':        'Apartment',
+        'house':         'House',
+        'villa':         'House',
+        'duplex':        'House',
+        'office':        'Place',
+        'shop':          'Store',
+        'fonds-commerce':'Store',
+        'land':          'Place',
+        'warehouse':     'Place'
+      };
+      const schemaType = typeMap[ad.type] || 'Residence';
 
+      /* Construire l'objet Schema.org */
+      const schema = {
+        "@context": "https://schema.org",
+        "@type":    schemaType,
+        "name":     adTitle,
+        "description": adDesc,
+        "url":      adUrl,
+        "image":    (ad.images && ad.images.length > 0)
+                      ? ad.images.slice(0, 6)
+                      : [adImg],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": ad.district || ad.city || 'Douala',
+          "addressRegion":   ad.city || 'Littoral',
+          "addressCountry":  "CM"
+        },
+        "offers": {
+          "@type":         "Offer",
+          "price":         ad.price || 0,
+          "priceCurrency": "XAF",
+          "availability":  "https://schema.org/InStock",
+          "url":           adUrl,
+          "businessFunction": ad.rent_sale === 'sale'
+                                ? "https://schema.org/Sell"
+                                : "https://schema.org/LeaseOut"
+        }
+      };
+
+      /* Ajout des caractéristiques selon le type */
+      if (ad.bedrooms)  schema.numberOfRooms      = ad.bedrooms;
+      if (ad.bathrooms) schema.numberOfBathroomsTotal = ad.bathrooms;
+      if (ad.surface)   schema.floorSize = {
+        "@type": "QuantitativeValue",
+        "value": ad.surface,
+        "unitCode": "MTK" /* m² */
+      };
+      if (ad.furnished) schema.amenityFeature = [
+        { "@type": "LocationFeatureSpecification", "name": "Meublé", "value": true }
+      ];
+
+      /* Si Fonds de commerce, ajouter le loyer */
+      if (ad.type === 'fonds-commerce' && ad.business_rent) {
+        schema.additionalProperty = [
+          {
+            "@type": "PropertyValue",
+            "name": "Loyer mensuel",
+            "value": ad.business_rent + ' FCFA'
+          }
+        ];
+      }
+
+      /* Ajout de l'agent immobilier (broker) */
+      schema.broker = {
+        "@type": "RealEstateAgent",
+        "name": "SE LOGER CM",
+        "url":  "https://selogercm.com",
+        "telephone": "+237650840714",
+        "areaServed": {
+          "@type": "City",
+          "name": "Douala"
+        }
+      };
+
+      /* Injecter ou mettre à jour le tag JSON-LD */
+      let scriptEl = document.getElementById('schema-listing');
+      if (!scriptEl) {
+        scriptEl = document.createElement('script');
+        scriptEl.type = 'application/ld+json';
+        scriptEl.id   = 'schema-listing';
+        document.head.appendChild(scriptEl);
+      }
+      scriptEl.textContent = JSON.stringify(schema, null, 2);
+    }
     async function loadSimilarListings(ad) {
       const client = window.SLCM_DB?.client;
       if (!client) return;
