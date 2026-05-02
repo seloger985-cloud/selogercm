@@ -634,6 +634,7 @@
       /* ── Annonces similaires ── */
       loadSimilarListings(ad);
     }
+    
     /* ══════════════════════════════════════
        SCHEMA.ORG — RealEstateListing
        Génère un JSON-LD structuré pour Google
@@ -727,6 +728,7 @@
       }
       scriptEl.textContent = JSON.stringify(schema, null, 2);
     }
+    
     async function loadSimilarListings(ad) {
       const client = window.SLCM_DB?.client;
       if (!client) return;
