@@ -39,8 +39,8 @@
 
   /* 1. Choix des thèmes actifs (4 emplacements) */
   const ACTIVE_BANNERS = {
-    rent_1: 'studios_80k',                 // Entre unfurnished et furnished
-    rent_2: 'apparts_familial_200k',       // Entre furnished et locaux commerciaux
+    rent_1: 'apparts_bonapriso_premium' ,   // Entre unfurnished et furnished
+    rent_2: 'apparts_150k',                 // Entre furnished et locaux commerciaux
     sale_1: 'ventes_50m',                  // Entre villas et terrains
     sale_2: 'fonds_commerce_vente'         // Entre terrains et fonds de commerce
   };
@@ -52,15 +52,15 @@
      dans le bloc THEMES. */
   const EDITO_OVERRIDES = {
     /* Exemple pour le thème actuel rent_2 — décommente / adapte / supprime */
-    apparts_familial_200k: {
-      // kicker: 'Spécial famille',
-      // title: '03 chambres à moins de 200K — encore disponibles',
+    'apparts_150k' : {
+      // kicker: 'Spécial jeune couple',
+      // title: 'de bons plans à 150k — encore disponibles',
       // cta: 'Voir tous'
     }
     /* Pour ajouter une surcharge sur un autre thème, copier ce bloc :
-    studios_80k: {
+   apparts_bonapriso_premium: {
       kicker: 'Bon plan du jour',
-      title: 'Petit budget ? Voici nos 3 studios <80K',
+      title: 'budget moyen? Voici 3 offres!',
       cta: 'Découvrir'
     },
     */
