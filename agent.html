@@ -4,315 +4,333 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Espace Agent Externe — SE LOGER CM</title>
+  <title>CRM Terrain — SE LOGER CM</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
-    * { box-sizing: border-box; }
-    body { background: var(--gray); font-family: 'Poppins', sans-serif; }
+    :root {
+      --orange: #ff7a00; --dark: #111; --gray: #f4f5f7;
+      --green: #22c55e; --blue: #3b82f6; --red: #ef4444;
+      --purple: #8b5cf6;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--gray); font-family: 'Poppins', sans-serif; font-size: 14px; color: var(--dark); }
 
-    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-    .login-box { background: #fff; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.12); padding: 2.5rem 2rem; width: 100%; max-width: 400px; }
-    .login-logo { text-align: center; margin-bottom: 1.8rem; }
-    .login-logo img { height: 48px; }
-    .login-logo p { font-size: .82rem; color: #888; margin-top: .4rem; }
-    .login-title { font-size: 1.2rem; font-weight: 900; color: var(--dark); margin-bottom: 1.5rem; text-align: center; }
-    .login-field { margin-bottom: 1rem; }
-    .login-field label { display: block; font-size: .78rem; font-weight: 700; color: #555; margin-bottom: .3rem; }
-    .login-field input { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 12px; padding: .8rem 1rem; font-family: inherit; font-size: .95rem; background: #fafafa; transition: border-color .2s; }
-    .login-field input:focus { outline: none; border-color: var(--orange); background: #fff; }
-    .login-btn { width: 100%; padding: .9rem; border: none; border-radius: 12px; background: var(--orange); color: #fff; font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; transition: opacity .2s; margin-top: .5rem; }
+    /* ── LOGIN ── */
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: var(--dark); }
+    .login-box { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); padding: 2.5rem 2rem; width: 100%; max-width: 380px; }
+    .login-logo { text-align: center; margin-bottom: 1.6rem; }
+    .login-logo img { height: 44px; }
+    .login-logo p { font-size: .78rem; color: #888; margin-top: .35rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+    .login-title { font-size: 1.1rem; font-weight: 900; color: var(--dark); margin-bottom: 1.4rem; text-align: center; }
+    .lf { margin-bottom: .9rem; }
+    .lf label { display: block; font-size: .72rem; font-weight: 700; color: #555; margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .3px; }
+    .lf input { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .75rem 1rem; font-family: inherit; font-size: .9rem; background: #fafafa; transition: border-color .2s; }
+    .lf input:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .login-btn { width: 100%; padding: .85rem; border: none; border-radius: 10px; background: var(--orange); color: #fff; font-family: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; margin-top: .4rem; transition: opacity .2s; }
     .login-btn:hover { opacity: .88; }
-    .login-btn:disabled { opacity: .6; cursor: not-allowed; }
-    .login-error { background: #fff0f0; border: 1px solid #fca5a5; border-radius: 10px; padding: .65rem 1rem; font-size: .82rem; color: #c00; font-weight: 600; margin-top: .75rem; display: none; }
-    .login-error.show { display: block; }
-    .login-note { text-align: center; font-size: .75rem; color: #bbb; margin-top: 1.2rem; }
+    .login-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .login-err { background: #fff0f0; border: 1px solid #fca5a5; border-radius: 8px; padding: .55rem .9rem; font-size: .78rem; color: #c00; font-weight: 600; margin-top: .7rem; display: none; }
+    .login-err.show { display: block; }
 
-    .dashboard { display: none; }
-    .dash-header { background: var(--dark); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
-    .dash-header-inner { max-width: 1100px; margin: auto; padding: .9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-    .dash-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
-    .dash-brand img { height: 32px; }
-    .dash-brand span { color: #fff; font-weight: 800; font-size: 1rem; }
-    .dash-user { display: flex; align-items: center; gap: .75rem; }
-    .dash-user-name { font-size: .85rem; color: rgba(255,255,255,.7); font-weight: 600; }
-    .dash-signout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; border-radius: 999px; padding: .4rem .9rem; font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: background .2s; }
-    .dash-signout:hover { background: rgba(255,255,255,.2); }
-    .dash-wrap { max-width: 1100px; margin: auto; padding: 1.5rem 1.2rem 4rem; }
+    /* ── APP SHELL ── */
+    .app { display: none; min-height: 100vh; }
+    .app-header { background: var(--dark); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .app-header-inner { max-width: 1200px; margin: auto; padding: .85rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .app-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .app-brand img { height: 30px; }
+    .app-brand span { color: #fff; font-weight: 800; font-size: .95rem; }
+    .app-brand .tag { background: var(--orange); color: #fff; font-size: .6rem; font-weight: 900; padding: .15rem .45rem; border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; margin-left: .3rem; }
+    .app-user { display: flex; align-items: center; gap: .75rem; }
+    .app-user-name { font-size: .82rem; color: rgba(255,255,255,.65); font-weight: 600; }
+    .app-signout { background: transparent; border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.8); border-radius: 999px; padding: .35rem .85rem; font-family: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+    .app-signout:hover { background: rgba(255,255,255,.1); }
 
-    .profile-hero { background: #fff; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.07); padding: 1.6rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: #eee; border: 3px solid var(--orange); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: #888; }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-info { flex: 1; min-width: 0; }
-    .profile-name { font-size: 1.3rem; font-weight: 900; color: var(--dark); }
-    .profile-email { font-size: .82rem; color: #888; margin-top: .15rem; }
-    .profile-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
-    .profile-btn { border: none; border-radius: 999px; padding: .5rem 1.1rem; font-family: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; transition: opacity .2s; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
-    .profile-btn:hover { opacity: .88; }
-    .btn-orange { background: var(--orange); color: #fff; }
-    .btn-dark   { background: #111; color: #fff; }
+    /* ── MAIN WRAP ── */
+    .wrap { max-width: 1200px; margin: auto; padding: 1.4rem 1.2rem 4rem; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-    .stat-card { background: #fff; border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 4px 14px rgba(0,0,0,.05); border-left: 4px solid #eee; }
-    .stat-card.orange { border-left-color: var(--orange); }
-    .stat-card.green  { border-left-color: #22c55e; }
-    .stat-card.red    { border-left-color: #ef4444; }
-    .stat-card.blue   { border-left-color: #3b82f6; }
-    .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--dark); }
-    .stat-card.orange .stat-num { color: var(--orange); }
-    .stat-card.green  .stat-num { color: #22c55e; }
-    .stat-card.red    .stat-num { color: #ef4444; }
-    .stat-card.blue   .stat-num { color: #3b82f6; }
-    .stat-lbl { font-size: .75rem; color: #888; font-weight: 600; margin-top: 2px; }
+    /* ── STATS ── */
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.4rem; }
+    .stat { background: #fff; border-radius: 12px; padding: .9rem 1rem; box-shadow: 0 2px 10px rgba(0,0,0,.05); border-left: 4px solid #eee; }
+    .stat.s-all    { border-left-color: #ddd; }
+    .stat.s-pros   { border-left-color: #94a3b8; }
+    .stat.s-cont   { border-left-color: var(--blue); }
+    .stat.s-acc    { border-left-color: var(--orange); }
+    .stat.s-pub    { border-left-color: var(--green); }
+    .stat-n { font-size: 1.5rem; font-weight: 900; color: var(--dark); line-height: 1; }
+    .stat.s-cont .stat-n { color: var(--blue); }
+    .stat.s-acc  .stat-n { color: var(--orange); }
+    .stat.s-pub  .stat-n { color: var(--green); }
+    .stat-l { font-size: .68rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-top: 3px; }
 
-    .section-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .section-bar h2 { font-size: 1rem; font-weight: 800; color: var(--dark); }
-    .section-bar a { font-size: .82rem; color: var(--orange); font-weight: 700; text-decoration: none; }
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .pipeline-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ptab { border: none; border-radius: 999px; padding: .42rem 1rem; font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .18s; background: #fff; color: #555; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+    .ptab.active { color: #fff; }
+    .ptab[data-s="all"].active      { background: var(--dark); }
+    .ptab[data-s="prospect"].active { background: #64748b; }
+    .ptab[data-s="contacted"].active{ background: var(--blue); }
+    .ptab[data-s="agreement"].active{ background: var(--orange); }
+    .ptab[data-s="published"].active{ background: var(--green); }
+    .ptab[data-s="closed"].active   { background: #475569; }
+    .toolbar-right { display: flex; align-items: center; gap: .7rem; }
+    .search-box { border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .45rem .9rem; font-family: inherit; font-size: .82rem; background: #fff; width: 200px; transition: border-color .2s; }
+    .search-box:focus { outline: none; border-color: var(--orange); }
+    .btn-new { background: var(--orange); color: #fff; border: none; border-radius: 10px; padding: .5rem 1.1rem; font-family: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: .35rem; transition: opacity .2s; }
+    .btn-new:hover { opacity: .88; }
 
-    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .dash-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.07); transition: transform .2s, box-shadow .2s; }
-    .dash-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,.11); }
-    .dash-card .thumb { position: relative; height: 170px; background: #eee; overflow: hidden; }
-    .dash-card .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
-    .dash-card:hover .thumb img { transform: scale(1.04); }
-    .status-pill-card { position: absolute; top: 10px; left: 10px; border-radius: 999px; padding: .2rem .6rem; font-size: .7rem; font-weight: 800; color: #fff; }
-    .pill-active { background: #22c55e; }
-    .pill-expired { background: #ef4444; }
-    .pill-draft { background: #888; }
-    .expire-badge { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,.6); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: .7rem; font-weight: 700; }
-    .dash-card .info { padding: 12px 14px; }
-    .dash-card .info h3 { font-size: .92rem; font-weight: 800; color: var(--dark); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dash-card .info .meta { font-size: .76rem; color: #888; margin-bottom: 4px; }
-    .dash-card .info .price { font-size: .98rem; font-weight: 900; color: var(--orange); }
-    .card-actions { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
-    .card-actions button, .card-actions a { flex: 1; padding: .42rem; border-radius: 8px; border: none; font-family: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; transition: opacity .2s; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .3rem; }
-    .card-actions button:hover, .card-actions a:hover { opacity: .82; }
-    .btn-view   { background: #f0f0f0; color: #333; }
-    .btn-edit   { background: var(--orange); color: #fff; }
-    .btn-delete { background: #fee2e2; color: #c00; }
-    .btn-renew  { background: #e0f2fe; color: #0369a1; }
+    /* ── GRID FICHES ── */
+    .contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .contact-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden; transition: transform .2s, box-shadow .2s; border-top: 3px solid #eee; }
+    .contact-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .contact-card[data-s="prospect"]  { border-top-color: #94a3b8; }
+    .contact-card[data-s="contacted"] { border-top-color: var(--blue); }
+    .contact-card[data-s="agreement"] { border-top-color: var(--orange); }
+    .contact-card[data-s="published"] { border-top-color: var(--green); }
+    .contact-card[data-s="closed"]    { border-top-color: #475569; }
 
-    .empty-state { text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
-    .empty-state i { font-size: 2.5rem; color: #ddd; margin-bottom: 1rem; display: block; }
-    .empty-state p { color: #888; margin-bottom: 1.2rem; }
+    .card-head { padding: .85rem 1rem .6rem; display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+    .card-name { font-size: .95rem; font-weight: 800; color: var(--dark); line-height: 1.2; }
+    .card-phone { font-size: .78rem; color: #888; margin-top: 2px; display: flex; align-items: center; gap: .3rem; }
+    .status-pill { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; padding: .22rem .65rem; border-radius: 999px; color: #fff; white-space: nowrap; flex-shrink: 0; }
+    .pill-prospect  { background: #94a3b8; }
+    .pill-contacted { background: var(--blue); }
+    .pill-agreement { background: var(--orange); }
+    .pill-published { background: var(--green); }
+    .pill-closed    { background: #475569; }
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: #fff; border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 1.8rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-    .modal-box h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; }
-    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-grid .full { grid-column: 1/-1; }
-    .modal-field label { display: block; font-size: .76rem; font-weight: 700; color: #555; margin-bottom: .3rem; }
-    .modal-field input, .modal-field select, .modal-field textarea { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .65rem .9rem; font-family: inherit; font-size: .9rem; background: #fafafa; transition: border-color .2s; }
-    .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { outline: none; border-color: var(--orange); background: #fff; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.2rem; }
-    .btn-cancel { padding: .7rem 1.2rem; border-radius: 10px; border: 1.5px solid #ddd; background: #fff; font-family: inherit; font-weight: 700; cursor: pointer; }
-    .btn-save { padding: .7rem 1.4rem; border-radius: 10px; border: none; background: var(--orange); color: #fff; font-family: inherit; font-weight: 800; cursor: pointer; }
+    .card-body { padding: 0 1rem .8rem; }
+    .card-prop { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: #444; margin-bottom: .3rem; }
+    .card-prop i { color: var(--orange); width: 14px; flex-shrink: 0; }
+    .card-notes { font-size: .75rem; color: #777; background: #f8f9fa; border-radius: 8px; padding: .5rem .7rem; margin-top: .5rem; line-height: 1.5; font-style: italic; max-height: 56px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #111; color: #fff; border-radius: 999px; padding: .7rem 1.6rem; font-size: .88rem; font-weight: 700; z-index: 9999; transition: transform .3s ease, opacity .3s; opacity: 0; pointer-events: none; white-space: nowrap; display: flex; align-items: center; gap: .5rem; }
+    .card-actions { padding: .65rem 1rem; border-top: 1px solid #f0f0f0; display: flex; gap: 6px; flex-wrap: wrap; }
+    .ca-btn { flex: 1; min-width: 0; padding: .4rem .5rem; border-radius: 7px; border: none; font-family: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; gap: .3rem; text-decoration: none; }
+    .ca-btn:hover { opacity: .82; }
+    .ca-status { background: #f1f5f9; color: #475569; }
+    .ca-edit   { background: #fff4e8; color: var(--orange); }
+    .ca-pub    { background: var(--orange); color: #fff; }
+    .ca-view   { background: #ecfdf5; color: #166534; }
+    .ca-del    { background: #fee2e2; color: #c00; }
+    .ca-call   { background: #eff6ff; color: #1d4ed8; }
+
+    /* ── EMPTY ── */
+    .empty { grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #fff; border-radius: 14px; }
+    .empty i { font-size: 2.8rem; color: #e2e8f0; display: block; margin-bottom: 1rem; }
+    .empty p { color: #94a3b8; margin-bottom: 1.2rem; }
+
+    /* ── MODAL ── */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 3000; align-items: center; justify-content: center; padding: 1rem; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 18px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 1.8rem; box-shadow: 0 24px 64px rgba(0,0,0,.25); }
+    .modal-title { font-size: 1.05rem; font-weight: 900; margin-bottom: 1.4rem; display: flex; align-items: center; gap: .5rem; }
+    .modal-title i { color: var(--orange); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .full { grid-column: 1/-1; }
+    .ff { display: flex; flex-direction: column; gap: .3rem; }
+    .ff label { font-size: .72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .3px; }
+    .ff input, .ff select, .ff textarea {
+      border: 1.5px solid #e5e5e5; border-radius: 9px; padding: .62rem .85rem;
+      font-family: inherit; font-size: .88rem; background: #fafafa; transition: border-color .2s;
+    }
+    .ff input:focus, .ff select:focus, .ff textarea:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .check-row { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+    .check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
+    .check-row label { font-size: .82rem; font-weight: 600; color: #555; cursor: pointer; }
+    .modal-sep { grid-column: 1/-1; border: none; border-top: 1px solid #f0f0f0; margin: .4rem 0; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.4rem; }
+    .btn-cancel { padding: .65rem 1.2rem; border-radius: 9px; border: 1.5px solid #ddd; background: #fff; font-family: inherit; font-weight: 700; font-size: .85rem; cursor: pointer; }
+    .btn-save { padding: .65rem 1.4rem; border-radius: 9px; border: none; background: var(--orange); color: #fff; font-family: inherit; font-weight: 800; font-size: .85rem; cursor: pointer; }
+
+    /* ── STATUS MODAL ── */
+    .status-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .status-list li button { width: 100%; text-align: left; padding: .7rem 1rem; border-radius: 10px; border: 2px solid #eee; background: #fff; font-family: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: .6rem; transition: all .15s; }
+    .status-list li button:hover { border-color: var(--orange); background: #fff8f0; }
+    .status-list li button.current { border-color: var(--orange); background: #fff4e8; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot-prospect  { background: #94a3b8; }
+    .dot-contacted { background: var(--blue); }
+    .dot-agreement { background: var(--orange); }
+    .dot-published { background: var(--green); }
+    .dot-closed    { background: #475569; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: #111; color: #fff; border-radius: 999px; padding: .65rem 1.5rem; font-size: .85rem; font-weight: 700; z-index: 9999; transition: transform .3s, opacity .3s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    @media (max-width: 700px) {
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .modal-grid { grid-template-columns: 1fr; }
-      .modal-grid .full { grid-column: 1; }
-      .profile-hero { flex-direction: column; text-align: center; }
+    @media (max-width: 800px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: 1; }
     }
-
-    /* ── KYC ── */
-    .kyc-banner { background: #fff8e1; border: 2px solid #ffc107; border-radius: 16px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .kyc-banner.pending { background: #e3f2fd; border-color: #2196f3; }
-    .kyc-banner.verified { background: #e8f5e9; border-color: #4caf50; }
-    .kyc-icon { font-size: 2rem; flex-shrink: 0; }
-    .kyc-text h3 { font-size: .95rem; font-weight: 800; color: #111; margin-bottom: .2rem; }
-    .kyc-text p  { font-size: .82rem; color: #666; line-height: 1.5; }
-    .kyc-btn { border: none; border-radius: 10px; padding: .6rem 1.2rem; font-family: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; transition: opacity .2s; white-space: nowrap; }
-    .kyc-btn.yellow { background: #ffc107; color: #111; }
-    .kyc-btn.blue   { background: #2196f3; color: #fff; }
-    .kyc-btn.green  { background: #4caf50; color: #fff; cursor: default; }
-
-    /* Upload zone KYC */
-    .upload-zone { border: 2px dashed #e5e5e5; border-radius: 14px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all .2s; background: #fafafa; }
-    .upload-zone:hover { border-color: var(--orange); background: #fff8f0; }
-    .upload-zone.has-file { border-color: #4caf50; background: #e8f5e9; }
-    .upload-zone i { font-size: 1.8rem; color: #ccc; margin-bottom: .5rem; display: block; }
-    .upload-zone p { font-size: .82rem; color: #888; margin: 0; }
-    .upload-zone input[type="file"] { display: none; }
-
-    /* Profil complet */
-    .profile-section { background: #fff; border-radius: 16px; padding: 1.4rem; box-shadow: 0 4px 14px rgba(0,0,0,.05); margin-bottom: 1.5rem; }
-    .profile-section h3 { font-size: .95rem; font-weight: 800; color: #111; margin-bottom: 1rem; display: flex; align-items: center; gap: .4rem; }
-    .profile-section h3 i { color: var(--orange); }
-    .profile-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .profile-fields .full { grid-column: 1/-1; }
-    .pf-label { font-size: .75rem; font-weight: 700; color: #666; margin-bottom: .3rem; display: block; }
-    .pf-input { width: 100%; border: 1.5px solid #e5e5e5; border-radius: 10px; padding: .65rem .9rem; font-family: inherit; font-size: .88rem; background: #fafafa; transition: border-color .2s; }
-    .pf-input:focus { outline: none; border-color: var(--orange); background: #fff; }
-    .pf-save { background: var(--orange); color: #fff; border: none; border-radius: 10px; padding: .7rem 1.4rem; font-family: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; margin-top: .5rem; transition: opacity .2s; }
-    .pf-save:hover { opacity: .88; }
-    .verified-badge { display: inline-flex; align-items: center; gap: .3rem; background: #e8f5e9; color: #2e7d32; border-radius: 999px; padding: .25rem .8rem; font-size: .78rem; font-weight: 800; }
-    @media (max-width: 600px) { .profile-fields { grid-template-columns: 1fr; } .profile-fields .full { grid-column: 1; } }
+    @media (max-width: 500px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .toolbar { flex-direction: column; align-items: flex-start; }
+      .search-box { width: 100%; }
+    }
   </style>
 </head>
 <body>
 
+<!-- ══ LOGIN ══ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
       <img src="./assets/img/logo.png" alt="SE LOGER CM">
-      <p>Espace Agent Externe</p>
+      <p>CRM Terrain</p>
     </div>
-    <div class="login-title">Connexion à votre espace</div>
-    <div class="login-field">
-      <label>Adresse email</label>
+    <div class="login-title">Accès Agent</div>
+    <div class="lf">
+      <label>Email</label>
       <input type="email" id="loginEmail" placeholder="votre@email.com" autocomplete="email">
     </div>
-    <div class="login-field">
+    <div class="lf">
       <label>Mot de passe</label>
       <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">
-      <i class="fas fa-sign-in-alt"></i> Se connecter
-    </button>
-    <div class="login-error" id="loginError"></div>
-    <p class="login-note">Compte fourni par SE LOGER CM · <a href="/" style="color:var(--orange)">Retour au site</a></p>
+    <button class="login-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Connexion</button>
+    <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
-<div class="dashboard" id="dashboard">
-  <div class="dash-header">
-    <div class="dash-header-inner">
-      <a class="dash-brand" href="/"><img src="./assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
-      <div class="dash-user">
-        <span class="dash-user-name" id="dashUserName"></span>
-        <button class="dash-signout" onclick="doSignOut()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="dash-wrap">
-    <div class="profile-hero">
-      <div class="profile-avatar" id="dashAvatar"><i class="fas fa-user"></i></div>
-      <div class="profile-info">
-        <div class="profile-name" id="dashName">—</div>
-        <div class="profile-email" id="dashEmail">—</div>
-      </div>
-      <div class="profile-actions">
-        <button class="profile-btn btn-orange" onclick="openProfileEdit()"><i class="fas fa-edit"></i> Mon profil</button>
-        <a href="/publier" class="profile-btn btn-dark"><i class="fas fa-plus"></i> Nouvelle annonce</a>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card orange"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total annonces</div></div>
-      <div class="stat-card green"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">En ligne</div></div>
-      <div class="stat-card red"><div class="stat-num" id="statExpired">0</div><div class="stat-lbl">Expirées</div></div>
-      <div class="stat-card blue"><div class="stat-num" id="statDraft">0</div><div class="stat-lbl">Brouillons</div></div>
-    </div>
-
-
-    <!-- ── Bannière KYC ── -->
-    <div id="kycBanner" style="display:none"></div>
-
-    <!-- ── Profil Agent ── -->
-    <div class="profile-section">
-      <h3><i class="fas fa-user-circle"></i> Mon Profil Professionnel
-        <span id="verifiedBadge" style="display:none" class="verified-badge"><i class="fas fa-check-circle"></i> Vérifié</span>
-      </h3>
-      <div class="profile-fields">
-        <div>
-          <label class="pf-label">Nom complet</label>
-          <input id="pfName" class="pf-input" type="text" placeholder="Votre nom">
-        </div>
-        <div>
-          <label class="pf-label">Téléphone</label>
-          <input id="pfPhone" class="pf-input" type="tel" placeholder="+237 6XX XXX XXX">
-        </div>
-        <div class="full">
-          <label class="pf-label">Zone géographique couverte</label>
-          <input id="pfZone" class="pf-input" type="text" placeholder="Ex: Douala — Bonanjo, Bonapriso, Akwa">
-        </div>
-        <div class="full">
-          <label class="pf-label">Bio professionnelle</label>
-          <textarea id="pfBio" class="pf-input" rows="3" placeholder="Décrivez votre expérience, vos spécialités..."></textarea>
-        </div>
-      </div>
-      <button class="pf-save" onclick="saveProfile()"><i class="fas fa-save"></i> Enregistrer le profil</button>
-    </div>
-
-    <div class="section-bar">
-      <h2>Mes annonces</h2>
-      <a href="/publier">+ Publier</a>
-    </div>
-    <div id="listingsGrid" class="listing-grid"></div>
-    <div id="emptyState" class="empty-state" style="display:none">
-      <i class="fas fa-home"></i>
-      <p>Vous n'avez pas encore d'annonces.</p>
-      <a href="/publier" style="display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;background:var(--orange);color:#fff;border-radius:12px;text-decoration:none;font-weight:700">
-        <i class="fas fa-plus"></i> Publier ma première annonce
+<!-- ══ APP ══ -->
+<div class="app" id="app">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="app-brand" href="/">
+        <img src="./assets/img/logo.png" alt="SE LOGER CM">
+        <span>SE LOGER CM</span>
+        <span class="tag">CRM</span>
       </a>
+      <div class="app-user">
+        <span class="app-user-name" id="appUserName"></span>
+        <button class="app-signout" id="signoutBtn"><i class="fas fa-sign-out-alt"></i> Déco</button>
+      </div>
     </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- Stats -->
+    <div class="stats" id="statsBar">
+      <div class="stat s-all">  <div class="stat-n" id="sAll">0</div><div class="stat-l">Total</div></div>
+      <div class="stat s-pros"> <div class="stat-n" id="sPros">0</div><div class="stat-l">Prospectés</div></div>
+      <div class="stat s-cont"> <div class="stat-n" id="sCont">0</div><div class="stat-l">Contactés</div></div>
+      <div class="stat s-acc">  <div class="stat-n" id="sAcc">0</div><div class="stat-l">Accords</div></div>
+      <div class="stat s-pub">  <div class="stat-n" id="sPub">0</div><div class="stat-l">Publiés</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="pipeline-tabs" id="pipelineTabs">
+        <button class="ptab active" data-s="all">Tous</button>
+        <button class="ptab" data-s="prospect">Prospecté</button>
+        <button class="ptab" data-s="contacted">Contacté</button>
+        <button class="ptab" data-s="agreement">Accord</button>
+        <button class="ptab" data-s="published">Publié</button>
+        <button class="ptab" data-s="closed">Clôturé</button>
+      </div>
+      <div class="toolbar-right">
+        <input class="search-box" type="search" id="searchBox" placeholder="Rechercher...">
+        <button class="btn-new" id="btnNew"><i class="fas fa-plus"></i> Nouvelle fiche</button>
+      </div>
+    </div>
+
+    <!-- Grille -->
+    <div class="contacts-grid" id="contactsGrid"></div>
+
   </div>
 </div>
 
-<div class="modal-overlay" id="editOverlay">
-  <div class="modal-box">
-    <h2><i class="fas fa-edit" style="color:var(--orange);margin-right:.4rem"></i> Modifier l'annonce</h2>
-    <input type="hidden" id="editId">
-    <div class="modal-grid">
-      <div class="modal-field full"><label>Titre</label><input id="editTitle" type="text"></div>
-      <div class="modal-field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
-      <div class="modal-field"><label>Ville</label><select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select></div>
-      <div class="modal-field"><label>Type</label>
-        <select id="editType"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="villa">Villa</option><option value="studio">Studio</option><option value="duplex">Duplex</option></select>
+<!-- ══ MODAL : Créer / Modifier fiche ══ -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-user-edit"></i> <span id="formTitle">Nouvelle fiche terrain</span></div>
+    <input type="hidden" id="fId">
+    <div class="form-grid">
+
+      <div class="ff full"><label>Nom propriétaire / gérant *</label>
+        <input type="text" id="fName" placeholder="Ex : M. Jean Mballa"></div>
+
+      <div class="ff"><label>Téléphone</label>
+        <input type="tel" id="fPhone" placeholder="+237 6XX XXX XXX"></div>
+
+      <div class="ff"><label>Statut</label>
+        <select id="fStatus">
+          <option value="prospect">🔘 Prospecté</option>
+          <option value="contacted">🔵 Contacté</option>
+          <option value="agreement">🟠 Accord</option>
+          <option value="published">🟢 Publié</option>
+          <option value="closed">⚫ Clôturé</option>
+        </select></div>
+
+      <hr class="modal-sep">
+
+      <div class="ff full"><label>Adresse du bien</label>
+        <input type="text" id="fAddress" placeholder="Ex : Rue Drouot, Immeuble Belle Vue, 3ème étage"></div>
+
+      <div class="ff"><label>Ville</label>
+        <select id="fCity"></select></div>
+
+      <div class="ff"><label>Quartier</label>
+        <select id="fDistrict"></select></div>
+
+      <div class="ff"><label>Type de bien</label>
+        <select id="fType"></select></div>
+
+      <div class="ff"><label>Opération</label>
+        <select id="fRentSale">
+          <option value="rent">À louer</option>
+          <option value="sale">À vendre</option>
+        </select></div>
+
+      <div class="ff"><label>Chambres</label>
+        <select id="fBedrooms">
+          <option value="">—</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>4</option><option>5</option><option>6+</option>
+        </select></div>
+
+      <div class="ff"><label>Prix estimé (FCFA)</label>
+        <input type="number" id="fPrice" placeholder="Ex : 150000" min="0"></div>
+
+      <div class="ff full">
+        <div class="check-row">
+          <input type="checkbox" id="fFurnished">
+          <label for="fFurnished">Meublé</label>
+        </div>
       </div>
-      <div class="modal-field"><label>Opération</label>
-        <select id="editMode"><option value="rent">À louer</option><option value="sale">À vendre</option></select>
-      </div>
-      <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
+
+      <hr class="modal-sep">
+
+      <div class="ff full"><label>Notes terrain</label>
+        <textarea id="fNotes" rows="3" placeholder="Observations, conditions, points à vérifier..."></textarea></div>
+
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeEditModal()">Annuler</button>
-      <button class="btn-save" onclick="saveEdit()">Enregistrer</button>
+      <button class="btn-cancel" id="formCancel">Annuler</button>
+      <button class="btn-save" id="formSave"><i class="fas fa-save"></i> Enregistrer</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="profileEditOverlay">
-  <div class="modal-box">
-    <h2><i class="fas fa-user" style="color:var(--orange);margin-right:.4rem"></i> Mon profil agent</h2>
-    <div class="modal-grid">
-      <div class="modal-field full"><label>Nom complet</label><input id="profileName" type="text"></div>
-      <div class="modal-field full"><label>Téléphone (WhatsApp)</label><input id="profilePhone" type="tel" placeholder="+237 6XX XXX XXX"></div>
-      <div class="modal-field full"><label>Bio / Présentation</label><textarea id="profileBio" rows="3" placeholder="Décrivez votre activité, spécialisations..."></textarea></div>
-    </div>
+<!-- ══ MODAL : Changer statut ══ -->
+<div class="overlay" id="statusOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><i class="fas fa-exchange-alt"></i> Changer le statut</div>
+    <input type="hidden" id="sContactId">
+    <ul class="status-list">
+      <li><button data-v="prospect">  <span class="status-dot dot-prospect"></span>  Prospecté</button></li>
+      <li><button data-v="contacted"> <span class="status-dot dot-contacted"></span> Contacté</button></li>
+      <li><button data-v="agreement"> <span class="status-dot dot-agreement"></span> Accord obtenu</button></li>
+      <li><button data-v="published"> <span class="status-dot dot-published"></span> Publié</button></li>
+      <li><button data-v="closed">    <span class="status-dot dot-closed"></span>    Clôturé</button></li>
+    </ul>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeProfileEdit()">Annuler</button>
-      <button class="btn-save" onclick="saveProfile()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal KYC -->
-<div class="modal-overlay" id="kycOverlay">
-  <div class="modal-box" style="max-width:460px">
-    <h2><i class="fas fa-id-card" style="color:var(--orange);margin-right:.4rem"></i> Vérification d'identité</h2>
-    <p style="font-size:.85rem;color:#666;margin-bottom:1.2rem;line-height:1.6">
-      Importez une photo de votre CNI (recto). Votre document sera examiné par notre équipe sous 24-48h.
-    </p>
-    <div class="upload-zone" id="kycDropZone">
-      <i class="fas fa-cloud-upload-alt"></i>
-      <p>Cliquez pour sélectionner votre CNI (JPG, PNG, PDF)</p>
-      <input type="file" id="kycFileInput" accept="image/*,.pdf">
-    </div>
-    <p style="font-size:.75rem;color:#aaa;margin-top:.5rem">Document sécurisé — visible uniquement par l'équipe SE LOGER CM</p>
-    <div class="modal-actions" style="margin-top:1.2rem">
-      <button class="btn-cancel" onclick="closeKycUpload()">Annuler</button>
-      <button class="btn-save" id="kycSubmitBtn" onclick="submitKyc()"><i class="fas fa-paper-plane"></i> Envoyer</button>
+      <button class="btn-cancel" id="statusCancel">Fermer</button>
     </div>
   </div>
 </div>
@@ -321,248 +339,438 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/supabase.js"></script>
+<script src="assets/js/config.js"></script>
 <script>
-  async function waitSB(ms=5000){const s=100;let e=0;while((!window.SLCM_DB||!window.SLCM_DB.client)&&e<ms){await new Promise(r=>setTimeout(r,s));e+=s;}return window.SLCM_DB?.client||null;}
-  let _client=null,_user=null,_profile=null,_listings=[];
+(function () {
+  'use strict';
 
-  async function doLogin(){
-    const email=document.getElementById('loginEmail').value.trim();
-    const password=document.getElementById('loginPassword').value;
-    const btn=document.getElementById('loginBtn');
-    const errEl=document.getElementById('loginError');
-    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs.';errEl.classList.add('show');return;}
-    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Connexion…';errEl.classList.remove('show');
-    _client=await waitSB();
-    if(!_client){errEl.textContent='Connexion impossible.';errEl.classList.add('show');btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Se connecter';return;}
-    const{data,error}=await _client.auth.signInWithPassword({email,password});
-    btn.disabled=false;btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Se connecter';
-    if(error||!data.user){errEl.textContent='Email ou mot de passe incorrect.';errEl.classList.add('show');return;}
-    _user=data.user;initDashboard();
+  /* ── Helpers ── */
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function fmtPrice(n) {
+    return n ? Number(n).toLocaleString('fr-FR') + ' FCFA' : '—';
+  }
+  function fmtType(t) {
+    const map = {
+      apartment:'Appartement', house:'Maison', studio:'Studio', villa:'Villa',
+      duplex:'Duplex', warehouse:'Entrepôt', commercial:'Local commercial',
+      'plots-of-land':'Terrain', immeuble:'Immeuble', residence:'Résidence'
+    };
+    return map[t] || t || '—';
+  }
+  const STATUS_LABELS = {
+    prospect:'Prospecté', contacted:'Contacté',
+    agreement:'Accord', published:'Publié', closed:'Clôturé'
+  };
+
+  /* ── State ── */
+  let _client = null, _user = null;
+  let _contacts = [];
+  let _filter = 'all';
+  let _search = '';
+  let _editingId = null;
+  let _toastTimer;
+
+  /* ── Supabase ready ── */
+  async function waitSB(ms = 6000) {
+    let t = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.client) && t < ms) {
+      await new Promise(r => setTimeout(r, 100)); t += 100;
+    }
+    return window.SLCM_DB?.client || null;
   }
 
-  document.addEventListener('DOMContentLoaded',()=>{
-    ['loginEmail','loginPassword'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
-    (async()=>{_client=await waitSB();if(!_client)return;const{data:{session}}=await _client.auth.getSession();if(session?.user){_user=session.user;initDashboard();}})();
-  });
+  /* ── Auth ── */
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pwd   = document.getElementById('loginPassword').value;
+    const btn   = document.getElementById('loginBtn');
+    const err   = document.getElementById('loginErr');
+    if (!email || !pwd) { showErr('Veuillez remplir tous les champs.'); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion…';
+    err.classList.remove('show');
+    _client = await waitSB();
+    if (!_client) { showErr('Connexion impossible.'); resetBtn(); return; }
+    const { data, error } = await _client.auth.signInWithPassword({ email, password: pwd });
+    resetBtn();
+    if (error || !data.user) { showErr('Email ou mot de passe incorrect.'); return; }
+    _user = data.user;
+    startApp();
+  }
+  function showErr(msg) {
+    const el = document.getElementById('loginErr');
+    el.textContent = msg; el.classList.add('show');
+  }
+  function resetBtn() {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Connexion';
+  }
+  async function doSignOut() {
+    if (_client) await _client.auth.signOut();
+    _user = null; _contacts = [];
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 
-  async function doSignOut(){if(_client)await _client.auth.signOut();_user=null;_profile=null;_listings=[];document.getElementById('dashboard').style.display='none';document.getElementById('loginScreen').style.display='flex';}
+  /* ── App init ── */
+  async function startApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    const name = _user.user_metadata?.name || _user.email;
+    document.getElementById('appUserName').textContent = name;
+    populateSelects();
+    await loadContacts();
+  }
 
-  async function initDashboard(){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('dashboard').style.display='block';
-    const{data:profile}=await _client.from('profiles').select('*').eq('id',_user.id).single();
-    _profile=profile||{};
-    const name=_profile.name||_user.user_metadata?.name||_user.email;
-    document.getElementById('dashName').textContent=name;
-    document.getElementById('dashEmail').textContent=_user.email;
-    document.getElementById('dashUserName').textContent=name;
-    const avatar=document.getElementById('dashAvatar');
-    if(_profile.agent_photo)avatar.innerHTML=`<img src="${_profile.agent_photo}" alt="${name}">`;
-    else avatar.innerHTML=`<span>${name.charAt(0).toUpperCase()}</span>`;
+  /* ── Selects from config ── */
+  function populateSelects() {
+    const cfg = window.SLCM_CONFIG;
+    if (!cfg) return;
 
-    /* Pré-remplir les champs profil */
-    document.getElementById('pfName').value  = _profile.name || '';
-    document.getElementById('pfPhone').value = _profile.agent_phone || _profile.phone || '';
-    document.getElementById('pfBio').value   = _profile.agent_bio || '';
-    document.getElementById('pfZone').value  = _profile.zone || '';
+    /* City */
+    const citySel = document.getElementById('fCity');
+    citySel.innerHTML = Object.keys(cfg.cities).map(c =>
+      `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    citySel.addEventListener('change', () => syncDistricts(citySel.value));
+    syncDistricts(citySel.value);
 
-    /* Badge vérifié */
-    if(_profile.kyc_status === 'verified') {
-      document.getElementById('verifiedBadge').style.display = 'inline-flex';
+    /* Type */
+    const typeSel = document.getElementById('fType');
+    typeSel.innerHTML = cfg.propertyTypes.map(t =>
+      `<option value="${esc(t.value)}">${esc(t.labelFR)}</option>`).join('');
+  }
+
+  function syncDistricts(city) {
+    const cfg = window.SLCM_CONFIG;
+    const list = (cfg && cfg.cities[city]) || [];
+    const sel = document.getElementById('fDistrict');
+    sel.innerHTML = `<option value="">— Quartier —</option>` +
+      list.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  }
+
+  /* ── Load contacts ── */
+  async function loadContacts() {
+    const { data, error } = await _client
+      .from('agent_contacts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { toast('Erreur chargement : ' + error.message); return; }
+    _contacts = data || [];
+    renderStats();
+    renderGrid();
+  }
+
+  /* ── Stats ── */
+  function renderStats() {
+    document.getElementById('sAll').textContent  = _contacts.length;
+    document.getElementById('sPros').textContent = _contacts.filter(c => c.status === 'prospect').length;
+    document.getElementById('sCont').textContent = _contacts.filter(c => c.status === 'contacted').length;
+    document.getElementById('sAcc').textContent  = _contacts.filter(c => c.status === 'agreement').length;
+    document.getElementById('sPub').textContent  = _contacts.filter(c => c.status === 'published').length;
+  }
+
+  /* ── Grid ── */
+  function renderGrid() {
+    const grid = document.getElementById('contactsGrid');
+    let list = _contacts;
+
+    if (_filter !== 'all') list = list.filter(c => c.status === _filter);
+    if (_search) {
+      const q = _search.toLowerCase();
+      list = list.filter(c =>
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.phone || '').includes(q) ||
+        (c.district || '').toLowerCase().includes(q) ||
+        (c.address || '').toLowerCase().includes(q)
+      );
     }
 
-    /* Bannière KYC */
-    renderKycBanner(_profile.kyc_status || 'none');
-
-    loadListings();
-  }
-
-  function renderKycBanner(status) {
-    const banner = document.getElementById('kycBanner');
-    if(status === 'verified') {
-      banner.style.display = 'none';
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty">
+        <i class="fas fa-clipboard-list"></i>
+        <p>${_filter === 'all' && !_search ? 'Aucune fiche terrain. Créez votre première fiche.' : 'Aucun résultat pour ce filtre.'}</p>
+        ${_filter === 'all' && !_search ? `<button class="btn-new" onclick="openForm()"><i class="fas fa-plus"></i> Première fiche</button>` : ''}
+      </div>`;
       return;
     }
-    banner.style.display = 'flex';
-    if(status === 'pending') {
-      banner.className = 'kyc-banner pending';
-      banner.innerHTML = `
-        <div class="kyc-icon">🕐</div>
-        <div class="kyc-text" style="flex:1">
-          <h3>Vérification en cours</h3>
-          <p>Votre CNI est en cours de vérification par notre équipe. Vous recevrez une confirmation sous 24-48h.</p>
-        </div>
-        <button class="kyc-btn blue" disabled>En attente</button>`;
-    } else {
-      banner.className = 'kyc-banner';
-      banner.innerHTML = `
-        <div class="kyc-icon">🪪</div>
-        <div class="kyc-text" style="flex:1">
-          <h3>Vérifiez votre identité</h3>
-          <p>Soumettez votre CNI pour obtenir le badge ✅ Agent Vérifié sur vos annonces.</p>
-        </div>
-        <button class="kyc-btn yellow" onclick="openKycUpload()">Vérifier mon identité</button>`;
-    }
-  }
 
-  /* ── KYC Upload Modal ── */
-  function openKycUpload() {
-    document.getElementById('kycOverlay').classList.add('open');
-  }
-  function closeKycUpload() {
-    document.getElementById('kycOverlay').classList.remove('open');
-  }
+    grid.innerHTML = list.map(c => renderCard(c)).join('');
 
-  let _kycFile = null;
-  document.addEventListener('DOMContentLoaded', () => {
-    const zone = document.getElementById('kycDropZone');
-    const input = document.getElementById('kycFileInput');
-    if(zone) {
-      zone.addEventListener('click', () => input.click());
-      input.addEventListener('change', () => {
-        _kycFile = input.files[0];
-        if(_kycFile) {
-          zone.classList.add('has-file');
-          zone.querySelector('p').textContent = '✅ ' + _kycFile.name;
-        }
+    /* Bind actions */
+    grid.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-cid]').dataset.cid;
+        const action = btn.dataset.action;
+        if (action === 'edit')   openForm(id);
+        if (action === 'status') openStatus(id);
+        if (action === 'delete') deleteContact(id);
+        if (action === 'publish') publishContact(id);
+        if (action === 'call')   callContact(id);
       });
-    }
-  });
-
-  async function submitKyc() {
-    if(!_kycFile) { showToast('Veuillez sélectionner un fichier.'); return; }
-    const btn = document.getElementById('kycSubmitBtn');
-    btn.disabled = true; btn.textContent = 'Envoi...';
-    try {
-      const ext  = _kycFile.name.split('.').pop();
-      const path = `kyc/${_user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await _client.storage.from('kyc-docs').upload(path, _kycFile, { upsert: true });
-      if(upErr) { showToast('Erreur upload : ' + upErr.message); return; }
-      const { data: urlData } = _client.storage.from('kyc-docs').getPublicUrl(path);
-      const { error: dbErr } = await _client.from('profiles').update({
-        kyc_status: 'pending',
-        kyc_doc_url: urlData.publicUrl
-      }).eq('id', _user.id);
-      if(dbErr) { showToast('Erreur : ' + dbErr.message); return; }
-      _profile.kyc_status = 'pending';
-      _profile.kyc_doc_url = urlData.publicUrl;
-      closeKycUpload();
-      renderKycBanner('pending');
-      showToast('Document envoyé ✅ Vérification en cours.');
-    } catch(e) {
-      showToast('Une erreur est survenue.');
-    } finally {
-      btn.disabled = false; btn.textContent = 'Envoyer';
-    }
-  }
-
-  async function loadListings(){
-    const{data}=await _client.from('listings').select('*').eq('owner_id',_user.id).order('created_at',{ascending:false});
-    _listings=data||[];
-    const now=new Date();
-    const active=_listings.filter(l=>l.status==='active'&&(!l.expires_at||new Date(l.expires_at)>now));
-    const expired=_listings.filter(l=>l.status==='active'&&l.expires_at&&new Date(l.expires_at)<=now);
-    const drafts=_listings.filter(l=>l.status==='draft');
-    document.getElementById('statTotal').textContent=_listings.length;
-    document.getElementById('statActive').textContent=active.length;
-    document.getElementById('statExpired').textContent=expired.length;
-    document.getElementById('statDraft').textContent=drafts.length;
-    renderListings(_listings);
-  }
-
-  function fmtPrice(n){return(n||0).toLocaleString('fr-FR')+' FCFA';}
-  function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/86400000);}
-
-  function renderListings(list){
-    const grid=document.getElementById('listingsGrid'),empty=document.getElementById('emptyState');
-    grid.innerHTML='';
-    if(!list.length){grid.style.display='none';empty.style.display='block';return;}
-    grid.style.display='grid';empty.style.display='none';
-    list.forEach(ad=>{
-      const img=ad.images?.[0]||'assets/img/no-image.png';
-      const title=ad.title||'Annonce';
-      const mode=ad.rent_sale==='sale'?'À vendre':'À louer';
-      const days=daysLeft(ad.expires_at);
-      const isActive=ad.status==='active'&&(days===null||days>0);
-      const isExpired=ad.status==='active'&&days!==null&&days<=0;
-      const pillCls=isActive?'pill-active':isExpired?'pill-expired':'pill-draft';
-      const pillLabel=isActive?'✅ En ligne':isExpired?'⚠️ Expirée':'📋 Brouillon';
-      const card=document.createElement('div');card.className='dash-card';
-      card.innerHTML=`
-        <div class="thumb">
-          <img src="${img}" alt="${title}" loading="lazy">
-          <span class="status-pill-card ${pillCls}">${pillLabel}</span>
-          ${days!==null&&days>0&&days<=7?`<span class="expire-badge">⏳ ${days}j</span>`:''}
-          ${isExpired?`<span class="expire-badge">Expirée</span>`:''}
-        </div>
-        <div class="info">
-          <h3>${title}</h3>
-          <div class="meta"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> ${[ad.district,ad.city].filter(Boolean).join(' · ')} · ${mode}</div>
-          <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
-          <div class="views" style="font-size:.75rem;color:#aaa;margin-top:4px"><i class="fas fa-eye"></i> ${ad.views||0} vue${(ad.views||0)>1?'s':''}</div>
-        </div>
-        <div class="card-actions">
-          ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
-          <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
-          ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
-          <button class="btn-delete"><i class="fas fa-trash"></i></button>
-        </div>`;
-      card.querySelector('.btn-edit').addEventListener('click',()=>openEditModal(ad));
-      card.querySelector('.btn-delete').addEventListener('click',()=>deleteAd(ad.id,title));
-      if(isExpired)card.querySelector('.btn-renew').addEventListener('click',()=>renewAd(ad.id));
-      grid.appendChild(card);
     });
   }
 
-  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';document.getElementById('editOverlay').classList.add('open');}
-  function closeEditModal(){document.getElementById('editOverlay').classList.remove('open');}
+  function renderCard(c) {
+    const pill = `<span class="status-pill pill-${esc(c.status)}">${esc(STATUS_LABELS[c.status] || c.status)}</span>`;
+    const propLine = [
+      c.type ? fmtType(c.type) : null,
+      c.bedrooms ? c.bedrooms + ' ch.' : null,
+      c.furnished ? 'Meublé' : null,
+      c.rent_sale === 'sale' ? 'Vente' : 'Location'
+    ].filter(Boolean).join(' · ');
 
-  async function saveEdit(){
-    const id=document.getElementById('editId').value;
-    const updates={title:document.getElementById('editTitle').value.trim(),price:Number(document.getElementById('editPrice').value)||0,city:document.getElementById('editCity').value,type:document.getElementById('editType').value,rent_sale:document.getElementById('editMode').value,description:document.getElementById('editDesc').value.trim()};
-    const{error}=await _client.from('listings').update(updates).eq('id',id);
-    if(error){showToast('Erreur : '+error.message);return;}
-    closeEditModal();showToast('Annonce mise à jour ✅');loadListings();
+    const pubBtn = c.status === 'agreement' && !c.listing_id
+      ? `<button class="ca-btn ca-pub" data-action="publish"><i class="fas fa-rocket"></i> Publier</button>`
+      : '';
+    const viewBtn = c.listing_id
+      ? `<a class="ca-btn ca-view" href="/annonce?id=${esc(c.listing_id)}" target="_blank"><i class="fas fa-external-link-alt"></i> Annonce</a>`
+      : '';
+
+    return `<div class="contact-card" data-s="${esc(c.status)}" data-cid="${esc(c.id)}">
+      <div class="card-head">
+        <div>
+          <div class="card-name">${esc(c.name)}</div>
+          ${c.phone ? `<div class="card-phone"><i class="fas fa-phone"></i> ${esc(c.phone)}</div>` : ''}
+        </div>
+        ${pill}
+      </div>
+      <div class="card-body">
+        ${c.district || c.city ? `<div class="card-prop"><i class="fas fa-map-marker-alt"></i> ${esc([c.district, c.city].filter(Boolean).join(', '))}</div>` : ''}
+        ${propLine ? `<div class="card-prop"><i class="fas fa-home"></i> ${esc(propLine)}</div>` : ''}
+        ${c.price_estimate ? `<div class="card-prop"><i class="fas fa-tag"></i> ${esc(fmtPrice(c.price_estimate))}</div>` : ''}
+        ${c.address ? `<div class="card-prop"><i class="fas fa-building"></i> ${esc(c.address)}</div>` : ''}
+        ${c.notes ? `<div class="card-notes">${esc(c.notes)}</div>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="ca-btn ca-status" data-action="status"><i class="fas fa-exchange-alt"></i> Statut</button>
+        ${c.phone ? `<button class="ca-btn ca-call" data-action="call"><i class="fas fa-whatsapp fab"></i> WA</button>` : ''}
+        <button class="ca-btn ca-edit" data-action="edit"><i class="fas fa-edit"></i> Modifier</button>
+        ${pubBtn}${viewBtn}
+        <button class="ca-btn ca-del" data-action="delete"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
   }
 
-  async function deleteAd(id,title){
-    if(!confirm(`Supprimer "${title}" ? Cette action est irréversible.`))return;
-    const{error}=await _client.from('listings').delete().eq('id',id);
-    if(error){showToast('Erreur : '+error.message);return;}
-    showToast('Annonce supprimée');loadListings();
+  /* ── Form modal ── */
+  function openForm(id) {
+    _editingId = id || null;
+    const modal = document.getElementById('formOverlay');
+    document.getElementById('formTitle').textContent = id ? 'Modifier la fiche' : 'Nouvelle fiche terrain';
+    document.getElementById('fId').value = '';
+
+    /* Reset */
+    ['fName','fPhone','fAddress','fNotes','fPrice'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('fFurnished').checked = false;
+    document.getElementById('fStatus').value = 'prospect';
+    document.getElementById('fRentSale').value = 'rent';
+    document.getElementById('fBedrooms').value = '';
+    const citySel = document.getElementById('fCity');
+    if (citySel.options.length) { citySel.value = citySel.options[0].value; syncDistricts(citySel.value); }
+
+    if (id) {
+      const c = _contacts.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('fId').value     = c.id;
+      document.getElementById('fName').value   = c.name || '';
+      document.getElementById('fPhone').value  = c.phone || '';
+      document.getElementById('fAddress').value = c.address || '';
+      document.getElementById('fNotes').value  = c.notes || '';
+      document.getElementById('fPrice').value  = c.price_estimate || '';
+      document.getElementById('fStatus').value = c.status || 'prospect';
+      document.getElementById('fRentSale').value = c.rent_sale || 'rent';
+      document.getElementById('fFurnished').checked = !!c.furnished;
+      if (c.bedrooms) document.getElementById('fBedrooms').value = c.bedrooms;
+      if (c.city) {
+        document.getElementById('fCity').value = c.city;
+        syncDistricts(c.city);
+      }
+      if (c.district) document.getElementById('fDistrict').value = c.district;
+      if (c.type) document.getElementById('fType').value = c.type;
+    }
+
+    modal.classList.add('open');
   }
 
-  async function renewAd(id){
-    const ad=_listings.find(l=>l.id===id);
-    const days=ad?.rent_sale==='sale'?60:30;
-    const expires=new Date();expires.setDate(expires.getDate()+days);
-    const{error}=await _client.from('listings').update({expires_at:expires.toISOString(),status:'active'}).eq('id',id);
-    if(error){showToast('Erreur : '+error.message);return;}
-    showToast(`Annonce renouvelée pour ${days} jours ✅`);loadListings();
+  function closeForm() {
+    document.getElementById('formOverlay').classList.remove('open');
+    _editingId = null;
   }
 
-  function openProfileEdit(){document.getElementById('profileName').value=_profile.name||'';document.getElementById('profilePhone').value=_profile.agent_phone||_profile.phone||'';document.getElementById('profileBio').value=_profile.agent_bio||'';document.getElementById('profileEditOverlay').classList.add('open');}
-  function closeProfileEdit(){document.getElementById('profileEditOverlay').classList.remove('open');}
+  async function saveForm() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { toast('Le nom est obligatoire.'); return; }
 
-  async function saveProfile(){
-    const updates={
-      name:        document.getElementById('pfName').value.trim(),
-      agent_phone: document.getElementById('pfPhone').value.trim(),
-      agent_bio:   document.getElementById('pfBio').value.trim(),
-      zone:        document.getElementById('pfZone').value.trim(),
+    const payload = {
+      name,
+      phone:          document.getElementById('fPhone').value.trim() || null,
+      address:        document.getElementById('fAddress').value.trim() || null,
+      city:           document.getElementById('fCity').value,
+      district:       document.getElementById('fDistrict').value || null,
+      type:           document.getElementById('fType').value,
+      rent_sale:      document.getElementById('fRentSale').value,
+      bedrooms:       parseInt(document.getElementById('fBedrooms').value) || null,
+      price_estimate: parseInt(document.getElementById('fPrice').value) || null,
+      furnished:      document.getElementById('fFurnished').checked,
+      status:         document.getElementById('fStatus').value,
+      notes:          document.getElementById('fNotes').value.trim() || null,
+      agent_id:       _user.id
     };
-    const{error}=await _client.from('profiles').upsert({id:_user.id,...updates});
-    if(error){showToast('Erreur : '+error.message);return;}
-    _profile={..._profile,...updates};
-    document.getElementById('dashName').textContent=updates.name||_user.email;
-    document.getElementById('dashUserName').textContent=updates.name||_user.email;
-    showToast('Profil mis à jour ✅');
+
+    const id = document.getElementById('fId').value;
+    let error;
+
+    if (id) {
+      ({ error } = await _client.from('agent_contacts').update(payload).eq('id', id));
+    } else {
+      ({ error } = await _client.from('agent_contacts').insert(payload));
+    }
+
+    if (error) { toast('Erreur : ' + error.message); return; }
+    closeForm();
+    toast(id ? 'Fiche mise à jour ✅' : 'Fiche créée ✅');
+    await loadContacts();
   }
 
-  ['editOverlay','kycOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+  /* ── Status modal ── */
+  function openStatus(id) {
+    const c = _contacts.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('sContactId').value = id;
+    document.querySelectorAll('#statusOverlay .status-list button').forEach(btn => {
+      btn.classList.toggle('current', btn.dataset.v === c.status);
+    });
+    document.getElementById('statusOverlay').classList.add('open');
+  }
 
-  let _toastTimer;
-  function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
+  function closeStatus() {
+    document.getElementById('statusOverlay').classList.remove('open');
+  }
+
+  async function setStatus(newStatus) {
+    const id = document.getElementById('sContactId').value;
+    const { error } = await _client.from('agent_contacts').update({ status: newStatus }).eq('id', id);
+    if (error) { toast('Erreur : ' + error.message); return; }
+    closeStatus();
+    toast('Statut mis à jour ✅');
+    await loadContacts();
+  }
+
+  /* ── Delete ── */
+  async function deleteContact(id) {
+    const c = _contacts.find(x => x.id === id);
+    if (!confirm(`Supprimer la fiche de "${c?.name}" ? Action irréversible.`)) return;
+    const { error } = await _client.from('agent_contacts').delete().eq('id', id);
+    if (error) { toast('Erreur : ' + error.message); return; }
+    toast('Fiche supprimée');
+    await loadContacts();
+  }
+
+  /* ── Publish ── */
+  function publishContact(id) {
+    const c = _contacts.find(x => x.id === id);
+    if (!c) return;
+    const draft = {
+      title:       `${fmtType(c.type)}${c.bedrooms ? ' ' + c.bedrooms + ' chambres' : ''}${c.district ? ' — ' + c.district : ''}`,
+      rent_sale:   c.rent_sale,
+      type:        c.type,
+      city:        c.city,
+      district:    c.district,
+      bedrooms:    c.bedrooms,
+      price:       c.price_estimate,
+      furnished:   c.furnished,
+      description: c.notes || '',
+      _crm_id:     c.id  /* pour suivi retour éventuel */
+    };
+    sessionStorage.setItem('slcm_draft', JSON.stringify(draft));
+    window.open('/publish.html?draft=1', '_blank');
+    toast('Formulaire pré-rempli — onglet ouvert ✅');
+  }
+
+  /* ── WhatsApp ── */
+  function callContact(id) {
+    const c = _contacts.find(x => x.id === id);
+    if (!c || !c.phone) return;
+    const phone = c.phone.replace(/\D/g, '');
+    const msg = encodeURIComponent(`Bonjour ${c.name}, je vous contacte de la part de SE LOGER CM concernant votre bien à ${c.district || c.city || 'Douala'}.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  }
+
+  /* ── Toast ── */
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  /* ── Events ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    /* Login */
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
+    ['loginEmail','loginPassword'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    });
+
+    /* Signout */
+    document.getElementById('signoutBtn').addEventListener('click', doSignOut);
+
+    /* New fiche */
+    document.getElementById('btnNew').addEventListener('click', () => openForm());
+
+    /* Form actions */
+    document.getElementById('formCancel').addEventListener('click', closeForm);
+    document.getElementById('formSave').addEventListener('click', saveForm);
+    document.getElementById('formOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('formOverlay')) closeForm();
+    });
+
+    /* Status modal */
+    document.getElementById('statusCancel').addEventListener('click', closeStatus);
+    document.getElementById('statusOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('statusOverlay')) closeStatus();
+    });
+    document.querySelectorAll('#statusOverlay .status-list button').forEach(btn => {
+      btn.addEventListener('click', () => setStatus(btn.dataset.v));
+    });
+
+    /* Pipeline tabs */
+    document.getElementById('pipelineTabs').addEventListener('click', e => {
+      const tab = e.target.closest('.ptab');
+      if (!tab) return;
+      document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      _filter = tab.dataset.s;
+      renderGrid();
+    });
+
+    /* Search */
+    document.getElementById('searchBox').addEventListener('input', e => {
+      _search = e.target.value.trim();
+      renderGrid();
+    });
+
+    /* City change in form */
+    document.getElementById('fCity').addEventListener('change', e => syncDistricts(e.target.value));
+
+    /* Auto-login si session active */
+    (async () => {
+      _client = await waitSB();
+      if (!_client) return;
+      const { data: { session } } = await _client.auth.getSession();
+      if (session?.user) { _user = session.user; startApp(); }
+    })();
+  });
+
+  /* Expose pour les onclick inline */
+  window.openForm = openForm;
+
+})();
 </script>
 </body>
 </html>

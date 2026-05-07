@@ -1,153 +1,149 @@
 /* ═══════════════════════════════════════════════════════════════
-   SE LOGER CM — Bandeaux promo dynamiques homepage
+   SE LOGER CM — Bandeaux promo homepage (sans vignettes)
    ─────────────────────────────────────────────────────────────
-   - 10 thèmes pré-configurés (filtres SQL réels sur listings)
-   - 4 emplacements : 2 en mode LOUER + 2 en mode VENDRE
-   - Vignettes auto-remplies depuis Supabase (3 annonces par bandeau)
-   - Si 0 annonce ne matche → bandeau caché (pas de zone vide)
-   - Cache sessionStorage 1h pour éviter requêtes inutiles
+   4 bandeaux au total : 2 en zone Location, 2 en zone Vente.
+   Chaque bandeau alterne automatiquement entre 2 thèmes (4,5 s).
 
-   POUR CHANGER LES THÈMES ACTIFS :
-   Modifier les 4 lignes du bloc ACTIVE_BANNERS ci-dessous,
-   commit + push GitHub. Aucune autre modif nécessaire.
+   BANNER_STYLE : 'slide'  → bandeau sombre auto-rotatif (défaut)
+                 'ticker' → bande fine texte défilant en boucle
+
+   POUR CHANGER LES THÈMES :
+   Modifier uniquement le bloc ACTIVE_BANNERS ci-dessous.
    ═══════════════════════════════════════════════════════════════ */
 (function() {
   'use strict';
 
   /* ═══════════════════════════════════════════════════════════════
-     ZONE ÉDITORIALE — À MODIFIER POUR CHANGER LES BANDEAUX
+     ZONE ÉDITORIALE — seule partie à modifier régulièrement
      ═══════════════════════════════════════════════════════════════
-     Cette zone est conçue pour être modifiée régulièrement (semaine,
-     mois) sans toucher au reste du code. 2 blocs :
 
-     1. ACTIVE_BANNERS  → quels thèmes afficher dans les 4 emplacements
-     2. EDITO_OVERRIDES → personnaliser le wording (titre, kicker, CTA)
-                          d'un thème sans toucher à son filtre SQL
+     BANNER_STYLE : 'slide' | 'ticker'
 
-     Clés disponibles pour ACTIVE_BANNERS (copier-coller exactement) :
-       'studios_80k'                  Studios <80K (location non meublé)
-       'apparts_150k'                 Apparts <150K (location non meublé)
-       'apparts_familial_200k'        Apparts familiaux 3 chambres ≤200K
-       'maisons_villas_250k'          Maisons & villas à louer <250K
-       'meubles_25k_jour'             Meublés courte durée <25K/jour
-       'apparts_bonapriso_premium'    Apparts Bonapriso ≤500K
-       'entrepots_2000_m2'            Entrepôts <2000 FCFA/m²
-       'fonds_commerce_vente'         Fonds de commerce à vendre
-       'ventes_50m'                   Ventes <50M FCFA
-       'meubles_annuels_bonapriso'    Meublés annuels Bonapriso
+     ACTIVE_BANNERS — 4 bandeaux × 2 thèmes :
+       rent_1a / rent_1b  → Bandeau 1 Location (entre Unfurnished et Furnished)
+       rent_2a / rent_2b  → Bandeau 2 Location (entre Furnished et Locaux Commerciaux)
+       sale_1a / sale_1b  → Bandeau 1 Vente (entre Villas et Terrains)
+       sale_2a / sale_2b  → Bandeau 2 Vente (entre Terrains et Fonds de Commerce)
+
+     Clés disponibles :
+       'loc_2p_akwa_bali_bonapriso'      Apparts 2 pièces — Akwa·Bali·Bonapriso
+       'loc_3p_bali_bonanjo_bonapriso'   Apparts 3 pièces — Bali·Bonanjo·Bonapriso
+       'meubles_long_sejour'             Meublés 2&3ch long séjour
+       'villas_famille'                  Villas à louer pour familles
+       'petits_lots_budget'              Vente petits budgets <50M
+       'lots_3b'                         Lots Bali·Bonapriso·Bonanjo
+       'lancez_vous_commercial'          Biens commerciaux accessibles
+       'investir_malin'                  Fonds de commerce & locaux pros
      ═══════════════════════════════════════════════════════════════ */
 
-  /* 1. Choix des thèmes actifs (4 emplacements) */
+  const BANNER_STYLE = 'slide'; /* 'slide' | 'ticker' */
+
   const ACTIVE_BANNERS = {
-    rent_1: 'apparts_bonapriso_premium' ,   // Entre unfurnished et furnished
-    rent_2: 'apparts_150k',                 // Entre furnished et locaux commerciaux
-    sale_1: 'ventes_50m',                  // Entre villas et terrains
-    sale_2: 'fonds_commerce_vente'         // Entre terrains et fonds de commerce
+    rent_1a: 'loc_2p_akwa_bali_bonapriso',
+    rent_1b: 'loc_3p_bali_bonanjo_bonapriso',
+    rent_2a: 'meubles_long_sejour',
+    rent_2b: 'villas_famille',
+    sale_1a: 'petits_lots_budget',
+    sale_1b: 'lots_3b',
+    sale_2a: 'lancez_vous_commercial',
+    sale_2b: 'investir_malin'
   };
 
-  /* 2. Surcharges éditoriales (optionnelles)
-     Pour personnaliser le wording d'un thème actif, décommente les lignes
-     dont tu veux changer le texte. Les autres garderont la valeur par défaut.
-     Ne touche JAMAIS à la propriété 'filter' d'un thème : modifie ici, pas
-     dans le bloc THEMES. */
   const EDITO_OVERRIDES = {
-    /* Exemple pour le thème actuel rent_2 — décommente / adapte / supprime */
-    'apparts_150k' : {
-      // kicker: 'Spécial jeune couple',
-      // title: 'de bons plans à 150k — encore disponibles',
-      // cta: 'Voir tous'
+    /* Exemple — décommenter pour surcharger le wording d'un thème :
+    'loc_2p_akwa_bali_bonapriso': {
+      kicker: 'Bon plan du moment',
+      title:  'Apparts 2 pièces à prix doux',
+      cta:    'Voir'
     }
-    /* Pour ajouter une surcharge sur un autre thème, copier ce bloc :
-   apparts_bonapriso_premium: {
-      kicker: 'Bon plan du jour',
-      title: 'budget moyen? Voici 3 offres!',
-      cta: 'Découvrir'
-    },
     */
   };
 
   /* ═══════════════════════════════════════════════════════════════
-     FIN ZONE ÉDITORIALE — Ne pas modifier ce qui suit sans précaution
+     FIN ZONE ÉDITORIALE
      ═══════════════════════════════════════════════════════════════ */
 
-  /* ─── DÉFINITION DES 10 THÈMES ─── */
   const THEMES = {
-    studios_80k: {
-      kicker: 'Cette semaine',
-      title: 'Studios disponibles à moins de 80 000 FCFA',
-      cta: 'Voir tous les studios <80K',
-      ctaHref: '/listings_v2.html?mode=rent&type=studio&price=0-80000',
-      filter: (q) => q.eq('type', 'studio').eq('rent_sale', 'rent').eq('furnished', false).lte('price', 80000)
+    /* ── Location ── */
+    loc_2p_akwa_bali_bonapriso: {
+      kicker:   'Disponible maintenant',
+      title:    'Appartements 2 pièces — Akwa · Bali · Bonapriso',
+      cta:      'Voir les 2 pièces',
+      kickerEN: 'Available now',
+      titleEN:  '2-bedroom apartments — Akwa · Bali · Bonapriso',
+      ctaEN:    'See 2-bedroom units',
+      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=2'
     },
-    apparts_150k: {
-      kicker: 'Budget moyen',
-      title: 'Appartements à moins de 150 000 FCFA',
-      cta: 'Voir tous les apparts <150K',
-      ctaHref: '/listings_v2.html?mode=rent&type=apartment&price=0-150000',
-      filter: (q) => q.eq('type', 'apartment').eq('rent_sale', 'rent').eq('furnished', false).lte('price', 150000)
+    loc_3p_bali_bonanjo_bonapriso: {
+      kicker:   'Bon plan espace',
+      title:    'Appartements 3 pièces — Bali · Bonanjo · Bonapriso',
+      cta:      'Voir les 3 pièces',
+      kickerEN: 'More space',
+      titleEN:  '3-bedroom apartments — Bali · Bonanjo · Bonapriso',
+      ctaEN:    'See 3-bedroom units',
+      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=3'
     },
-    apparts_familial_200k: {
-      kicker: 'Plan famille',
-      title: 'Appartements familiaux 3 chambres à moins de 200 000 FCFA',
-      cta: 'Voir tous les apparts 3 chambres',
-      ctaHref: '/listings_v2.html?mode=rent&type=apartment&bedrooms=3&price=0-200000',
-      filter: (q) => q.eq('type', 'apartment').eq('rent_sale', 'rent').gte('bedrooms', 3).lte('price', 200000)
+    meubles_long_sejour: {
+      kicker:   'Long séjour',
+      title:    'Posez vos valises — meublés 2 & 3 chambres disponibles',
+      cta:      'Voir les meublés',
+      kickerEN: 'Long stay',
+      titleEN:  'Move right in — furnished 2 & 3-bedroom units available',
+      ctaEN:    'See furnished units',
+      ctaHref:  '/listings_v2.html?mode=rent&furnished=true'
     },
-    maisons_villas_250k: {
-      kicker: 'Pour la famille',
-      title: 'Maisons & villas à louer moins de 250 000 FCFA',
-      cta: 'Voir maisons & villas',
-      ctaHref: '/listings_v2.html?mode=rent&type=villa&price=0-250000',
-      filter: (q) => q.in('type', ['house', 'villa']).eq('rent_sale', 'rent').lte('price', 250000)
+    villas_famille: {
+      kicker:   'Pour toute la famille',
+      title:    'Villas spacieuses à louer — entrée en famille',
+      cta:      'Voir les villas',
+      kickerEN: 'For the whole family',
+      titleEN:  'Spacious villas to rent — family-ready',
+      ctaEN:    'See villas',
+      ctaHref:  '/listings_v2.html?mode=rent&type=villa'
     },
-    meubles_25k_jour: {
-      kicker: 'Plan court séjour',
-      title: 'Meublés à moins de 25 000 FCFA / jour',
-      cta: 'Voir tous les meublés courte durée',
-      ctaHref: '/listings_v2.html?mode=rent&furnished=true',
-      filter: (q) => q.eq('furnished', true).eq('rent_sale', 'rent').not('price_per_day', 'is', null).lte('price_per_day', 25000)
+    /* ── Vente ── */
+    petits_lots_budget: {
+      kicker:   'Petits budgets',
+      title:    'De petits lots pour bien commencer — à partir de 5M FCFA',
+      cta:      'Voir les petits lots',
+      kickerEN: 'Small budgets',
+      titleEN:  'Small lots to get started — from 5M FCFA',
+      ctaEN:    'See small lots',
+      ctaHref:  '/listings_v2.html?mode=sale&price=0-50000000'
     },
-    apparts_bonapriso_premium: {
-      kicker: 'Quartier Bonapriso',
-      title: 'Appartements premium Bonapriso à moins de 500 000 FCFA',
-      cta: 'Voir tous les apparts Bonapriso',
-      ctaHref: '/listings_v2.html?mode=rent&district=Bonapriso',
-      filter: (q) => q.eq('type', 'apartment').eq('district', 'Bonapriso').eq('rent_sale', 'rent').lte('price', 500000)
+    lots_3b: {
+      kicker:   'Les 3B',
+      title:    'Lots en vente à Bali · Bonapriso · Bonanjo',
+      cta:      'Explorer les 3B',
+      kickerEN: 'The 3Bs',
+      titleEN:  'Lots for sale in Bali · Bonapriso · Bonanjo',
+      ctaEN:    'Explore the 3Bs',
+      ctaHref:  '/listings_v2.html?mode=sale'
     },
-    entrepots_2000_m2: {
-      kicker: 'Pour entreprises',
-      title: 'Entrepôts à moins de 2 000 FCFA/m²',
-      cta: 'Voir tous les entrepôts',
-      ctaHref: '/listings_v2.html?mode=rent&type=warehouse',
-      filter: (q) => q.eq('type', 'warehouse').eq('rent_sale', 'rent'),
-      postFilter: (items) => items.filter(item => {
-        const sup = parseFloat(item.superficie);
-        const px  = parseFloat(item.price);
-        return sup > 0 && (px / sup) <= 2000;
-      })
+    lancez_vous_commercial: {
+      kicker:   'Lancez-vous',
+      title:    'Démarrez votre activité — biens commerciaux accessibles',
+      cta:      'Voir les biens pro',
+      kickerEN: 'Start your business',
+      titleEN:  'Launch your activity — affordable commercial properties',
+      ctaEN:    'See commercial listings',
+      ctaHref:  '/listings_v2.html?mode=sale&type=commercial'
     },
-    fonds_commerce_vente: {
-      kicker: 'Vous voulez lancer un projet ?',
-      title: 'Visitez nos fonds de commerce à vendre',
-      cta: 'Voir tous les fonds de commerce',
-      ctaHref: '/listings_v2.html?mode=sale&type=fonds-commerce',
-      filter: (q) => q.eq('type', 'fonds-commerce').eq('rent_sale', 'sale')
-    },
-    ventes_50m: {
-      kicker: 'Petits lots, petits budgets',
-      title: 'Annonces à vendre à moins de 50 millions FCFA',
-      cta: 'Voir toutes les ventes <50M',
-      ctaHref: '/listings_v2.html?mode=sale&price=0-50000000',
-      filter: (q) => q.eq('rent_sale', 'sale').lte('price', 50000000)
-    },
-    meubles_annuels_bonapriso: {
-      kicker: 'Débarque avec tes valises !',
-      title: 'Meublés en location annuelle à Bonapriso',
-      cta: 'Voir tous les meublés Bonapriso',
-      ctaHref: '/listings_v2.html?mode=rent&district=Bonapriso&furnished=true',
-      filter: (q) => q.eq('type', 'apartment').eq('district', 'Bonapriso').eq('furnished', true).eq('rent_sale', 'rent').is('price_per_day', null)
+    investir_malin: {
+      kicker:   'Investir malin',
+      title:    'Fonds de commerce & locaux pros à petits prix',
+      cta:      'Explorer',
+      kickerEN: 'Smart investment',
+      titleEN:  'Business goodwill & commercial spaces at great prices',
+      ctaEN:    'Explore',
+      ctaHref:  '/listings_v2.html?mode=sale&type=fonds-commerce'
     }
   };
+
+  /* ─── LANGUE ─── */
+  function getLang() {
+    return localStorage.getItem('slcm_lang') || 'fr';
+  }
 
   /* ─── HELPERS ─── */
   function escapeHtml(str) {
@@ -156,183 +152,294 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-  function fmtPrice(n) {
-    return Number(n || 0).toLocaleString('fr-FR') + ' FCFA';
-  }
 
-  /* ─── CACHE LOCAL (1h) ─── */
-  const CACHE_KEY_PREFIX = 'slcm_banner_';
-  const CACHE_TTL = 60 * 60 * 1000;
-
-  function getCache(key) {
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY_PREFIX + key);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      if (Date.now() - obj.ts > CACHE_TTL) return null;
-      return obj.data;
-    } catch (e) { return null; }
-  }
-  function setCache(key, data) {
-    try {
-      sessionStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({ ts: Date.now(), data: data }));
-    } catch (e) {}
-  }
-
-  /* ─── REQUÊTE SUPABASE D'UN THÈME ─── */
-  async function fetchThemeListings(themeKey) {
-    const cached = getCache(themeKey);
-    if (cached) return cached;
-
-    const theme = THEMES[themeKey];
-    if (!theme) {
+  function getTheme(themeKey, lang) {
+    if (!themeKey || !THEMES[themeKey]) {
       console.warn('[banners] Thème inconnu:', themeKey);
-      return [];
+      return null;
     }
-
-    /* Attendre que Supabase soit prêt */
-    let tries = 0;
-    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
-      await new Promise(r => setTimeout(r, 100));
-      tries++;
-    }
-    if (!window.SLCM_DB || !window.SLCM_DB.client) {
-      console.warn('[banners] Supabase indisponible');
-      return [];
-    }
-
-    const client = window.SLCM_DB.client;
-    let query = client.from('listings').select('*').eq('status', 'active');
-    query = theme.filter(query);
-    query = query.order('created_at', { ascending: false }).limit(theme.postFilter ? 20 : 6);
-
-    const { data, error } = await query;
-    if (error) {
-      console.warn('[banners] Erreur fetch:', themeKey, error.message);
-      return [];
-    }
-
-    let items = data || [];
-    if (theme.postFilter) items = theme.postFilter(items).slice(0, 6);
-
-    setCache(themeKey, items);
-    return items;
+    const base = THEMES[themeKey];
+    const ov   = EDITO_OVERRIDES[themeKey] || {};
+    const en   = (lang || getLang()) === 'en';
+    return {
+      key:     themeKey,
+      kicker:  ov.kicker  || (en && base.kickerEN ? base.kickerEN : base.kicker),
+      title:   ov.title   || (en && base.titleEN  ? base.titleEN  : base.title),
+      cta:     ov.cta     || (en && base.ctaEN    ? base.ctaEN    : base.cta),
+      ctaHref: ov.ctaHref || base.ctaHref
+    };
   }
 
-  /* ─── RENDU D'UNE VIGNETTE ─── */
-  function renderTile(listing, themeKey) {
-    /* Vrai pattern photo SE LOGER CM (cohérent avec listings.js):
-       champ 'images' (tableau), fallback sur no-image.png si vide */
-    const photo = (listing.images && listing.images[0]) || '/assets/img/no-image.png';
-    const district = listing.district || listing.city || 'Douala';
-    const title = listing.title || (listing.type || 'Annonce');
-
-    let priceLabel;
-    if (themeKey === 'meubles_25k_jour' && listing.price_per_day) {
-      priceLabel = fmtPrice(listing.price_per_day) + ' / jour';
-    } else if (themeKey === 'entrepots_2000_m2' && listing.superficie > 0) {
-      const pxm2 = Math.round(listing.price / listing.superficie);
-      priceLabel = fmtPrice(listing.price) + ' (' + fmtPrice(pxm2) + '/m²)';
-    } else {
-      priceLabel = fmtPrice(listing.price);
-    }
-
-    const slug = listing.slug || listing.id;
-    const url = '/annonce/' + encodeURIComponent(slug);
-
-    return ''
-      + '<a class="slcm-banner-tile" href="' + escapeHtml(url) + '">'
-      +   '<div class="slcm-banner-tile-photo">'
-      +     '<img src="' + escapeHtml(photo) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
-      +   '</div>'
-      +   '<div class="slcm-banner-tile-body">'
-      +     '<p class="slcm-banner-tile-title">' + escapeHtml(title) + '</p>'
-      +     '<p class="slcm-banner-tile-meta">' + escapeHtml(district) + '</p>'
-      +     '<p class="slcm-banner-tile-price">' + escapeHtml(priceLabel) + '</p>'
-      +   '</div>'
-      + '</a>';
-  }
-
-  /* ─── RENDU D'UN BANDEAU COMPLET ─── */
-  function renderBanner(theme, items, themeKey) {
-    const tilesHtml = items.slice(0, 3).map(item => renderTile(item, themeKey)).join('');
-    return ''
-      + '<div class="slcm-banner">'
-      +   '<div class="slcm-banner-head">'
-      +     '<div class="slcm-banner-titles">'
-      +       '<p class="slcm-banner-kicker">' + escapeHtml(theme.kicker) + '</p>'
-      +       '<p class="slcm-banner-title">' + escapeHtml(theme.title) + '</p>'
-      +     '</div>'
-      +     '<a class="slcm-banner-cta" href="' + escapeHtml(theme.ctaHref) + '">'
-      +       escapeHtml(theme.cta) + ' →'
-      +     '</a>'
-      +   '</div>'
-      +   '<div class="slcm-banner-tiles">' + tilesHtml + '</div>'
-      + '</div>';
-  }
-
-  /* ─── INJECTION DES STYLES UNE SEULE FOIS ─── */
+  /* ─── STYLES ─── */
   function injectStyles() {
     if (document.getElementById('slcm-banner-styles')) return;
     const style = document.createElement('style');
     style.id = 'slcm-banner-styles';
-    style.textContent = ''
-      /* Wrapper : zone respiration entre 2 sections sombres + alignement avec le container du site */
-      + '.slcm-banner-wrapper { background: #fff; padding: 32px 1rem; }'
-      /* Bandeau principal : grande card cohérente avec les annonces (border-radius 16px + ombre) */
-      + '.slcm-banner { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); border: 1px solid #f3f3f3; }'
-      /* Header du bandeau : kicker + titre à gauche, bouton CTA outline à droite */
-      + '.slcm-banner-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }'
-      + '.slcm-banner-titles { flex: 1; min-width: 200px; }'
-      + '.slcm-banner-kicker { font-size: 11px; color: #ea580c; margin: 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }'
-      + '.slcm-banner-title { font-size: 17px; color: #111; margin: 3px 0 0; font-weight: 700; line-height: 1.3; }'
-      /* CTA : bouton outline orange arrondi (style cohérent SE LOGER CM) */
-      + '.slcm-banner-cta { font-size: 12px; color: #ea580c; text-decoration: none; font-weight: 700; padding: 8px 14px; border: 1.5px solid #ea580c; border-radius: 999px; white-space: nowrap; transition: all .15s; }'
-      + '.slcm-banner-cta:hover { background: #ea580c; color: #fff; }'
-      /* Grille des vignettes : 3 mini-cards avec gap propre */
-      + '.slcm-banner-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }'
-      /* Mini-card : photo en haut + infos en bas, ombre douce, hover effect (cohérent .listing-card) */
-      + '.slcm-banner-tile { background: #fff; border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: transform .2s, box-shadow .2s; display: block; }'
-      + '.slcm-banner-tile:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.1); }'
-      /* Photo : 100px de haut, prend toute la largeur de la mini-card */
-      + '.slcm-banner-tile-photo { background: #f3f4f6; height: 110px; overflow: hidden; }'
-      + '.slcm-banner-tile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }'
-      /* Body : padding propre, infos hiérarchisées */
-      + '.slcm-banner-tile-body { padding: 10px 12px; }'
-      + '.slcm-banner-tile-title { font-size: 12px; margin: 0 0 2px; font-weight: 700; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }'
-      + '.slcm-banner-tile-meta { font-size: 10px; color: #999; margin: 0 0 4px; }'
-      + '.slcm-banner-tile-price { font-size: 13px; color: #ea580c; margin: 0; font-weight: 800; }'
-      /* Mobile : 1 colonne, photos plus courtes, padding réduit */
-      + '@media (max-width: 700px) { .slcm-banner-wrapper { padding: 24px 12px; } .slcm-banner { padding: 16px; } .slcm-banner-tiles { grid-template-columns: 1fr; gap: 10px; } .slcm-banner-tile-photo { height: 140px; } .slcm-banner-title { font-size: 15px; } .slcm-banner-cta { padding: 6px 10px; font-size: 11px; } }';
+    style.textContent = `
+/* ── Wrapper commun ── */
+.slcm-banner-wrapper { margin: 0; padding: 0; }
+
+/* ════════════════════════════════════
+   STYLE SLIDE
+════════════════════════════════════ */
+.slcm-slide-outer {
+  padding: 20px 1rem;
+  background: #f8f8f8;
+}
+.slcm-slide-banner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(120deg, #111 0%, #1e1e1e 60%, #2a1a0a 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+.slcm-slide-track {
+  position: relative;
+  height: 104px;
+}
+.slcm-slide-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  pointer-events: none;
+}
+.slcm-slide-item.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.slcm-slide-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
+}
+.slcm-slide-texts { flex: 1; min-width: 0; }
+.slcm-slide-kicker {
+  font-size: 10px;
+  color: #ea580c;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin: 0 0 5px;
+}
+.slcm-slide-title {
+  font-size: 17px;
+  color: #fff;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slcm-slide-cta {
+  font-size: 12px;
+  color: #ea580c;
+  text-decoration: none;
+  font-weight: 800;
+  padding: 9px 18px;
+  border: 1.5px solid #ea580c;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.slcm-slide-cta:hover { background: #ea580c; color: #fff; }
+.slcm-slide-dots {
+  position: absolute;
+  bottom: 10px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.slcm-slide-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  cursor: pointer;
+  transition: background .25s, transform .25s;
+}
+.slcm-slide-dot.active {
+  background: #ea580c;
+  transform: scale(1.35);
+}
+.slcm-slide-banner::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: #ea580c;
+  border-radius: 0 3px 3px 0;
+}
+@media (max-width: 680px) {
+  .slcm-slide-track { height: auto; min-height: 90px; }
+  .slcm-slide-item { padding: 14px 18px; align-items: flex-start; }
+  .slcm-slide-content { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .slcm-slide-title { font-size: 14px; white-space: normal; }
+  .slcm-slide-cta { font-size: 11px; padding: 7px 14px; }
+  .slcm-slide-dots { bottom: 8px; right: 12px; }
+}
+
+/* ════════════════════════════════════
+   STYLE TICKER
+════════════════════════════════════ */
+.slcm-ticker-outer {
+  background: #111;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.slcm-ticker-inner {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: slcm-ticker-scroll 28s linear infinite;
+  will-change: transform;
+}
+.slcm-ticker-outer:hover .slcm-ticker-inner {
+  animation-play-state: paused;
+}
+@keyframes slcm-ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.slcm-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 48px;
+  height: 48px;
+}
+.slcm-ticker-item + .slcm-ticker-item {
+  border-left: 1px solid rgba(255,255,255,.12);
+}
+.slcm-ticker-kicker {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ea580c;
+  letter-spacing: 1.2px;
+}
+.slcm-ticker-sep { color: rgba(255,255,255,.25); font-size: 14px; }
+.slcm-ticker-title {
+  font-size: 13px;
+  color: rgba(255,255,255,.85);
+  font-weight: 500;
+}
+.slcm-ticker-cta {
+  font-size: 11px;
+  color: #ea580c;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 4px 12px;
+  border: 1px solid #ea580c;
+  border-radius: 999px;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.slcm-ticker-cta:hover { background: #ea580c; color: #fff; }
+`;
     document.head.appendChild(style);
   }
 
-  /* ─── INSERTION D'UN BANDEAU À UN EMPLACEMENT ─── */
-  async function insertBanner(themeKey, anchorSection, position) {
-    if (!themeKey || !THEMES[themeKey]) {
-      console.warn('[banners] Clé inconnue dans ACTIVE_BANNERS:', themeKey,
-                   '→ vérifie l\'orthographe (sensible majuscules)');
-      return;
-    }
-    /* Appliquer les surcharges éditoriales si présentes pour ce thème */
-    const baseTheme = THEMES[themeKey];
-    const override = EDITO_OVERRIDES[themeKey] || {};
-    const theme = {
-      kicker:  override.kicker  || baseTheme.kicker,
-      title:   override.title   || baseTheme.title,
-      cta:     override.cta     || baseTheme.cta,
-      ctaHref: override.ctaHref || baseTheme.ctaHref,
-      filter:  baseTheme.filter,        /* PROTÉGÉ : jamais surchargé */
-      postFilter: baseTheme.postFilter  /* PROTÉGÉ : jamais surchargé */
-    };
-    const items = await fetchThemeListings(themeKey);
-    if (!items.length) {
-      console.log('[banners] Pas d\'annonces pour le thème:', themeKey, '→ bandeau caché');
-      return;
-    }
+  /* ─── RENDER SLIDE ─── */
+  function renderSlide(themes) {
+    const slides = themes.map((t, i) => `
+      <div class="slcm-slide-item${i === 0 ? ' active' : ''}" data-theme-key="${escapeHtml(t.key)}">
+        <div class="slcm-slide-content">
+          <div class="slcm-slide-texts">
+            <p class="slcm-slide-kicker">${escapeHtml(t.kicker)}</p>
+            <p class="slcm-slide-title">${escapeHtml(t.title)}</p>
+          </div>
+          <a class="slcm-slide-cta" href="${escapeHtml(t.ctaHref)}">${escapeHtml(t.cta)} →</a>
+        </div>
+      </div>`).join('');
+
+    const dots = `<div class="slcm-slide-dots">${themes.map((_, i) =>
+      `<span class="slcm-slide-dot${i === 0 ? ' active' : ''}"></span>`).join('')}</div>`;
+
+    return `<div class="slcm-slide-outer"><div class="slcm-slide-banner">
+      <div class="slcm-slide-track">${slides}</div>${dots}
+    </div></div>`;
+  }
+
+  /* ─── RENDER TICKER ─── */
+  function renderTicker(themes) {
+    const itemsHtml = themes.map(t => `
+      <span class="slcm-ticker-item" data-theme-key="${escapeHtml(t.key)}">
+        <span class="slcm-ticker-kicker">${escapeHtml(t.kicker)}</span>
+        <span class="slcm-ticker-sep">·</span>
+        <span class="slcm-ticker-title">${escapeHtml(t.title)}</span>
+        <a class="slcm-ticker-cta" href="${escapeHtml(t.ctaHref)}">${escapeHtml(t.cta)} →</a>
+      </span>`).join('');
+    return `<div class="slcm-ticker-outer"><div class="slcm-ticker-inner">${itemsHtml}${itemsHtml}${itemsHtml}</div></div>`;
+  }
+
+  /* ─── MISE À JOUR LANGUE (sans re-créer le DOM) ─── */
+  function applyLang(lang) {
+    /* Slides */
+    document.querySelectorAll('.slcm-slide-item[data-theme-key]').forEach(item => {
+      const t = getTheme(item.dataset.themeKey, lang);
+      if (!t) return;
+      const kicker = item.querySelector('.slcm-slide-kicker');
+      const title  = item.querySelector('.slcm-slide-title');
+      const cta    = item.querySelector('.slcm-slide-cta');
+      if (kicker) kicker.textContent = t.kicker;
+      if (title)  title.textContent  = t.title;
+      if (cta)  { cta.textContent = t.cta + ' →'; cta.href = t.ctaHref; }
+    });
+    /* Ticker — une seule mise à jour suffit (les 3 copies se synchronisent) */
+    document.querySelectorAll('.slcm-ticker-item[data-theme-key]').forEach(item => {
+      const t = getTheme(item.dataset.themeKey, lang);
+      if (!t) return;
+      const kicker = item.querySelector('.slcm-ticker-kicker');
+      const title  = item.querySelector('.slcm-ticker-title');
+      const cta    = item.querySelector('.slcm-ticker-cta');
+      if (kicker) kicker.textContent = t.kicker;
+      if (title)  title.textContent  = t.title;
+      if (cta)  { cta.textContent = t.cta + ' →'; cta.href = t.ctaHref; }
+    });
+  }
+
+  /* ─── AUTO-ROTATION (slide) ─── */
+  function startAutoRotate(wrapper) {
+    const items = wrapper.querySelectorAll('.slcm-slide-item');
+    const dots  = wrapper.querySelectorAll('.slcm-slide-dot');
+    if (items.length <= 1) return;
+    let idx = 0;
+    setInterval(() => {
+      items[idx].classList.remove('active');
+      dots[idx]?.classList.remove('active');
+      idx = (idx + 1) % items.length;
+      items[idx].classList.add('active');
+      dots[idx]?.classList.add('active');
+    }, 4500);
+  }
+
+  /* ─── INSERTION ─── */
+  function insertBanner(keys, anchorSection, position) {
+    const themes = keys.map(getTheme).filter(Boolean);
+    if (!themes.length) return;
+
     const wrapper = document.createElement('div');
     wrapper.className = 'slcm-banner-wrapper';
-    wrapper.innerHTML = renderBanner(theme, items, themeKey);
+
+    if (BANNER_STYLE === 'ticker') {
+      wrapper.innerHTML = renderTicker(themes);
+    } else {
+      wrapper.innerHTML = renderSlide(themes);
+      setTimeout(() => startAutoRotate(wrapper), 50);
+    }
+
     if (position === 'after' && anchorSection) {
       anchorSection.parentNode.insertBefore(wrapper, anchorSection.nextSibling);
     } else if (position === 'before' && anchorSection) {
@@ -341,23 +448,32 @@
   }
 
   /* ─── INITIALISATION ─── */
-  async function init() {
+  function init() {
     injectStyles();
 
-    const unfurnished = document.getElementById('unfurnished');
-    if (unfurnished) await insertBanner(ACTIVE_BANNERS.rent_1, unfurnished, 'after');
+    /* ── Zone LOCATION ── */
+    const unfurnished  = document.getElementById('unfurnished');
+    const furnished    = document.getElementById('furnishedSection');
 
-    const furnished = document.getElementById('furnishedSection');
-    if (furnished) await insertBanner(ACTIVE_BANNERS.rent_2, furnished, 'after');
+    /* Bandeau 1 : entre Unfurnished et Furnished */
+    if (unfurnished) insertBanner([ACTIVE_BANNERS.rent_1a, ACTIVE_BANNERS.rent_1b], unfurnished, 'after');
+    /* Bandeau 2 : entre Furnished et Locaux Commerciaux */
+    if (furnished)   insertBanner([ACTIVE_BANNERS.rent_2a, ACTIVE_BANNERS.rent_2b], furnished,   'after');
 
+    /* ── Zone VENTE ── */
     const saleSections = document.getElementById('saleSections');
     if (saleSections) {
-      const villasSection = saleSections.querySelector('section[aria-label="Top Villas"]');
-      if (villasSection) await insertBanner(ACTIVE_BANNERS.sale_1, villasSection, 'after');
+      const villasSection   = saleSections.querySelector('section[aria-label="Top Villas"]');
       const terrainsSection = saleSections.querySelector('section[aria-label="Top Terrains"]');
-      if (terrainsSection) await insertBanner(ACTIVE_BANNERS.sale_2, terrainsSection, 'after');
+      /* Bandeau 1 : entre Villas et Terrains */
+      if (villasSection)   insertBanner([ACTIVE_BANNERS.sale_1a, ACTIVE_BANNERS.sale_1b], villasSection,   'after');
+      /* Bandeau 2 : entre Terrains et Fonds de Commerce */
+      if (terrainsSection) insertBanner([ACTIVE_BANNERS.sale_2a, ACTIVE_BANNERS.sale_2b], terrainsSection, 'after');
     }
   }
+
+  /* Écouter les changements de langue du site */
+  document.addEventListener('slcm:langchange', (e) => applyLang(e.detail.lang));
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

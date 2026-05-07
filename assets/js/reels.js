@@ -451,8 +451,8 @@ const SLCM_reels = (() => {
 
     return `
       <div class="reel-card" data-index="${index}" data-id="${escapeHtml(r.id)}">
-        <video class="reel-video" src="${escapeHtml(r.video_url)}"
-               playsinline muted loop preload="metadata"
+        <video class="reel-video" data-src="${escapeHtml(r.video_url)}"
+               playsinline muted loop preload="none"
                poster="${escapeHtml((r.images && r.images[0]) || '')}"></video>
         ${premiumBadge}
         <button class="reel-sound" aria-label="Activer le son" type="button">
@@ -531,6 +531,7 @@ const SLCM_reels = (() => {
       if (i === idx) {
         card.classList.add('is-active');
         if (video) {
+          if (!video.src && video.dataset.src) video.src = video.dataset.src;
           video.currentTime = 0;
           video.play().catch(() => {});
         }
@@ -539,6 +540,12 @@ const SLCM_reels = (() => {
         if (video) { video.pause(); video.currentTime = 0; }
       }
     });
+    /* Pre-warm la vidéo suivante : charge uniquement les métadonnées */
+    const nextCard = cards[idx + 1];
+    if (nextCard) {
+      const nv = nextCard.querySelector('.reel-video');
+      if (nv && !nv.src && nv.dataset.src) { nv.src = nv.dataset.src; nv.preload = 'metadata'; }
+    }
 
     const track = document.getElementById('reelsTrack');
     const viewport = document.querySelector('#reelsSection .reels-viewport');
@@ -637,8 +644,8 @@ const SLCM_reels = (() => {
 
     return `
       <div class="viewer-slide" data-index="${index}">
-        <video class="viewer-video" src="${escapeHtml(r.video_url)}"
-               playsinline muted preload="metadata" poster="${poster}"></video>
+        <video class="viewer-video" data-src="${escapeHtml(r.video_url)}"
+               playsinline muted preload="none" poster="${poster}"></video>
         <div class="viewer-counter">${index + 1} / ${reels.length}</div>
         <button class="viewer-close" aria-label="Fermer" type="button">×</button>
         ${premiumBadge}
@@ -733,13 +740,18 @@ const SLCM_reels = (() => {
           if (!video) return;
           const idx = parseInt(entry.target.dataset.index, 10);
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-            /* Reset du compteur quand on arrive sur un slide :
-               permet de re-bénéficier du loop si l'utilisateur swipe back ou
-               re-arrive après l'auto-passage */
+            /* Reset du compteur quand on arrive sur un slide */
             playCountByIndex.set(idx, 0);
+            if (!video.src && video.dataset.src) video.src = video.dataset.src;
             video.currentTime = 0;
             video.play().catch(() => {});
             viewerIndex = idx;
+            /* Pre-warm le slide suivant */
+            const nextSlide = slides[idx + 1];
+            if (nextSlide) {
+              const nv = nextSlide.querySelector('.viewer-video');
+              if (nv && !nv.src && nv.dataset.src) { nv.src = nv.dataset.src; nv.preload = 'metadata'; }
+            }
           } else {
             video.pause();
           }
@@ -770,7 +782,10 @@ const SLCM_reels = (() => {
       const target = viewer.querySelector(`.viewer-slide[data-index="${viewerIndex}"]`);
       if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
       const video = target?.querySelector('.viewer-video');
-      if (video) video.play().catch(() => {});
+      if (video) {
+        if (!video.src && video.dataset.src) video.src = video.dataset.src;
+        video.play().catch(() => {});
+      }
     });
   }
 

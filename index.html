@@ -117,6 +117,27 @@
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
       gap: 1.2rem !important;
     }
+    /* Villas : 3 cards, photo plus imposante */
+    #villasGrid {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 1.4rem !important;
+    }
+    #villasGrid .listing-thumb { height: 240px !important; }
+    /* Terrains & Fonds de commerce : 3 cards, taille actuelle */
+    #terrainsGrid, #commercialSaleGrid {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 1.2rem !important;
+    }
+    @media (max-width: 900px) {
+      #villasGrid { grid-template-columns: repeat(2, 1fr) !important; }
+      #terrainsGrid, #commercialSaleGrid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 560px) {
+      #villasGrid { grid-template-columns: 1fr !important; }
+      #terrainsGrid, #commercialSaleGrid { grid-template-columns: 1fr !important; }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
   <script src="assets/js/notify.js" defer></script>
@@ -485,7 +506,7 @@ if (!unfurnished.length || !furnished.length) {
         .eq('rent_sale', 'sale')
         .in('type', ['villa', 'house', 'duplex'])
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(3);
 
       /* Terrains & Plots */
       const { data: terrainsData } = await client
@@ -496,7 +517,7 @@ if (!unfurnished.length || !furnished.length) {
         .eq('rent_sale', 'sale')
         .in('type', ['plots-of-land'])
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(3);
 
       /* Fonds de Commerce (vente) */
       const { data: commercialSaleData } = await client
@@ -507,7 +528,7 @@ if (!unfurnished.length || !furnished.length) {
         .eq('rent_sale', 'sale')
         .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(3);
 
       /* Fallback vente si pas de premium */
       let villas = villasData || [];
@@ -521,11 +542,11 @@ if (!unfurnished.length || !furnished.length) {
           .eq('status', 'active')
           .eq('rent_sale', 'sale')
           .order('created_at', { ascending: false })
-          .limit(12);
+          .limit(6);
         const all = allSale || [];
-        villas   = all.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 6);
-        terrains = all.filter(l => l.type === 'plots-of-land').slice(0, 6);
-        if (!terrains.length) terrains = all.slice(6, 12);
+        villas   = all.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 3);
+        terrains = all.filter(l => l.type === 'plots-of-land').slice(0, 3);
+        if (!terrains.length) terrains = all.slice(3, 6);
       }
 
       return { villas, terrains, commercialSale };
