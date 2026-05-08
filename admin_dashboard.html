@@ -605,10 +605,6 @@
       await render();
     }
 
-    /* Fermer modal en cliquant dehors */
-    document.getElementById('boostOverlay').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('boostOverlay')) closeBoostModal();
-    });
   </script>
   <!-- Modal Boost Vitrine -->
   <div id="boostOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
@@ -643,6 +639,12 @@
       </div>
     </div>
   </div>
+  <script>
+    /* Fermer boostOverlay en cliquant dehors — placé après l'élément */
+    document.getElementById('boostOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('boostOverlay')) closeBoostModal();
+    });
+  </script>
 
   <script src="assets/js/blog.js"></script>
   <script src="assets/js/nav.js"></script>

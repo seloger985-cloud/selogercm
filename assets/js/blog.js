@@ -25,9 +25,9 @@ const SLCM_blog = (() => {
   }
 
   function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    });
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function readingTime(content) {
@@ -66,13 +66,12 @@ const SLCM_blog = (() => {
     const client = await sb();
     const now = new Date().toISOString();
     const payload = {
-      title:    article.title,
-      category: article.category,
-      excerpt:  article.excerpt,
-      content:  article.content,
-      author:   article.author || 'SE LOGER CM',
-      cover:    article.cover  || null,
-      date:     article.date   || now.split('T')[0],
+      title:      article.title,
+      category:   article.category,
+      excerpt:    article.excerpt,
+      content:    article.content,
+      author:     article.author || 'SE LOGER CM',
+      cover:      article.cover  || null,
       updated_at: now
     };
 
