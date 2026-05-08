@@ -66,22 +66,22 @@
   const THEMES = {
     /* ── Location ── */
     loc_2p_akwa_bali_bonapriso: {
-      kicker:   'Disponible maintenant',
-      title:    'Studios & 2 pièces — Akwa · Bali · Bonapriso',
-      cta:      'Voir les studios disponibles',
-      kickerEN: 'Available now',
-      titleEN:  'Studios & 2-room units — Akwa · Bali · Bonapriso',
-      ctaEN:    'See available studios',
-      ctaHref:  '/listings_v2.html?mode=rent&type=studio'
+      kicker:   'Studios disponibles · Bonapriso',
+      title:    'Studios à louer à Bonapriso — disponibles maintenant',
+      cta:      'Voir les studios à Bonapriso',
+      kickerEN: 'Studios available · Bonapriso',
+      titleEN:  'Studios for rent in Bonapriso — available now',
+      ctaEN:    'See studios in Bonapriso',
+      ctaHref:  '/listings_v2.html?mode=rent&type=studio&district=Bonapriso'
     },
     loc_3p_bali_bonanjo_bonapriso: {
-      kicker:   'Bon plan espace',
-      title:    'Appartements 2 chambres — Bali · Bonanjo · Bonapriso',
-      cta:      'Voir les appartements 2 chambres',
-      kickerEN: 'More space',
-      titleEN:  '2-bedroom apartments — Bali · Bonanjo · Bonapriso',
-      ctaEN:    'See 2-bedroom apartments',
-      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=2'
+      kicker:   'Appartements 2 chambres · Bali',
+      title:    'Appartements 2 chambres à Bali — quartier résidentiel',
+      cta:      'Voir les apparts 2ch à Bali',
+      kickerEN: '2-bedroom apartments · Bali',
+      titleEN:  '2-bedroom apartments in Bali — residential neighbourhood',
+      ctaEN:    'See 2-bed apartments in Bali',
+      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=2&district=Bali'
     },
     meubles_long_sejour: {
       kicker:   'Long séjour',
@@ -112,13 +112,13 @@
       ctaHref:  '/listings_v2.html?mode=sale&type=plots-of-land&price=10m%2B&sort=price_asc'
     },
     lots_3b: {
-      kicker:   'Les 3B',
-      title:    'Lots en vente à Bali · Bonapriso · Bonanjo',
-      cta:      'Explorer les lots des 3B',
-      kickerEN: 'The 3Bs',
-      titleEN:  'Lots for sale in Bali · Bonapriso · Bonanjo',
-      ctaEN:    'Explore the 3Bs',
-      ctaHref:  '/listings_v2.html?mode=sale&type=plots-of-land'
+      kicker:   'Ventes · Bonapriso',
+      title:    'Villas, terrains, duplex à vendre à Bonapriso',
+      cta:      'Voir toutes les ventes à Bonapriso',
+      kickerEN: 'For sale · Bonapriso',
+      titleEN:  'Villas, plots, duplexes for sale in Bonapriso',
+      ctaEN:    'See all sales in Bonapriso',
+      ctaHref:  '/listings_v2.html?mode=sale&district=Bonapriso'
     },
     lancez_vous_commercial: {
       kicker:   'Espace pro',

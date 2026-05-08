@@ -102,6 +102,42 @@ const SLCM_CONFIG = {
     'Bafoussam':    [5.4765, 10.4191]
   },
 
+  /* Quartiers similaires — utilisés pour les suggestions "Voir aussi dans" */
+  similarDistricts: {
+    /* ── Zone premium centre ── */
+    'Bonapriso':              ['Bali', 'Bonanjo', 'Akwa'],
+    'Bali':                   ['Bonapriso', 'Bonanjo', 'Akwa'],
+    'Bonanjo':                ['Bonapriso', 'Bali', 'Akwa'],
+    'Akwa':                   ['Bali', 'Bonapriso', 'Bonanjo'],
+    'Akwa-Nord':              ['Akwa', 'Bali', 'Deïdo'],
+    'Deïdo':                  ['Akwa', 'Bepanda', 'Bessengue'],
+    'Bessengue':              ['Deïdo', 'Akwa', 'Bepanda'],
+    'Bepanda':                ['Deïdo', 'Ndokoti', 'Bessengue'],
+    /* ── Zone résidentielle nord ── */
+    'Bonamoussadi':           ['Makepe', 'Logpom', 'Ndokoti'],
+    'Makepe':                 ['Bonamoussadi', 'Kotto', 'Logpom'],
+    'Logpom':                 ['Bonamoussadi', 'Makepe', 'Ndokoti'],
+    'Ndokoti':                ['Bonamoussadi', 'Logpom', 'Bepanda'],
+    'Kotto':                  ['Makepe', 'Bonamoussadi', 'Ndogpassi'],
+    'Cité des Palmiers':      ['Bonamoussadi', 'Makepe', 'Logpom'],
+    'Logbessou':              ['Bonamoussadi', 'Makepe', 'Ndogbong'],
+    /* ── Zone est / PK ── */
+    'Ndogbong':               ['Logbessou', 'Ndogpassi', 'Makepe'],
+    'Ndogpassi':              ['Ndogbong', 'Kotto', 'Yassa'],
+    'Yassa':                  ['Ndogpassi', 'Ndogbong', 'PK8'],
+    'PK8':                    ['PK9', 'Yassa', 'Ndogpassi'],
+    'PK9':                    ['PK8', 'PK10', 'Yassa'],
+    'PK10':                   ['PK9', 'PK11'],
+    'PK11':                   ['PK10', 'PK12'],
+    'PK12':                   ['PK11', 'PK13'],
+    'PK13':                   ['PK12', 'PK14'],
+    'PK14':                   ['PK13', 'PK12'],
+    /* ── Bonabéri / Grand Mall ── */
+    'Bonabéri':               ['Bonadiwoto (Grand Mall)', 'Akwa'],
+    'Bonadiwoto (Grand Mall)':['Bonabéri', 'Deïdo', 'Akwa'],
+    'Béedi':                  ['Bonanjo', 'Akwa', 'Bessengue'],
+  },
+
   /**
    * Retourne les coordonnées GPS pour un quartier/ville donnés.
    * Ajoute un léger décalage aléatoire pour masquer l'adresse exacte.
