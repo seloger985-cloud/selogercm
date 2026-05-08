@@ -481,10 +481,13 @@
 
     /* Chargement initial */
     await loadAndRender({
-      mode: urlMode,
-      city: params.get('city') || '', district: params.get('district') || '',
-      type: params.get('type') || '', bedrooms: params.get('bedrooms') || '',
-      price: params.get('price') || '',
+      mode:     urlMode,
+      city:     params.get('city')     || '',
+      district: params.get('district') || '',
+      type:     params.get('type')     || '',
+      bedrooms: params.get('bedrooms') || '',
+      price:    params.get('price')    || '',
+      sort:     params.get('sort')     || '',
     });
     /* Reset page à 1 lors d'une nouvelle recherche */
     form.addEventListener('submit', () => {

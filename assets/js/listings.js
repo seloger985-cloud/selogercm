@@ -18,8 +18,14 @@ const SLCM_listings = (() => {
     let query = client
       .from('listings')
       .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+      .eq('status', 'active');
+
+    /* Tri : price_asc pour les terrains triés du moins cher au plus cher */
+    if (filters.sort === 'price_asc') {
+      query = query.order('price', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
 
     if (filters.mode)     query = query.eq('rent_sale', filters.mode);
     if (filters.city)     query = query.eq('city', filters.city);
@@ -35,9 +41,10 @@ const SLCM_listings = (() => {
         '100k-300k': [100000,  300000],
         '300k-600k': [300000,  600000],
         '600k+':     [600000,  999999999],
-        '0-15m':     [0,       15000000],
-        '15m-50m':   [15000000, 50000000],
-        '50m-100m':  [50000000, 100000000],
+        '0-15m':     [0,         15000000],
+        '10m+':      [10000000,  999999999],
+        '15m-50m':   [15000000,  50000000],
+        '50m-100m':  [50000000,  100000000],
         '100m+':     [100000000, 999999999],
       };
       const [min, max] = ranges[filters.price] || [0, 999999999];

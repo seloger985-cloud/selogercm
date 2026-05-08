@@ -67,21 +67,21 @@
     /* ── Location ── */
     loc_2p_akwa_bali_bonapriso: {
       kicker:   'Disponible maintenant',
-      title:    'Appartements 2 pièces — Akwa · Bali · Bonapriso',
-      cta:      'Voir les 2 pièces',
+      title:    'Studios & 2 pièces — Akwa · Bali · Bonapriso',
+      cta:      'Voir les studios disponibles',
       kickerEN: 'Available now',
-      titleEN:  '2-bedroom apartments — Akwa · Bali · Bonapriso',
-      ctaEN:    'See 2-bedroom units',
-      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=2'
+      titleEN:  'Studios & 2-room units — Akwa · Bali · Bonapriso',
+      ctaEN:    'See available studios',
+      ctaHref:  '/listings_v2.html?mode=rent&type=studio'
     },
     loc_3p_bali_bonanjo_bonapriso: {
       kicker:   'Bon plan espace',
-      title:    'Appartements 3 pièces — Bali · Bonanjo · Bonapriso',
-      cta:      'Voir les 3 pièces',
+      title:    'Appartements 2 chambres — Bali · Bonanjo · Bonapriso',
+      cta:      'Voir les appartements 2 chambres',
       kickerEN: 'More space',
-      titleEN:  '3-bedroom apartments — Bali · Bonanjo · Bonapriso',
-      ctaEN:    'See 3-bedroom units',
-      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=3'
+      titleEN:  '2-bedroom apartments — Bali · Bonanjo · Bonapriso',
+      ctaEN:    'See 2-bedroom apartments',
+      ctaHref:  '/listings_v2.html?mode=rent&type=apartment&bedrooms=2'
     },
     meubles_long_sejour: {
       kicker:   'Long séjour',
@@ -103,36 +103,36 @@
     },
     /* ── Vente ── */
     petits_lots_budget: {
-      kicker:   'Petits budgets',
-      title:    'De petits lots pour bien commencer — à partir de 5M FCFA',
-      cta:      'Voir les petits lots',
-      kickerEN: 'Small budgets',
-      titleEN:  'Small lots to get started — from 5M FCFA',
-      ctaEN:    'See small lots',
-      ctaHref:  '/listings_v2.html?mode=sale&price=0-50000000'
+      kicker:   'Investissement terrain',
+      title:    'Terrains disponibles — à partir de 10M FCFA, du moins cher au plus cher',
+      cta:      'Voir les terrains',
+      kickerEN: 'Land investment',
+      titleEN:  'Plots available — from 10M FCFA, cheapest first',
+      ctaEN:    'See plots',
+      ctaHref:  '/listings_v2.html?mode=sale&type=plots-of-land&price=10m%2B&sort=price_asc'
     },
     lots_3b: {
       kicker:   'Les 3B',
       title:    'Lots en vente à Bali · Bonapriso · Bonanjo',
-      cta:      'Explorer les 3B',
+      cta:      'Explorer les lots des 3B',
       kickerEN: 'The 3Bs',
       titleEN:  'Lots for sale in Bali · Bonapriso · Bonanjo',
       ctaEN:    'Explore the 3Bs',
-      ctaHref:  '/listings_v2.html?mode=sale'
+      ctaHref:  '/listings_v2.html?mode=sale&type=plots-of-land'
     },
     lancez_vous_commercial: {
-      kicker:   'Lancez-vous',
-      title:    'Démarrez votre activité — biens commerciaux accessibles',
-      cta:      'Voir les biens pro',
-      kickerEN: 'Start your business',
-      titleEN:  'Launch your activity — affordable commercial properties',
-      ctaEN:    'See commercial listings',
-      ctaHref:  '/listings_v2.html?mode=sale&type=commercial'
+      kicker:   'Espace pro',
+      title:    'Boutiques, bureaux, entrepôts — trouvez votre espace pro',
+      cta:      'Voir les espaces pros',
+      kickerEN: 'Pro spaces',
+      titleEN:  'Shops, offices, warehouses — find your workspace',
+      ctaEN:    'See commercial spaces',
+      ctaHref:  '/listings_v2.html?mode=sale&type=shop'
     },
     investir_malin: {
       kicker:   'Investir malin',
       title:    'Fonds de commerce & locaux pros à petits prix',
-      cta:      'Explorer',
+      cta:      'Explorer les fonds de commerce',
       kickerEN: 'Smart investment',
       titleEN:  'Business goodwill & commercial spaces at great prices',
       ctaEN:    'Explore',

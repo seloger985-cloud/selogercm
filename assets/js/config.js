@@ -29,11 +29,13 @@ const SLCM_CONFIG = {
     { value: 'studio',        labelFR: 'Studio',           labelEN: 'Studio' },
     { value: 'villa',         labelFR: 'Villa',            labelEN: 'Villa' },
     { value: 'duplex',        labelFR: 'Duplex',           labelEN: 'Duplex' },
-    { value: 'warehouse',     labelFR: 'Entrepôt',         labelEN: 'Warehouse' },
-    { value: 'commercial',    labelFR: 'Local commercial', labelEN: 'Commercial space' },
-    { value: 'plots-of-land', labelFR: 'Terrain',          labelEN: 'Plot of land' },
-    { value: 'immeuble',      labelFR: 'Immeuble',         labelEN: 'Building' },
-    { value: 'residence',     labelFR: 'Résidence',        labelEN: 'Residence' }
+    { value: 'warehouse',     labelFR: 'Entrepôt',                  labelEN: 'Warehouse' },
+    { value: 'commercial',    labelFR: 'Local commercial',           labelEN: 'Commercial space' },
+    { value: 'shop',          labelFR: 'Boutique',                   labelEN: 'Shop' },
+    { value: 'office',        labelFR: 'Bureau / Espace de travail', labelEN: 'Office / Workspace' },
+    { value: 'plots-of-land', labelFR: 'Terrain',                    labelEN: 'Plot of land' },
+    { value: 'immeuble',      labelFR: 'Immeuble',                   labelEN: 'Building' },
+    { value: 'residence',     labelFR: 'Résidence',                  labelEN: 'Residence' }
   ],
 
   priceRanges: {
