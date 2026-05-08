@@ -22,10 +22,12 @@
   <meta name="twitter:description" content="Agence immobilière à Douala et au Cameroun. Appartements, villas, maisons à louer ou à acheter.">
   <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
  <!-- Preload hero (gain ~1s sur LCP) -->
-  <link rel="preload" as="image" href="assets/img/fond.webp" type="image/webp" media="(min-width: 1px)">
-  <link rel="preload" as="image" href="assets/img/fond.jpg" type="image/jpeg">
+  <link rel="preload" as="image" href="assets/img/fond.webp" type="image/webp" media="(min-width: 1px)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/img/fond.jpg" type="image/jpeg" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://hozlyddiqodvjguqywty.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
   <!-- Styles témoignages (partagés avec about.html) -->
@@ -448,9 +450,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js" defer></script>
   <script src="assets/js/i18n.js" defer></script>
-  <script src="assets/js/listings.js"></script>
+  <script src="assets/js/listings.js" defer></script>
   <script>
   /* ── Accueil : charger les annonces premium depuis Supabase ── */
   document.addEventListener('DOMContentLoaded', async () => {
@@ -611,8 +613,8 @@ if (!unfurnished.length || !furnished.length) {
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
-  <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/auth.js" defer></script>
 
 
   <!-- Sync search bar with publish.html (cities, districts, types, price ranges) -->
@@ -818,7 +820,7 @@ form.addEventListener('submit', async (e) => {
   <script src="assets/js/footer.js" defer></script>
   <script src="assets/js/nav.js" defer></script>
   <script src="assets/js/homepage-boost.js" defer></script>
-  <script src="assets/js/homepage-banners.js" defer></script>
+  <script src="assets/js/Homepage-banners.js?v=2" defer></script>
   <script src="assets/js/reels.js" defer></script>
   <script src="assets/js/favorites.js" defer></script>
   <script src="assets/js/chatbot.js" defer></script>

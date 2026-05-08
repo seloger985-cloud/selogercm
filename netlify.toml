@@ -4,13 +4,38 @@
 [functions]
   directory = "netlify/functions"
 
+# ── Routing annonces ──────────────────────────────────────────
+[[redirects]]
+  from = "/annonce"
+  to = "/listing_detail.html"
+  status = 200
+
+# ── Partage réseaux sociaux ──────────────────────────────────
 [[redirects]]
   from = "/share/*"
   to = "/.netlify/functions/og"
   status = 200
   force = true
 
+# ── Cache statique : assets versionnés (JS/CSS/images) ───────
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# ── Cache HTML court (mise à jour fréquente) ─────────────────
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=86400"
+
+# ── Pas de cache sur les routes dynamiques ────────────────────
 [[headers]]
   for = "/share/*"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
