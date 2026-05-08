@@ -73,7 +73,51 @@ const SLCM_WA = (() => {
     });
   }
 
-  document.addEventListener('DOMContentLoaded', initListingButtons);
+  /* ── 4. Bouton flottant permanent ── */
+  function injectFAB() {
+    if (document.getElementById('slcm-wa-fab')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #slcm-wa-fab {
+        position: fixed; bottom: 24px; right: 24px; z-index: 999;
+        background: #25d366; color: #fff; border-radius: 999px;
+        width: 56px; height: 56px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; text-decoration: none;
+        box-shadow: 0 4px 18px rgba(37,211,102,.45);
+        transition: transform .2s, box-shadow .2s;
+        overflow: hidden;
+      }
+      #slcm-wa-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,.55); }
+      #slcm-wa-fab .wa-label { display: none; font-size: .82rem; font-weight: 800; white-space: nowrap; }
+      @media (max-width: 600px) {
+        #slcm-wa-fab {
+          bottom: 16px; right: 16px;
+          width: auto; padding: 0 1.1rem; gap: .45rem; height: 50px;
+        }
+        #slcm-wa-fab .wa-label { display: block; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const fab = document.createElement('a');
+    fab.id   = 'slcm-wa-fab';
+    fab.href = '#';
+    fab.setAttribute('aria-label', 'Contacter sur WhatsApp');
+    fab.setAttribute('rel', 'noopener noreferrer');
+    fab.innerHTML = `<i class="fab fa-whatsapp"></i><span class="wa-label">WhatsApp</span>`;
+    fab.addEventListener('click', (e) => {
+      e.preventDefault();
+      openChat({ text: PREFILL.general() });
+    });
+    document.body.appendChild(fab);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initListingButtons();
+    injectFAB();
+  });
 
   return { openChat, chatFromListing, notify, PREFILL };
 })();

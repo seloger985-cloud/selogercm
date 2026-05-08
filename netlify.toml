@@ -8,6 +8,9 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+[functions."send-alerts"]
+  schedule = "0 */6 * * *"
+
 
 # ── Routing annonces ──────────────────────────────────────────
 [[redirects]]
@@ -21,6 +24,18 @@
   to = "/.netlify/functions/og"
   status = 200
   force = true
+# ── Sitemap listings (annonces dynamiques) ─────────────────────
+[[redirects]]
+  from = "/sitemap-listings.xml"
+  to = "/.netlify/functions/sitemap-listings"
+  status = 200
+
+# ── Headers pour sitemap dynamique ─────────────────────────────
+[[headers]]
+  for = "/sitemap-listings.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=7200, stale-while-revalidate=86400"
+    Content-Type = "application/xml; charset=utf-8"
 
 # ── Cache statique : assets versionnés (JS/CSS/images) ───────
 [[headers]]

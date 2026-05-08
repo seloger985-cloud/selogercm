@@ -85,6 +85,92 @@
       text-align: center; font-size: .82rem; color: #aaa;
       margin-bottom: .5rem;
     }
+    /* ── Bouton alerte ── */
+    .alert-bar {
+      display: flex; align-items: center; justify-content: flex-end;
+      margin: .75rem 0 0; gap: .6rem;
+    }
+    .btn-alert {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: none; border: 1.5px solid #ff7a00; color: #ff7a00;
+      border-radius: 999px; padding: .42rem 1rem;
+      font-family: inherit; font-size: .82rem; font-weight: 700;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-alert:hover { background: #ff7a00; color: #fff; }
+    .alert-popover {
+      display: none; background: #fff; border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.14); padding: 1.2rem 1.4rem;
+      margin-top: .5rem; max-width: 420px; margin-left: auto;
+    }
+    .alert-popover.open { display: block; }
+    .alert-popover h4 { font-size: .92rem; font-weight: 800; margin-bottom: .6rem; color: #111; }
+    .alert-popover p  { font-size: .8rem; color: #666; margin-bottom: .8rem; }
+    .alert-email-row  { display: flex; gap: 8px; }
+    .alert-email-row input {
+      flex: 1; border: 1.5px solid #e5e5e5; border-radius: 10px;
+      padding: .55rem .85rem; font-family: inherit; font-size: .85rem;
+    }
+    .alert-email-row input:focus { outline: none; border-color: #ff7a00; }
+    .btn-alert-submit {
+      background: #ff7a00; color: #fff; border: none; border-radius: 10px;
+      padding: .55rem 1rem; font-family: inherit; font-size: .82rem;
+      font-weight: 800; cursor: pointer; white-space: nowrap;
+    }
+    .alert-msg { font-size: .8rem; margin-top: .5rem; font-weight: 600; }
+    .alert-msg.ok  { color: #22c55e; }
+    .alert-msg.err { color: #ef4444; }
+
+    /* ── Multi-select district ── */
+    .ms-field { position: relative; }
+    .ms-trigger {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+      cursor: pointer; min-height: 42px; padding: .42rem .75rem;
+      background: rgba(255,255,255,.08); border: none;
+      border-radius: 10px; font-family: inherit; font-size: .9rem;
+      color: rgba(255,255,255,.7);
+    }
+    .ms-trigger:focus { outline: 2px solid #ff7a00; }
+    .ms-placeholder { font-size: .88rem; color: rgba(255,255,255,.5); }
+    .ms-chip {
+      background: #ff7a00; color: #fff; border-radius: 999px;
+      padding: .18rem .55rem; font-size: .75rem; font-weight: 700;
+      display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+    }
+    .ms-chip-rm {
+      background: none; border: none; color: #fff; cursor: pointer;
+      font-size: .72rem; padding: 0; line-height: 1; opacity: .8;
+    }
+    .ms-chip-rm:hover { opacity: 1; }
+    .ms-arrow { margin-left: auto; font-size: .72rem; opacity: .5; flex-shrink: 0; transition: transform .2s; }
+    .ms-field.open .ms-arrow { transform: rotate(180deg); }
+    .ms-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 220px;
+      background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.18);
+      z-index: 200; overflow: hidden;
+    }
+    .ms-field.open .ms-dropdown { display: block; }
+    .ms-search {
+      width: 100%; border: none; border-bottom: 1px solid #f0f0f0;
+      padding: .6rem .85rem; font-family: inherit; font-size: .85rem;
+      outline: none; color: #333;
+    }
+    .ms-options { max-height: 210px; overflow-y: auto; }
+    .ms-opt {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .52rem .85rem; cursor: pointer; font-size: .85rem; color: #333;
+      transition: background .15s;
+    }
+    .ms-opt:hover { background: #f8f9fa; }
+    .ms-opt input[type=checkbox] { accent-color: #ff7a00; cursor: pointer; flex-shrink: 0; }
+    .ms-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .55rem .85rem; border-top: 1px solid #f0f0f0;
+    }
+    .ms-clear { background: none; border: none; font-family: inherit; font-size: .78rem; color: #999; cursor: pointer; }
+    .ms-clear:hover { color: #333; }
+    .ms-count { font-size: .75rem; color: #ff7a00; font-weight: 700; }
+
     /* ── Chips quartiers similaires ── */
     .similar-wrap {
       display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
@@ -130,8 +216,20 @@
         <div class="field-black">
           <select id="city"><option value="">Ville</option><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select>
         </div>
-        <div class="field-black">
-          <select id="district"><option value="">Quartier</option></select>
+        <div class="field-black ms-field" id="districtField">
+          <div class="ms-trigger" id="districtTrigger" tabindex="0" role="combobox" aria-expanded="false" aria-label="Sélectionner des quartiers">
+            <span class="ms-placeholder" id="districtPlaceholder">Quartier</span>
+            <div class="ms-chips" id="districtChips"></div>
+            <i class="fas fa-chevron-down ms-arrow"></i>
+          </div>
+          <div class="ms-dropdown" id="districtDropdown">
+            <input class="ms-search" type="text" id="districtSearch" placeholder="Rechercher un quartier…" autocomplete="off">
+            <div class="ms-options" id="districtOptions"></div>
+            <div class="ms-footer">
+              <button type="button" class="ms-clear" id="districtClear">Effacer tout</button>
+              <span class="ms-count" id="districtCount"></span>
+            </div>
+          </div>
         </div>
         <div class="field-black">
           <select id="type">
@@ -155,6 +253,21 @@
         <div class="field-black">
           <select id="price"><option value="">Tous les prix</option></select>
         </div>
+        <div class="field-black" id="furnishedField">
+          <select id="furnished">
+            <option value="">Meublé (tous)</option>
+            <option value="true">Meublé</option>
+            <option value="false">Non meublé</option>
+          </select>
+        </div>
+        <div class="field-black">
+          <select id="sort">
+            <option value="">Trier par défaut</option>
+            <option value="price_asc">Prix croissant ↑</option>
+            <option value="price_desc">Prix décroissant ↓</option>
+            <option value="date_desc">Plus récent</option>
+          </select>
+        </div>
         <div class="search-btn-cell">
           <button class="btn-primary" type="submit">Rechercher</button>
           <button type="button" id="shareSearchBtn" onclick="shareSearch()"
@@ -165,7 +278,24 @@
       </div>
     </form>
 
-    <section style="margin-top:3rem">
+    <!-- Barre alerte -->
+    <div class="alert-bar">
+      <button type="button" class="btn-alert" id="btnAlert">
+        <i class="fas fa-bell"></i> M'alerter pour cette recherche
+      </button>
+    </div>
+    <div class="alert-popover" id="alertPopover">
+      <h4>🔔 Alerte nouvelle annonce</h4>
+      <p id="alertDesc" style="font-style:italic;color:#ff7a00"></p>
+      <p>Recevez un email dès qu'une nouvelle annonce correspond à vos critères.</p>
+      <div class="alert-email-row">
+        <input type="email" id="alertEmail" placeholder="votre@email.com" autocomplete="email">
+        <button type="button" class="btn-alert-submit" id="alertSubmit">M'alerter</button>
+      </div>
+      <p class="alert-msg" id="alertMsg"></p>
+    </div>
+
+    <section style="margin-top:1.5rem">
       <p id="paginationInfo" class="pagination-info" style="display:none"></p>
       <div id="resultsGrid" class="grid grid-3"></div>
       <p id="emptyState" style="display:none;text-align:center;margin-top:2rem;color:#666">Aucune annonce trouvée.</p>
@@ -371,13 +501,99 @@
       });
     });
 
-    /* Quartiers selon ville */
-    const citySel = document.getElementById('city');
-    const distSel = document.getElementById('district');
-    function refreshDistricts() {
-      if (typeof SLCM_CONFIG !== 'undefined') SLCM_CONFIG.fillDistricts(distSel, citySel.value);
+    /* ══ Multi-select district ══ */
+    const citySel    = document.getElementById('city');
+    let _districts   = [];   /* sélectionnés */
+
+    function getDistrictList(city) {
+      const cfg = typeof SLCM_CONFIG !== 'undefined' ? SLCM_CONFIG : null;
+      return cfg?.cities[city] || cfg?.cities['Douala'] || [];
     }
-    citySel.addEventListener('change', refreshDistricts);
+
+    function renderOptions(filter) {
+      const city = citySel?.value || 'Douala';
+      const all  = getDistrictList(city);
+      const q    = (filter || '').toLowerCase();
+      const list = q ? all.filter(d => d.toLowerCase().includes(q)) : all;
+      const el   = document.getElementById('districtOptions');
+      if (!el) return;
+      el.innerHTML = list.map(d => `
+        <label class="ms-opt">
+          <input type="checkbox" value="${d}" ${_districts.includes(d) ? 'checked' : ''}>
+          ${d}
+        </label>`).join('') || '<div style="padding:.6rem .85rem;color:#aaa;font-size:.82rem">Aucun résultat</div>';
+      el.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) { if (!_districts.includes(cb.value)) _districts.push(cb.value); }
+          else            { _districts = _districts.filter(d => d !== cb.value); }
+          renderChips();
+        });
+      });
+    }
+
+    function renderChips() {
+      const chipsEl      = document.getElementById('districtChips');
+      const placeholder  = document.getElementById('districtPlaceholder');
+      const countEl      = document.getElementById('districtCount');
+      if (!chipsEl) return;
+      if (_districts.length === 0) {
+        placeholder.style.display = '';
+        chipsEl.innerHTML = '';
+        if (countEl) countEl.textContent = '';
+      } else {
+        placeholder.style.display = 'none';
+        chipsEl.innerHTML = _districts.map(d =>
+          `<span class="ms-chip">${d}<button class="ms-chip-rm" type="button" data-d="${d}" aria-label="Retirer ${d}">✕</button></span>`
+        ).join('');
+        if (countEl) countEl.textContent = _districts.length + ' sélectionné' + (_districts.length > 1 ? 's' : '');
+        chipsEl.querySelectorAll('.ms-chip-rm').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            _districts = _districts.filter(d => d !== btn.dataset.d);
+            renderChips();
+            renderOptions(document.getElementById('districtSearch')?.value);
+          });
+        });
+      }
+    }
+
+    function openPicker() {
+      const field = document.getElementById('districtField');
+      const trigger = document.getElementById('districtTrigger');
+      field?.classList.add('open');
+      trigger?.setAttribute('aria-expanded', 'true');
+      renderOptions();
+      document.getElementById('districtSearch')?.focus();
+    }
+    function closePicker() {
+      document.getElementById('districtField')?.classList.remove('open');
+      document.getElementById('districtTrigger')?.setAttribute('aria-expanded', 'false');
+    }
+
+    document.getElementById('districtTrigger')?.addEventListener('click', (e) => {
+      const field = document.getElementById('districtField');
+      field?.classList.contains('open') ? closePicker() : openPicker();
+    });
+    document.getElementById('districtTrigger')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); }
+      if (e.key === 'Escape') closePicker();
+    });
+    document.getElementById('districtSearch')?.addEventListener('input', (e) => {
+      renderOptions(e.target.value);
+    });
+    document.getElementById('districtClear')?.addEventListener('click', () => {
+      _districts = []; renderChips();
+      renderOptions(document.getElementById('districtSearch')?.value);
+    });
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('districtField')?.contains(e.target)) closePicker();
+    });
+
+    function refreshDistricts() {
+      _districts = [];
+      renderChips();
+      renderOptions();
+    }
 
     /* Prix selon mode */
     function refreshPrices(mode) {
@@ -388,11 +604,12 @@
         ranges.map(r => `<option value="${r.value}">${r.labelFR}</option>`).join('');
     }
 
-    /* Pré-remplir depuis URL */
-    ['city','district','type','bedrooms','price'].forEach(k => {
+    /* Pré-remplir depuis URL (district géré séparément via multi-select) */
+    ['city','type','bedrooms','price'].forEach(k => {
       const el = document.getElementById(k);
       if (el && params.get(k)) el.value = params.get(k);
     });
+    citySel.addEventListener('change', refreshDistricts);
     refreshDistricts();
     refreshPrices(urlMode);
 
@@ -498,22 +715,50 @@
       renderPage(urlPage);
     }
 
+    /* Masquer le filtre Meublé en mode Vente */
+    function syncFurnishedVisibility(mode) {
+      const el = document.getElementById('furnishedField');
+      if (el) el.style.display = mode === 'sale' ? 'none' : '';
+    }
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => syncFurnishedVisibility(btn.dataset.mode));
+    });
+    syncFurnishedVisibility(urlMode);
+
+    /* Construire l'objet filters depuis le formulaire */
+    function buildFilters() {
+      const mode      = document.querySelector('.seg-btn.active')?.dataset.mode || 'rent';
+      const furnished = document.getElementById('furnished').value;
+      return {
+        mode,
+        city:      citySel.value,
+        district:  _districts.length > 0 ? _districts : undefined,
+        type:      document.getElementById('type').value,
+        bedrooms:  document.getElementById('bedrooms').value,
+        price:     document.getElementById('price').value,
+        furnished: furnished === 'true' ? true : furnished === 'false' ? false : undefined,
+        sort:      document.getElementById('sort').value,
+      };
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const filters = {
-        mode:     document.querySelector('.seg-btn.active')?.dataset.mode || 'rent',
-        city:     citySel.value,
-        district: distSel.value,
-        type:     document.getElementById('type').value,
-        bedrooms: document.getElementById('bedrooms').value,
-        price:    document.getElementById('price').value,
-      };
+      const filters = buildFilters();
 
-      /* ── Encoder les filtres dans l'URL pour partage WhatsApp ── */
+      /* Encoder dans l'URL */
       const url = new URL(window.location);
       url.searchParams.delete('page');
-      Object.entries(filters).forEach(([k, v]) => {
-        if (v) url.searchParams.set(k, v);
+      url.searchParams.delete('district');
+      if (_districts.length > 0) url.searchParams.set('district', _districts.join(','));
+      const extra = {
+        mode: filters.mode, city: filters.city,
+        type: filters.type, bedrooms: filters.bedrooms,
+        price: filters.price,
+        furnished: document.getElementById('furnished').value,
+        sort: filters.sort,
+      };
+      Object.entries(extra).forEach(([k, v]) => {
+        if (v !== undefined && v !== '') url.searchParams.set(k, v);
         else url.searchParams.delete(k);
       });
       window.history.pushState({}, '', url);
@@ -521,15 +766,25 @@
       await loadAndRender(filters);
     });
 
-    /* Chargement initial */
+    /* Chargement initial — restaurer districts depuis URL (format: Bali,Bonapriso) */
+    const furnishedParam  = params.get('furnished');
+    const districtParam   = params.get('district');
+    if (districtParam) {
+      _districts = districtParam.split(',').map(d => d.trim()).filter(Boolean);
+      renderChips();
+    }
+    if (params.get('sort'))      document.getElementById('sort').value      = params.get('sort');
+    if (furnishedParam)          document.getElementById('furnished').value = furnishedParam;
+
     await loadAndRender({
-      mode:     urlMode,
-      city:     params.get('city')     || '',
-      district: params.get('district') || '',
-      type:     params.get('type')     || '',
-      bedrooms: params.get('bedrooms') || '',
-      price:    params.get('price')    || '',
-      sort:     params.get('sort')     || '',
+      mode:      urlMode,
+      city:      params.get('city')  || '',
+      district:  _districts.length > 0 ? _districts : undefined,
+      type:      params.get('type')  || '',
+      bedrooms:  params.get('bedrooms') || '',
+      price:     params.get('price') || '',
+      furnished: furnishedParam === 'true' ? true : furnishedParam === 'false' ? false : undefined,
+      sort:      params.get('sort')  || '',
     });
     /* Reset page à 1 lors d'une nouvelle recherche */
     form.addEventListener('submit', () => {
@@ -537,6 +792,72 @@
       url.searchParams.delete('page');
       window.history.replaceState({}, '', url);
     }, { capture: true });
+
+    /* ══ Alerte recherche ══ */
+    const btnAlert     = document.getElementById('btnAlert');
+    const alertPopover = document.getElementById('alertPopover');
+    const alertDescEl  = document.getElementById('alertDesc');
+    const alertMsg     = document.getElementById('alertMsg');
+
+    btnAlert?.addEventListener('click', () => {
+      const open = alertPopover.classList.toggle('open');
+      if (open && _currentFilters) {
+        const parts = [];
+        if (_currentFilters.mode)     parts.push(_currentFilters.mode === 'rent' ? 'À louer' : 'À vendre');
+        if (Array.isArray(_currentFilters.district) && _currentFilters.district.length)
+          parts.push(_currentFilters.district.join(', '));
+        else if (_currentFilters.district) parts.push(_currentFilters.district);
+        if (_currentFilters.type)     parts.push(_currentFilters.type);
+        if (_currentFilters.city)     parts.push(_currentFilters.city);
+        if (_currentFilters.bedrooms) parts.push(_currentFilters.bedrooms + ' ch.');
+        alertDescEl.textContent = parts.join(' · ') || 'Toutes les annonces';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!alertPopover.contains(e.target) && e.target !== btnAlert)
+        alertPopover.classList.remove('open');
+    });
+
+    document.getElementById('alertSubmit')?.addEventListener('click', async () => {
+      const email = document.getElementById('alertEmail').value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alertMsg.textContent = 'Email invalide.'; alertMsg.className = 'alert-msg err'; return;
+      }
+      alertMsg.textContent = '…'; alertMsg.className = 'alert-msg';
+
+      let tries = 0;
+      while ((!window.SLCM_DB?.client) && tries < 30) {
+        await new Promise(r => setTimeout(r, 100)); tries++;
+      }
+      if (!window.SLCM_DB?.client) {
+        alertMsg.textContent = 'Connexion impossible.'; alertMsg.className = 'alert-msg err'; return;
+      }
+
+      const f = _currentFilters || {};
+      const districts = Array.isArray(f.district) ? f.district : (f.district ? [f.district] : []);
+
+      const { error } = await window.SLCM_DB.client.from('saved_searches').insert({
+        email,
+        mode:      f.mode      || null,
+        city:      f.city      || null,
+        districts,
+        type:      f.type      || null,
+        bedrooms:  f.bedrooms  ? parseInt(f.bedrooms) : null,
+        price:     f.price     || null,
+        furnished: f.furnished !== undefined ? f.furnished : null,
+      });
+
+      if (error) {
+        alertMsg.textContent = 'Erreur : ' + error.message;
+        alertMsg.className = 'alert-msg err';
+      } else {
+        alertMsg.textContent = '✅ Alerte créée ! Vous recevrez un email dès qu\'une annonce correspond.';
+        alertMsg.className = 'alert-msg ok';
+        document.getElementById('alertEmail').value = '';
+        setTimeout(() => alertPopover.classList.remove('open'), 3000);
+      }
+    });
   });
   </script>
   <script src="assets/js/cookies.js" defer></script>

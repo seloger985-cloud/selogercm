@@ -5,37 +5,54 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-  <!-- SEO — mis à jour dynamiquement après chargement de l'annonce -->
-  <title>Annonce immobilière — SE LOGER CM</title>
-  <meta name="description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
+  <!-- SEO — dynamique selon l'annonce chargée -->
+  <title>Bien immobilier à Douala | SE LOGER CM</title>
+  <meta name="description" content="Découvrez des biens immobiliers uniques à Douala et au Cameroun. Annonces vérifiées, contact direct propriétaires et agents immobiliers.">
 
   <!-- Canonical — mise à jour dynamiquement après chargement -->
-  <link rel="canonical" href="https://selogercm.com/">
+  <link rel="canonical" href="https://selogercm.com/listing_detail.html">
 
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
   <meta property="og:type"        content="website">
   <meta property="og:site_name"   content="SE LOGER CM">
-  <meta property="og:url"         content="https://selogercm.com/">
-  <meta property="og:title"       content="Annonce immobilière — SE LOGER CM">
-  <meta property="og:description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
+  <meta property="og:url"         content="https://selogercm.com/listing_detail.html">
+  <meta property="og:title"       content="Bien immobilier — SE LOGER CM">
+  <meta property="og:description" content="Découvrez ce bien immobilier unique à Douala sur SE LOGER CM.">
   <meta property="og:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
   <meta property="og:locale"      content="fr_CM">
 
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:title"       content="Annonce immobilière — SE LOGER CM">
-  <meta name="twitter:description" content="Trouvez votre bien immobilier à Douala et au Cameroun sur SE LOGER CM.">
+  <meta name="twitter:title"       content="Bien immobilier — SE LOGER CM">
+  <meta name="twitter:description" content="Découvrez ce bien immobilier unique à Douala sur SE LOGER CM.">
   <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
-  <!-- SEO : title immédiat depuis l'URL avant le chargement Supabase -->
+
+  <!-- Schema.org Property (placeholder, mis à jour après chargement) -->
+  <script type="application/ld+json" id="schema-listing">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Residence",
+    "name": "Bien immobilier",
+    "url": "https://selogercm.com/listing_detail.html",
+    "image": ["https://selogercm.com/assets/img/og-cover.jpg"],
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "CM",
+      "addressLocality": "Douala"
+    }
+  }
+  </script>
+
+  <!-- SEO immédiat : pré-remplir title depuis URL slug si présent -->
   <script>
     (function(){
-      var p=new URLSearchParams(window.location.search);
-      var slug=p.get('slug')||'';
-      if(slug){
-        var t=slug.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
-        document.title=t+' — SE LOGER CM';
-        var m=document.querySelector('meta[name="description"]');
-        if(m)m.setAttribute('content','Découvrez '+t+' à Douala sur SE LOGER CM. Annonce vérifiée, contact direct propriétaire.');
+      var p = new URLSearchParams(window.location.search);
+      var slug = p.get('slug') || p.get('id') || '';
+      if(slug && slug.length > 2){
+        var t = slug.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        document.title = t + ' — À louer/vendre | SE LOGER CM';
+        var m = document.querySelector('meta[name="description"]');
+        if(m) m.setAttribute('content', 'Découvrez ' + t + ' à Douala et au Cameroun sur SE LOGER CM. Annonce vérifiée, contact direct.');
       }
     })();
   </script>

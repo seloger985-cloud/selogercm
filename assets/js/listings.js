@@ -20,16 +20,19 @@ const SLCM_listings = (() => {
       .select('*')
       .eq('status', 'active');
 
-    /* Tri : price_asc pour les terrains triés du moins cher au plus cher */
-    if (filters.sort === 'price_asc') {
-      query = query.order('price', { ascending: true });
-    } else {
-      query = query.order('created_at', { ascending: false });
-    }
+    if      (filters.sort === 'price_asc')  query = query.order('price',      { ascending: true  });
+    else if (filters.sort === 'price_desc') query = query.order('price',      { ascending: false });
+    else                                    query = query.order('created_at', { ascending: false });
 
     if (filters.mode)     query = query.eq('rent_sale', filters.mode);
     if (filters.city)     query = query.eq('city', filters.city);
-    if (filters.district) query = query.eq('district', filters.district);
+    if (filters.district) {
+      const districts = Array.isArray(filters.district)
+        ? filters.district.filter(Boolean)
+        : [filters.district];
+      if (districts.length === 1) query = query.eq('district', districts[0]);
+      else if (districts.length > 1) query = query.in('district', districts);
+    }
     if (filters.type)     query = query.eq('type', filters.type);
     if (filters.bedrooms) query = query.eq('bedrooms', filters.bedrooms);
     if (filters.furnished !== undefined) query = query.eq('furnished', filters.furnished);

@@ -10,5 +10,8 @@ Disallow: /dashboard.html
 Disallow: /ops.html
 Disallow: /connexion
 Disallow: /.netlify/
+# Allow public sitemap endpoints
+Allow: /sitemap-listings.xml
+Allow: /.netlify/functions/sitemap-listings
 
 Sitemap: https://www.selogercm.com/sitemap-index.xml
