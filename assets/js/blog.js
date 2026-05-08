@@ -64,6 +64,7 @@ const SLCM_blog = (() => {
   /* ── Sauvegarder un article (create ou update) ──────────────────── */
   async function saveArticle(article) {
     const client = await sb();
+    const now = new Date().toISOString();
     const payload = {
       title:    article.title,
       category: article.category,
@@ -71,17 +72,19 @@ const SLCM_blog = (() => {
       content:  article.content,
       author:   article.author || 'SE LOGER CM',
       cover:    article.cover  || null,
-      updated_at: new Date().toISOString()
+      date:     article.date   || now.split('T')[0],
+      updated_at: now
     };
 
+    /* UUID Supabase réel = 8-4-4-4-12 hex. Tout autre format → INSERT. */
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(article.id || '');
+
     let result;
-    if (article.id) {
-      /* Mise à jour — l'article a déjà un ID Supabase (UUID) */
+    if (isUUID) {
       result = await client.from('blog_articles').update(payload).eq('id', article.id).select().single();
     } else {
-      /* Création — pas d'ID, nouvel article */
       result = await client.from('blog_articles')
-        .insert([{ ...payload, created_at: new Date().toISOString() }])
+        .insert([{ ...payload, created_at: now }])
         .select().single();
     }
     if (result.error) { console.error('saveArticle:', result.error); return null; }

@@ -234,7 +234,7 @@
           </div>
           <div class="card-body">
             <div class="card-meta">
-              <span><i class="fas fa-calendar-alt"></i> ${SLCM_blog.formatDate(art.date)}</span>
+              <span><i class="fas fa-calendar-alt"></i> ${SLCM_blog.formatDate(art.date || art.created_at)}</span>
               <span>·</span>
               <span><i class="fas fa-clock"></i> ${SLCM_blog.readingTime(art.content)}</span>
             </div>
