@@ -7,9 +7,9 @@
     <lastmod>2026-05-08</lastmod>
   </sitemap>
 
-  <!-- Annonces dynamiques (via route publique) -->
+  <!-- Annonces dynamiques (via Netlify Function) -->
   <sitemap>
-    <loc>https://www.selogercm.com/sitemap-listings.xml</loc>
+    <loc>https://www.selogercm.com/.netlify/functions/sitemap-listings</loc>
   </sitemap>
 
 </sitemapindex>
