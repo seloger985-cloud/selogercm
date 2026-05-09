@@ -93,6 +93,19 @@
     .card-actions button:hover, .card-actions a:hover { opacity: .82; }
     .btn-view   { background: #f0f0f0; color: #333; }
     .btn-edit   { background: var(--orange); color: #fff; }
+    .btn-boost  { background: #fff7e0; color: #b45309; border: 1.5px solid #fcd34d !important; }
+    .btn-boosted{ background: #ecfdf5; color: #166534; border: 1.5px solid #6ee7b7 !important; cursor: default; }
+    .boost-badge{
+      position: absolute; top: 10px; right: 10px;
+      background: #ff7a00; color: #fff;
+      border-radius: 999px; padding: .2rem .6rem;
+      font-size: .65rem; font-weight: 900; letter-spacing: .3px;
+    }
+    .boost-free-tag {
+      display: inline-block; background: #dcfce7; color: #166534;
+      border-radius: 6px; padding: .15rem .5rem;
+      font-size: .72rem; font-weight: 800; margin-left: .4rem;
+    }
     .btn-delete { background: #fee2e2; color: #c00; }
     .btn-renew  { background: #e0f2fe; color: #0369a1; }
 
@@ -327,6 +340,40 @@
   </div>
 </div>
 
+<!-- Modal Boost Vitrine agent -->
+<div class="modal-overlay" id="boostOverlay">
+  <div class="modal-box" style="max-width:440px">
+    <h2><i class="fas fa-bolt" style="color:#ff7a00;margin-right:.4rem"></i> Booster mon annonce
+      <span class="boost-free-tag">GRATUIT</span>
+    </h2>
+    <p style="font-size:.85rem;color:#666;margin-bottom:1.2rem;line-height:1.6">
+      Votre annonce sera mise <strong>en première position</strong> dans la section correspondante de la page d'accueil.
+      <br><strong style="color:#166534">Offre gratuite jusqu'au 31 août 2026.</strong>
+    </p>
+    <div id="boostListingName" style="background:#f8f9fa;border-radius:10px;padding:.75rem 1rem;font-weight:700;font-size:.9rem;color:#111;margin-bottom:1.2rem"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem">
+      <div onclick="selectBoostType('rent')" id="boostOptRent" style="border:2px solid #eee;border-radius:12px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">🏠</div>
+        <div style="font-weight:800;font-size:.88rem">Location</div>
+        <div style="font-size:.78rem;color:#888;margin:.2rem 0">5 jours en vitrine</div>
+        <div style="font-weight:900;color:#166534;font-size:.9rem">GRATUIT</div>
+      </div>
+      <div onclick="selectBoostType('sale')" id="boostOptSale" style="border:2px solid #eee;border-radius:12px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">🏢</div>
+        <div style="font-weight:800;font-size:.88rem">Vente</div>
+        <div style="font-size:.78rem;color:#888;margin:.2rem 0">15 jours en vitrine</div>
+        <div style="font-weight:900;color:#166534;font-size:.9rem">GRATUIT</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBoostModal()">Annuler</button>
+      <button class="btn-save" id="boostConfirmBtn" onclick="confirmBoost()" disabled style="opacity:.5">
+        <i class="fas fa-bolt"></i> Activer gratuitement
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--orange)"></i> <span id="toastMsg"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -532,11 +579,14 @@
       const isExpired=ad.status==='active'&&days!==null&&days<=0;
       const pillCls=isActive?'pill-active':isExpired?'pill-expired':'pill-draft';
       const pillLabel=isActive?'✅ En ligne':isExpired?'⚠️ Expirée':'📋 Brouillon';
+      const isBoosted = ad.boost_expires_at && new Date(ad.boost_expires_at) > Date.now();
+      const boostDaysLeft = isBoosted ? Math.ceil((new Date(ad.boost_expires_at)-Date.now())/86400000) : 0;
       const card=document.createElement('div');card.className='dash-card';
       card.innerHTML=`
         <div class="thumb">
           <img src="${img}" alt="${title}" loading="lazy">
           <span class="status-pill-card ${pillCls}">${pillLabel}</span>
+          ${isBoosted?`<span class="boost-badge">⚡ VITRINE · ${boostDaysLeft}j</span>`:''}
           ${days!==null&&days>0&&days<=7?`<span class="expire-badge">⏳ ${days}j</span>`:''}
           ${isExpired?`<span class="expire-badge">Expirée</span>`:''}
         </div>
@@ -548,12 +598,15 @@
         <div class="card-actions">
           ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
           <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
+          ${isActive&&!isBoosted?`<button class="btn-boost"><i class="fas fa-bolt"></i> Booster</button>`:''}
+          ${isActive&&isBoosted?`<button class="btn-boosted" disabled><i class="fas fa-star"></i> En vitrine</button>`:''}
           ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
           <button class="btn-delete"><i class="fas fa-trash"></i></button>
         </div>`;
       card.querySelector('.btn-edit').addEventListener('click',()=>openEditModal(ad));
       card.querySelector('.btn-delete').addEventListener('click',()=>deleteAd(ad.id,title));
       if(isExpired)card.querySelector('.btn-renew').addEventListener('click',()=>renewAd(ad.id));
+      if(isActive&&!isBoosted)card.querySelector('.btn-boost').addEventListener('click',()=>openBoostModal(ad));
       grid.appendChild(card);
     });
   }
@@ -604,6 +657,46 @@
   }
 
   ['editOverlay','kycOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+
+  /* ── Boost Vitrine ── */
+  let _boostAd = null, _boostType = null;
+  function openBoostModal(ad) {
+    _boostAd = ad; _boostType = null;
+    document.getElementById('boostListingName').textContent = ad.title || 'Annonce';
+    document.getElementById('boostOptRent').style.borderColor = '#eee';
+    document.getElementById('boostOptSale').style.borderColor = '#eee';
+    const btn = document.getElementById('boostConfirmBtn');
+    btn.disabled = true; btn.style.opacity = '.5';
+    document.getElementById('boostOverlay').classList.add('open');
+  }
+  function closeBoostModal() {
+    document.getElementById('boostOverlay').classList.remove('open');
+    _boostAd = null; _boostType = null;
+  }
+  function selectBoostType(type) {
+    _boostType = type;
+    document.getElementById('boostOptRent').style.borderColor = type==='rent' ? '#ff7a00' : '#eee';
+    document.getElementById('boostOptSale').style.borderColor = type==='sale' ? '#ff7a00' : '#eee';
+    const btn = document.getElementById('boostConfirmBtn');
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+  async function confirmBoost() {
+    if (!_boostAd || !_boostType) return;
+    const days    = _boostType === 'rent' ? 5 : 15;
+    const expires = new Date();
+    expires.setDate(expires.getDate() + days);
+    const { error } = await _client.from('listings').update({
+      premium: true,
+      boost_expires_at: expires.toISOString()
+    }).eq('id', _boostAd.id);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    closeBoostModal();
+    showToast(`⚡ Annonce en vitrine pour ${days} jours ✅`);
+    loadListings();
+  }
+  document.getElementById('boostOverlay')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('boostOverlay')) closeBoostModal();
+  });
 
   let _toastTimer;
   function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}

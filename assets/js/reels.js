@@ -18,7 +18,7 @@
 const SLCM_reels = (() => {
 
   const MOBILE_BREAKPOINT = 768;
-  const DESKTOP_LIMIT = 6;
+  const DESKTOP_LIMIT = 8;
   const MOBILE_LIMIT  = 8;
 
   const MOBILE_QUOTA = {

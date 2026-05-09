@@ -18,6 +18,32 @@
   to = "/listing_detail.html"
   status = 200
 
+# ── Pages SEO par quartier / type ─────────────────────────────
+[[redirects]]
+  from = "/appartements-bonapriso"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/appartements-bali"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/appartements-bonanjo"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/studios-bali"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/studios-bonapriso"
+  to = "/seo-landing.html"
+  status = 200
+
 # ── Partage réseaux sociaux ──────────────────────────────────
 [[redirects]]
   from = "/share/*"

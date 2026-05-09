@@ -62,8 +62,6 @@ const SLCM_listings = (() => {
   /* ── Annonces premium (pour l'accueil) ──────────────────────────── */
   async function getPremiumListings(furnished = false, limit = 6) {
     const client = await sb();
-    /* Récupérer TOUS les premium LOCATION de type résidentiel uniquement
-       (exclut les locaux commerciaux, terrains, fonds de commerce) */
     const { data, error } = await client
       .from('listings')
       .select('*')
@@ -72,22 +70,28 @@ const SLCM_listings = (() => {
       .eq('furnished', furnished)
       .eq('rent_sale', 'rent')
       .in('type', ['apartment', 'house', 'studio', 'villa', 'duplex'])
-      .order('created_at', { ascending: false });
+      .order('boost_expires_at', { ascending: false, nullsFirst: false })
+      .order('created_at',       { ascending: false });
     if (error) { console.error('getPremiumListings:', error); return []; }
-    /* Rotation déterministe : change toutes les 30 minutes */
-    return rotatePremium(data || [], limit);
+
+    const now  = Date.now();
+    const all  = data || [];
+    /* Séparer : boosts actifs (priorité garantie) et le reste */
+    const boosted   = all.filter(l => l.boost_expires_at && new Date(l.boost_expires_at) > now);
+    const unboosted = all.filter(l => !l.boost_expires_at || new Date(l.boost_expires_at) <= now);
+
+    /* Slots boostés d'abord, puis rotation sur le reste */
+    const slots = limit - Math.min(boosted.length, limit);
+    return [...boosted.slice(0, limit), ...rotatePremium(unboosted, slots)].slice(0, limit);
   }
 
   /* Rotation déterministe basée sur l'heure (tranche de 30 min) */
   function rotatePremium(arr, limit) {
-    if (!arr.length) return [];
+    if (!arr.length || !limit) return [];
     if (arr.length <= limit) return arr;
-    /* Seed = nombre de tranches de 30 min depuis epoch */
-    const seed = Math.floor(Date.now() / (30 * 60 * 1000));
-    /* Décalage circulaire basé sur le seed */
+    const seed   = Math.floor(Date.now() / (30 * 60 * 1000));
     const offset = seed % arr.length;
-    const rotated = [...arr.slice(offset), ...arr.slice(0, offset)];
-    return rotated.slice(0, limit);
+    return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, limit);
   }
 
   /* ── Lire une annonce par ID ─────────────────────────────────────── */
@@ -187,11 +191,14 @@ const SLCM_listings = (() => {
     const title = listing.title || listing.title_fr || 'Annonce';
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
-    const badge = listing.premium
-      ? '<div class="listing-badge premium">PREMIUM</div>'
-      : listing.furnished
-        ? '<div class="listing-badge">Meublé</div>'
-        : '';
+    const isBoosted = listing.boost_expires_at && new Date(listing.boost_expires_at) > Date.now();
+    const badge = isBoosted
+      ? '<div class="listing-badge premium" style="background:#ff7a00">⚡ VITRINE</div>'
+      : listing.premium
+        ? '<div class="listing-badge premium">PREMIUM</div>'
+        : listing.furnished
+          ? '<div class="listing-badge">Meublé</div>'
+          : '';
     const fav = showFav
       ? `<button class="fav-btn" data-id="${listing.id}" title="Ajouter aux favoris" onclick="event.preventDefault()">
            <i class="far fa-heart"></i>
