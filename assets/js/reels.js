@@ -91,7 +91,7 @@ const SLCM_reels = (() => {
 
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('premium', { ascending: false })
@@ -437,6 +437,27 @@ const SLCM_reels = (() => {
         backdrop-filter: blur(6px);
         z-index: 25;
       }
+
+      /* ── Boutons WhatsApp Reels ── */
+      .reel-cta-row {
+        display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+      }
+      .reel-wa-btn {
+        display: inline-flex; align-items: center; gap: .35rem;
+        background: #25d366; color: #fff; border: none;
+        padding: .5rem .9rem; border-radius: 999px;
+        font-weight: 700; font-size: .8rem; cursor: pointer;
+        transition: opacity .2s; white-space: nowrap;
+      }
+      .reel-wa-btn:hover { opacity: .88; }
+      .viewer-wa-btn {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: #25d366; color: #fff; border: none;
+        padding: .55rem 1.1rem; border-radius: 999px;
+        font-weight: 700; font-size: .85rem; cursor: pointer;
+        transition: opacity .2s; margin-top: .4rem;
+      }
+      .viewer-wa-btn:hover { opacity: .88; }
     `;
     document.head.appendChild(style);
   }
@@ -462,7 +483,13 @@ const SLCM_reels = (() => {
           <p class="reel-title">${title}</p>
           <p class="reel-loc"><i class="fas fa-map-marker-alt"></i> ${loc}</p>
           <p class="reel-price">${fmtPrice(r.price)}${rentMode}</p>
-          <a href="${href}" class="reel-cta">Voir l'annonce →</a>
+          <div class="reel-cta-row">
+            <a href="${href}" class="reel-cta">Voir l'annonce →</a>
+            <button class="reel-wa-btn" type="button"
+              data-wa-listing='${escapeHtml(JSON.stringify({title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+          </div>
         </div>
       </div>`;
   }
@@ -657,6 +684,10 @@ const SLCM_reels = (() => {
           <p class="viewer-loc"><i class="fas fa-map-marker-alt"></i> ${loc}</p>
           <p class="viewer-price">${fmtPrice(r.price)}${rentMode}</p>
           <a href="${href}" class="viewer-cta">Voir l'annonce →</a>
+          <button class="viewer-wa-btn" type="button"
+            data-wa-listing='${escapeHtml(JSON.stringify({title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
+            <i class="fab fa-whatsapp"></i> Contacter sur WhatsApp
+          </button>
         </div>
       </div>`;
   }

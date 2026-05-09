@@ -277,6 +277,14 @@
         <label for="titreFoncier">📄 Titre foncier disponible</label>
       </div>
 
+      <!-- Téléphone de contact -->
+      <div class="full">
+        <label for="ownerPhone" style="font-weight:700;display:block;margin-bottom:.25rem">
+          Téléphone WhatsApp du contact <span style="color:#888;font-weight:400;font-size:.85rem">(affiché aux visiteurs pour contact direct)</span>
+        </label>
+        <input id="ownerPhone" type="tel" class="input" placeholder="+237 6XX XXX XXX">
+      </div>
+
       <!-- Description -->
       <div class="full">
         <label for="desc" style="font-weight:700;display:block;margin-bottom:.25rem">Description</label>
@@ -792,6 +800,9 @@
 
         /* Images — utiliser celles du brouillon si aucune nouvelle photo ajoutée */
         images: imageUrls.length > 0 ? imageUrls : (window._draftImageUrls || []),
+
+        /* Contact direct */
+        owner_phone: document.getElementById('ownerPhone')?.value.trim() || null,
 
         /* Statut */
         status:        'active',

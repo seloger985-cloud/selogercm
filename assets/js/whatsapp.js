@@ -36,7 +36,18 @@ const SLCM_WA = (() => {
   };
 
   function chatFromListing(listing) {
-    openChat({ text: PREFILL.listing(listing) });
+    /* Utilise le numéro du propriétaire si disponible, sinon SE LOGER CM */
+    const ownerPhone = (listing.owner_phone || '').replace(/\D/g, '');
+    const text = PREFILL.listing(listing);
+    if (ownerPhone && ownerPhone.length >= 8) {
+      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+      const url = isMobile
+        ? `whatsapp://send?phone=${ownerPhone}&text=${encodeURIComponent(text)}`
+        : `https://web.whatsapp.com/send?phone=${ownerPhone}&text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      openChat({ text });
+    }
   }
 
   /* ── 2. Notifier l'équipe via la Netlify Function (API Twilio) ── */
