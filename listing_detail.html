@@ -11,6 +11,9 @@
 
   <!-- Canonical — mise à jour dynamiquement après chargement -->
   <link rel="canonical" href="https://selogercm.com/listing_detail.html">
+  <link rel="alternate" hreflang="fr"        href="https://www.selogercm.com/listing_detail.html">
+  <link rel="alternate" hreflang="en"        href="https://www.selogercm.com/listing_detail.html">
+  <link rel="alternate" hreflang="x-default" href="https://www.selogercm.com/listing_detail.html">
 
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
   <meta property="og:type"        content="website">
@@ -43,11 +46,16 @@
   }
   </script>
 
-  <!-- SEO immédiat : pré-remplir title depuis URL slug si présent -->
+  <!-- SEO immédiat : title + canonical depuis URL avant tout chargement -->
   <script>
     (function(){
-      var p = new URLSearchParams(window.location.search);
+      var p    = new URLSearchParams(window.location.search);
       var slug = p.get('slug') || p.get('id') || '';
+
+      /* Canonical immédiat — Google le voit dès le premier octet */
+      var canonical = document.querySelector('link[rel="canonical"]');
+      if(canonical) canonical.setAttribute('href', window.location.href.split('?')[0] + (window.location.search || ''));
+
       if(slug && slug.length > 2){
         var t = slug.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
         document.title = t + ' — À louer/vendre | SE LOGER CM';

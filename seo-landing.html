@@ -100,9 +100,16 @@
   const page = SEO_PAGES[slug] || null;
 
   if (page) {
+    const fullUrl = 'https://www.selogercm.com/' + slug;
     document.title = page.title;
     document.querySelector('meta[name="description"]')?.setAttribute('content', page.desc);
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://www.selogercm.com/' + slug);
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', fullUrl);
+    /* hreflang — même URL pour FR et EN (switch JS côté client) */
+    ['fr','en','x-default'].forEach(lang => {
+      const l = document.createElement('link');
+      l.rel = 'alternate'; l.hreflang = lang; l.href = fullUrl;
+      document.head.appendChild(l);
+    });
   }
   </script>
 
