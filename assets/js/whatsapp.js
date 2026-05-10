@@ -19,11 +19,7 @@ const SLCM_WA = (() => {
 
   /* ── 1. Ouvrir une conversation WhatsApp directe (côté visiteur) ── */
   function openChat({ text = '' } = {}) {
-    const encoded = encodeURIComponent(text);
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    const url = isMobile
-      ? `whatsapp://send?phone=${PHONE}&text=${encoded}`
-      : `https://web.whatsapp.com/send?phone=${PHONE}&text=${encoded}`;
+    const url = `https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 
@@ -40,10 +36,7 @@ const SLCM_WA = (() => {
     const ownerPhone = (listing.owner_phone || '').replace(/\D/g, '');
     const text = PREFILL.listing(listing);
     if (ownerPhone && ownerPhone.length >= 8) {
-      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-      const url = isMobile
-        ? `whatsapp://send?phone=${ownerPhone}&text=${encodeURIComponent(text)}`
-        : `https://web.whatsapp.com/send?phone=${ownerPhone}&text=${encodeURIComponent(text)}`;
+      const url = `https://wa.me/${ownerPhone}?text=${encodeURIComponent(text)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     } else {
       openChat({ text });
