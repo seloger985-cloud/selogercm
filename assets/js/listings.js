@@ -7,6 +7,15 @@ const SLCM_listings = (() => {
 
   async function sb() { return window.SLCM_DB ? window.SLCM_DB.init() : null; }
 
+  /* Champs nécessaires pour l'affichage en card — évite de fetcher
+     description, superficies, charges, etc. inutiles pour les grilles */
+  const CARD_FIELDS = [
+    'id', 'slug', 'title', 'title_fr', 'images', 'video_url',
+    'rent_sale', 'furnished', 'premium', 'boost_expires_at',
+    'price', 'price_per_day', 'bedrooms', 'district', 'city',
+    'type', 'status', 'created_at', 'owner_phone'
+  ].join(',');
+
   /* ── Formatage prix ─────────────────────────────────────────────── */
   function fmtPrice(n) {
     return (n || 0).toLocaleString('fr-FR') + ' FCFA';
@@ -17,7 +26,7 @@ const SLCM_listings = (() => {
     const client = await sb();
     let query = client
       .from('listings')
-      .select('*')
+      .select(CARD_FIELDS)
       .eq('status', 'active');
 
     if      (filters.sort === 'price_asc')  query = query.order('price',      { ascending: true  });
@@ -64,7 +73,7 @@ const SLCM_listings = (() => {
     const client = await sb();
     const { data, error } = await client
       .from('listings')
-      .select('*')
+      .select(CARD_FIELDS)
       .eq('status', 'active')
       .eq('premium', true)
       .eq('furnished', furnished)

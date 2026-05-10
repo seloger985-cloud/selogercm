@@ -140,6 +140,27 @@
           <div class="footer-col"><h4>${C.colServices[lang]}</h4><ul>${links(C.serviceLinks[lang])}</ul></div>
           <div class="footer-col"><h4>${C.colContact[lang]}</h4><ul>${links(C.contactLinks[lang])}</ul></div>
         </div>
+        <!-- Recherches populaires — maillage interne SEO -->
+        <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:1.2rem;margin-top:1rem">
+          <p style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem">
+            ${lang === 'fr' ? 'Recherches populaires' : 'Popular searches'}
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:.4rem .8rem">
+            ${[
+              { href: '/appartements-bonapriso',    fr: 'Appartements Bonapriso',    en: 'Apartments Bonapriso'   },
+              { href: '/appartements-bali',         fr: 'Appartements Bali',          en: 'Apartments Bali'        },
+              { href: '/appartements-bonanjo',      fr: 'Appartements Bonanjo',       en: 'Apartments Bonanjo'     },
+              { href: '/studios-bali',              fr: 'Studios Bali',               en: 'Studios Bali'           },
+              { href: '/studios-bonapriso',         fr: 'Studios Bonapriso',          en: 'Studios Bonapriso'      },
+              { href: '/villas-a-louer-douala',     fr: 'Villas à louer Douala',      en: 'Villas for rent Douala' },
+              { href: '/maisons-a-louer-douala',    fr: 'Maisons à louer Douala',     en: 'Houses for rent Douala' },
+              { href: '/appartements-meubles-douala', fr: 'Appartements meublés',     en: 'Furnished apartments'   },
+              { href: '/terrains-a-vendre-bonapriso', fr: 'Terrains Bonapriso',       en: 'Land Bonapriso'         },
+              { href: '/appartements-bonamoussadi', fr: 'Appartements Bonamoussadi',  en: 'Apartments Bonamoussadi'},
+            ].map(l => `<a href="${l.href}" style="font-size:.75rem;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ff7a00'" onmouseout="this.style.color='rgba(255,255,255,.45)'">${lang === 'fr' ? l.fr : l.en}</a>`).join('')}
+          </div>
+        </div>
+
         <div class="footer-bottom">
           <p class="footer-copy">${C.copyright[lang](year)}</p>
           <div class="footer-legal">

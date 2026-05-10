@@ -44,6 +44,31 @@
   to = "/seo-landing.html"
   status = 200
 
+[[redirects]]
+  from = "/villas-a-louer-douala"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/maisons-a-louer-douala"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/appartements-meubles-douala"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/terrains-a-vendre-bonapriso"
+  to = "/seo-landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/appartements-bonamoussadi"
+  to = "/seo-landing.html"
+  status = 200
+
 # ── Partage réseaux sociaux ──────────────────────────────────
 [[redirects]]
   from = "/share/*"
