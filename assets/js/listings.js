@@ -10,7 +10,7 @@ const SLCM_listings = (() => {
   /* Champs nécessaires pour l'affichage en card — évite de fetcher
      description, superficies, charges, etc. inutiles pour les grilles */
   const CARD_FIELDS = [
-    'id', 'slug', 'title', 'title_fr', 'images', 'video_url',
+    'id', 'title', 'images', 'video_url',
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
     'type', 'status', 'created_at', 'owner_phone'

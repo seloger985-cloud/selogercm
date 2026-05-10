@@ -7,8 +7,9 @@
   /* ─── Liens de navigation avec traductions ─── */
   const NAV_LINKS = [
     { href: '/',       fr: 'Accueil',      en: 'Home',        icon: 'fa-home' },
-    { href: '/annonces', fr: 'Annonces',     en: 'Listings',    icon: 'fa-search' },
-    { href: '/services',    fr: 'Services',     en: 'Services',    icon: 'fa-concierge-bell' },
+    { href: '/annonces',   fr: 'Annonces',    en: 'Listings',    icon: 'fa-search' },
+    { href: '/favorites',  fr: 'Favoris',     en: 'Favorites',   icon: 'fa-heart' },
+    { href: '/services',   fr: 'Services',    en: 'Services',    icon: 'fa-concierge-bell' },
     { href: '/blog',        fr: 'Blog',         en: 'Blog',        icon: 'fa-newspaper' },
     { href: '/a-propos',       fr: 'À propos',     en: 'About',       icon: 'fa-info-circle' },
     { href: '/rendez-vous',         fr: 'Rendez-vous',  en: 'Book a call', icon: 'fa-calendar-check', cta: true },

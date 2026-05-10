@@ -12,6 +12,22 @@
   schedule = "0 */6 * * *"
 
 
+# ── Pages principales ─────────────────────────────────────────
+[[redirects]]
+  from = "/pricing"
+  to = "/pricing.html"
+  status = 200
+
+[[redirects]]
+  from = "/favorites"
+  to = "/favorites.html"
+  status = 200
+
+[[redirects]]
+  from = "/douala"
+  to = "/douala.html"
+  status = 200
+
 # ── Routing annonces ──────────────────────────────────────────
 [[redirects]]
   from = "/annonce"

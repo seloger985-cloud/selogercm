@@ -77,14 +77,14 @@
         { href: 'services.html#location',  label: 'Location' },
         { href: 'services.html#vente',     label: 'Vente' },
         { href: 'services.html#gestion',   label: 'Gestion locative' },
-        { href: 'services.html#formation', label: 'Formation' },
+        { href: '/pricing',                label: 'Tarifs & Boost' },
       ],
       en: [
         { href: 'services.html',           label: 'Our services' },
         { href: 'services.html#location',  label: 'Rental' },
         { href: 'services.html#vente',     label: 'Sale' },
         { href: 'services.html#gestion',   label: 'Property management' },
-        { href: 'services.html#formation', label: 'Training' },
+        { href: '/pricing',                label: 'Pricing & Boost' },
       ]
     },
     contactLinks: {
@@ -157,6 +157,7 @@
               { href: '/appartements-meubles-douala', fr: 'Appartements meublés',     en: 'Furnished apartments'   },
               { href: '/terrains-a-vendre-bonapriso', fr: 'Terrains Bonapriso',       en: 'Land Bonapriso'         },
               { href: '/appartements-bonamoussadi', fr: 'Appartements Bonamoussadi',  en: 'Apartments Bonamoussadi'},
+              { href: '/douala',                    fr: 'Immobilier à Douala',         en: 'Real estate Douala'      },
             ].map(l => `<a href="${l.href}" style="font-size:.75rem;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ff7a00'" onmouseout="this.style.color='rgba(255,255,255,.45)'">${lang === 'fr' ? l.fr : l.en}</a>`).join('')}
           </div>
         </div>
