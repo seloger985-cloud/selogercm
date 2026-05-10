@@ -473,160 +473,43 @@
   <script src="assets/js/i18n.js" defer></script>
   <script src="assets/js/listings.js" defer></script>
   <script>
-  /* ── Accueil : charger les annonces premium depuis Supabase ── */
+  /* ── Accueil : annonces via CDN cache (homepage-listings function) ── */
   document.addEventListener('DOMContentLoaded', async () => {
-    const unGrid = document.getElementById('unfurnishedGrid');
-    const fuGrid = document.getElementById('furnishedGrid');
-
-    function skeleton() {
-      return Array(3).fill(0).map(() => `
-        <div class="card" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.07)">
-          <div style="height:180px;background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div>
-          <div style="padding:1rem">
-            <div style="height:14px;background:#eee;border-radius:4px;margin-bottom:.5rem;width:70%"></div>
-            <div style="height:12px;background:#eee;border-radius:4px;width:50%"></div>
-          </div>
-        </div>`).join('');
+    const empty = '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+    function cards(list) {
+      return list.length ? list.map(l => SLCM_listings.renderCard(l)).join('') : empty;
+    }
+    function fillGrid(id, list) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = cards(list);
     }
 
-    if (unGrid) unGrid.innerHTML = skeleton();
-    if (fuGrid) fuGrid.innerHTML = skeleton();
+    try {
+      /* Un seul fetch → CDN cache 5 min → pas d'attente Supabase client */
+      const res  = await fetch('/.netlify/functions/homepage-listings');
+      if (!res.ok) throw new Error('function ' + res.status);
+      const data = await res.json();
 
-    /* Attendre que Supabase soit prêt */
-    let tries = 0;
-    while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
-      await new Promise(r => setTimeout(r, 100)); tries++;
-    }
+      fillGrid('unfurnishedGrid',  data.unfurnished    || []);
+      fillGrid('furnishedGrid',    data.furnished      || []);
+      fillGrid('commercialRentGrid', data.commercialRent || []);
+      fillGrid('villasGrid',       data.villas         || []);
+      fillGrid('terrainsGrid',     data.terrains       || []);
+      fillGrid('commercialSaleGrid', data.commercialSale || []);
 
-   /* ── Charger annonces LOCATION ── */
-let unfurnished = await SLCM_listings.getPremiumListings(false, 6);
-let furnished   = await SLCM_listings.getPremiumListings(true, 6);
-
-/* Fallback indépendant si pas assez de premium */
-if (!unfurnished.length || !furnished.length) {
-  const allRent = await SLCM_listings.getListings({ mode: 'rent' });
-  if (!unfurnished.length) unfurnished = allRent.filter(l => !l.furnished).slice(0, 6);
-  if (!furnished.length)   furnished   = allRent.filter(l =>  l.furnished).slice(0, 6);
-  if (!unfurnished.length) unfurnished = allRent.slice(0, 6);
-}
-
-    /* ── Charger annonces VENTE premium ── */
-    async function loadSalePremium() {
-      let tries2 = 0;
-      while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries2 < 30) {
-        await new Promise(r => setTimeout(r, 100)); tries2++;
+    } catch (err) {
+      /* Fallback Supabase direct si la function échoue */
+      console.warn('homepage-listings function failed, falling back to Supabase:', err.message);
+      let tries = 0;
+      while ((!window.SLCM_DB || !window.SLCM_DB.client) && tries < 50) {
+        await new Promise(r => setTimeout(r, 100)); tries++;
       }
-      const client = window.SLCM_DB.client;
-
-      /* Villas & Maisons */
-      const { data: villasData } = await client
-        .from('listings')
-        .select('*')
-        .eq('status', 'active')
-        .eq('premium', true)
-        .eq('rent_sale', 'sale')
-        .in('type', ['villa', 'house', 'duplex'])
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      /* Terrains & Plots */
-      const { data: terrainsData } = await client
-        .from('listings')
-        .select('*')
-        .eq('status', 'active')
-        .eq('premium', true)
-        .eq('rent_sale', 'sale')
-        .in('type', ['plots-of-land'])
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      /* Fonds de Commerce (vente) */
-      const { data: commercialSaleData } = await client
-        .from('listings')
-        .select('*')
-        .eq('status', 'active')
-        .eq('premium', true)
-        .eq('rent_sale', 'sale')
-        .in('type', ['commercial', 'warehouse', 'shop', 'fonds-commerce'])
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      /* Fallback vente si pas de premium */
-      let villas = villasData || [];
-      let terrains = terrainsData || [];
-      let commercialSale = commercialSaleData || [];
-
-      if (!villas.length && !terrains.length) {
-        const { data: allSale } = await client
-          .from('listings')
-          .select('*')
-          .eq('status', 'active')
-          .eq('rent_sale', 'sale')
-          .order('created_at', { ascending: false })
-          .limit(6);
-        const all = allSale || [];
-        villas   = all.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 3);
-        terrains = all.filter(l => l.type === 'plots-of-land').slice(0, 3);
-        if (!terrains.length) terrains = all.slice(3, 6);
-      }
-
-      return { villas, terrains, commercialSale };
-    }
-
-    if (unGrid) {
-      unGrid.innerHTML = unfurnished.length
-        ? unfurnished.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
-    }
-    if (fuGrid) {
-      fuGrid.innerHTML = furnished.length
-        ? furnished.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
-    }
-
-    /* ── Locaux commerciaux à louer ── */
-    let triesC = 0;
-    while ((!window.SLCM_DB || !window.SLCM_DB.client) && triesC < 30) {
-      await new Promise(r => setTimeout(r, 100)); triesC++;
-    }
-
-    const { data: commercialRentData } = await window.SLCM_DB.client
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .eq('rent_sale', 'rent')
-      .in('type', ['commercial', 'warehouse', 'shop'])
-      .order('created_at', { ascending: false })
-      .limit(6);
-
-    const commercialRentGrid = document.getElementById('commercialRentGrid');
-    if (commercialRentGrid) {
-      const commRent = commercialRentData || [];
-      commercialRentGrid.innerHTML = commRent.length
-        ? commRent.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
-    }
-
-    /* ── Charger et afficher les annonces vente ── */
-    const { villas, terrains, commercialSale } = await loadSalePremium();
-    const villasGrid   = document.getElementById('villasGrid');
-    const terrainsGrid = document.getElementById('terrainsGrid');
-    const commercialSaleGrid = document.getElementById('commercialSaleGrid');
-
-    if (villasGrid) {
-      villasGrid.innerHTML = villas.length
-        ? villas.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
-    }
-    if (terrainsGrid) {
-      terrainsGrid.innerHTML = terrains.length
-        ? terrains.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
-    }
-    if (commercialSaleGrid) {
-      commercialSaleGrid.innerHTML = commercialSale.length
-        ? commercialSale.map(l => SLCM_listings.renderCard(l)).join('')
-        : '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+      const [unfurnished, furnished] = await Promise.all([
+        SLCM_listings.getPremiumListings(false, 6),
+        SLCM_listings.getPremiumListings(true,  6),
+      ]);
+      fillGrid('unfurnishedGrid', unfurnished);
+      fillGrid('furnishedGrid',   furnished);
     }
   });
   </script>
