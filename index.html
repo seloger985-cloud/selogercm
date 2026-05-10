@@ -24,9 +24,8 @@
   <meta name="twitter:title"       content="SE LOGER CM — Immobilier Douala : Location & Vente">
   <meta name="twitter:description" content="Agence immobilière à Douala et au Cameroun. Appartements, villas, maisons à louer ou à acheter.">
   <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
- <!-- Preload hero (gain ~1s sur LCP) -->
-  <link rel="preload" as="image" href="assets/img/fond.webp" type="image/webp" media="(min-width: 1px)" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/img/fond.jpg" type="image/jpeg" fetchpriority="high">
+ <!-- Preload hero WebP uniquement -->
+  <link rel="preload" as="image" href="assets/img/fond.webp" type="image/webp" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://hozlyddiqodvjguqywty.supabase.co" crossorigin>
@@ -73,9 +72,6 @@
   <!-- Styles du site -->
   <link rel="preload" href="assets/css/style.css" as="style">
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="preload" href="assets/js/supabase.js" as="script">
-  <link rel="preload" href="assets/js/auth.js" as="script">
-  <link rel="preload" href="assets/js/listings.js" as="script">
   <style>
     .listing-card {
       background: #fff; border-radius: 16px; overflow: hidden;
@@ -121,6 +117,26 @@
       display: grid !important;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
       gap: 1.2rem !important;
+    }
+    /* Réserver l'espace avant chargement JS → évite le CLS */
+    #unfurnishedGrid:empty, #furnishedGrid:empty,
+    #villasGrid:empty, #commercialRentGrid:empty,
+    #terrainsGrid:empty, #commercialSaleGrid:empty {
+      min-height: 340px;
+      position: relative;
+    }
+    #unfurnishedGrid:empty::after, #furnishedGrid:empty::after,
+    #villasGrid:empty::after, #commercialRentGrid:empty::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 16px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
     /* Villas : 3 cards, photo plus imposante */
     #villasGrid {

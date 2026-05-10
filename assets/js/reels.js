@@ -488,7 +488,7 @@ const SLCM_reels = (() => {
           <div class="reel-cta-row">
             <a href="${href}" class="reel-cta">Voir l'annonce →</a>
             <button class="reel-wa-btn" type="button"
-              data-wa-listing='${escapeHtml(JSON.stringify({title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
+              data-wa-listing='${escapeHtml(JSON.stringify({id: r.id||'', title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
               <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
           </div>
@@ -687,7 +687,7 @@ const SLCM_reels = (() => {
           <p class="viewer-price">${fmtPrice(r.price)}${rentMode}</p>
           <a href="${href}" class="viewer-cta">Voir l'annonce →</a>
           <button class="viewer-wa-btn" type="button"
-            data-wa-listing='${escapeHtml(JSON.stringify({title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
+            data-wa-listing='${escapeHtml(JSON.stringify({id: r.id||'', title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
             <i class="fab fa-whatsapp"></i> Contacter sur WhatsApp
           </button>
         </div>
