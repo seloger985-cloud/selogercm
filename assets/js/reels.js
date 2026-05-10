@@ -377,7 +377,8 @@ const SLCM_reels = (() => {
         background: linear-gradient(0deg, rgba(0,0,0,.9) 0%, rgba(0,0,0,0) 100%);
         color: #fff; pointer-events: none;
       }
-      #slcmReelViewer .viewer-info a { pointer-events: auto; }
+      #slcmReelViewer .viewer-info a,
+      #slcmReelViewer .viewer-info button { pointer-events: auto; }
       #slcmReelViewer .viewer-title {
         font-size: 1rem; font-weight: 800; margin: 0 0 .35rem;
         text-shadow: 0 1px 3px rgba(0,0,0,.6);
@@ -405,7 +406,8 @@ const SLCM_reels = (() => {
         background: linear-gradient(0deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,0) 100%);
         color: #fff; pointer-events: none;
       }
-      #reelsSection .reel-overlay a { pointer-events: auto; }
+      #reelsSection .reel-overlay a,
+      #reelsSection .reel-overlay button.reel-wa-btn { pointer-events: auto; }
       #reelsSection .reel-title {
         font-size: .95rem; font-weight: 800; margin: 0 0 .3rem;
         text-shadow: 0 1px 3px rgba(0,0,0,.6);

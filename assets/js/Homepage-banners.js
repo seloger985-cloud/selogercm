@@ -281,12 +281,22 @@
   border-radius: 0 3px 3px 0;
 }
 @media (max-width: 680px) {
-  .slcm-slide-track { height: auto; min-height: 90px; }
-  .slcm-slide-item { padding: 14px 18px; align-items: flex-start; }
-  .slcm-slide-content { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .slcm-slide-title { font-size: 14px; white-space: normal; }
-  .slcm-slide-cta { font-size: 11px; padding: 7px 14px; }
-  .slcm-slide-dots { bottom: 8px; right: 12px; }
+  /* Sur mobile : abandon du position:absolute → height naturelle */
+  .slcm-slide-track { height: auto; min-height: 0; }
+  .slcm-slide-item {
+    position: relative; inset: auto;
+    display: none;
+    padding: 16px 16px 36px;
+    align-items: flex-start;
+    opacity: 1;
+  }
+  .slcm-slide-item.active { display: flex; }
+  .slcm-slide-content { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
+  .slcm-slide-title { font-size: 13px; white-space: normal; line-height: 1.4; }
+  .slcm-slide-kicker { font-size: 9px; }
+  .slcm-slide-cta { font-size: 11px; padding: 7px 14px; align-self: flex-start; }
+  .slcm-slide-dots { bottom: 10px; right: 14px; }
+  .slcm-slide-banner::before { top: 15%; bottom: 15%; }
 }
 
 /* ════════════════════════════════════

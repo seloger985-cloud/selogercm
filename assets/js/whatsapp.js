@@ -104,7 +104,7 @@ const SLCM_WA = (() => {
       #slcm-wa-fab .wa-label { display: none; font-size: .82rem; font-weight: 800; white-space: nowrap; }
       @media (max-width: 600px) {
         #slcm-wa-fab {
-          bottom: 16px; right: 16px;
+          bottom: 16px; right: auto; left: 16px;
           width: auto; padding: 0 1.1rem; gap: .45rem; height: 50px;
         }
         #slcm-wa-fab .wa-label { display: block; }
