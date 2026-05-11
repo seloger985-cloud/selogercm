@@ -6,6 +6,17 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>Tarifs — SE LOGER CM</title>
   <meta name="description" content="Publiez vos annonces immobilières gratuitement ou boostez votre visibilité avec nos offres Pro.">
+  <link rel="canonical" href="https://www.selogercm.com/pricing">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://www.selogercm.com/pricing">
+  <meta property="og:title"       content="Tarifs & Boost Vitrine — SE LOGER CM">
+  <meta property="og:description" content="Publiez gratuitement ou boostez votre annonce immobilière à Douala. Formules Boost Starter, Pro et Max.">
+  <meta property="og:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
+  <meta property="og:locale"      content="fr_CM">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Tarifs & Boost Vitrine — SE LOGER CM">
+  <meta name="twitter:description" content="Publiez gratuitement ou boostez votre annonce immobilière à Douala.">
+  <meta name="twitter:image"       content="https://selogercm.com/assets/img/og-cover.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -527,11 +538,6 @@
              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
             <i class="fab fa-whatsapp"></i> Payer via WhatsApp
           </a>
-          <button onclick="openFlutterwave(10000, 'Boost Starter 7 jours')"
-             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
-             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i class="fas fa-credit-card"></i> Payer en ligne
-          </button>
         </div>
       </div>
 
@@ -551,11 +557,6 @@
              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
             <i class="fab fa-whatsapp"></i> Payer via WhatsApp
           </a>
-          <button onclick="openFlutterwave(15000, 'Boost Pro 15 jours')"
-             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
-             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i class="fas fa-credit-card"></i> Payer en ligne
-          </button>
         </div>
       </div>
 
@@ -574,11 +575,6 @@
              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
             <i class="fab fa-whatsapp"></i> Payer via WhatsApp
           </a>
-          <button onclick="openFlutterwave(20000, 'Boost Max 30 jours')"
-             style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:#ff7a00;color:#fff;border:none;border-radius:10px;padding:.65rem;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;transition:opacity .2s"
-             onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i class="fas fa-credit-card"></i> Payer en ligne
-          </button>
         </div>
       </div>
 
@@ -587,8 +583,8 @@
     <!-- Note paiement -->
     <div style="text-align:center;margin-top:2rem;padding:1rem;background:#fff;border-radius:14px;max-width:600px;margin-left:auto;margin-right:auto;margin-top:2rem">
       <p style="font-size:.82rem;color:#888;line-height:1.7">
-        <strong style="color:#111">💳 Paiements acceptés :</strong> MTN Mobile Money · Orange Money · Visa/Mastercard · Wave<br>
-        <span style="font-size:.78rem">Après paiement, envoyez la référence de votre annonce sur WhatsApp. Activation sous 2h.</span>
+        <strong style="color:#111">💳 Paiement via WhatsApp :</strong> MTN Mobile Money · Orange Money · Wave<br>
+        <span style="font-size:.78rem">Envoyez la référence de votre annonce sur WhatsApp. Activation sous 2h. Paiement en ligne disponible prochainement.</span>
       </p>
     </div>
   </div>
@@ -605,7 +601,7 @@
         <i class="fas fa-plus"></i>
       </div>
       <div class="faq-a">
-        Deux options : paiement en ligne via Flutterwave (MTN Mobile Money, Orange Money, Visa/Mastercard, Wave) ou directement sur WhatsApp au +237 650 840 714. L'activation se fait sous 2h après confirmation du paiement.
+        Envoyez votre demande sur WhatsApp au +237 650 840 714 avec la référence de votre annonce. Paiement accepté via MTN Mobile Money, Orange Money ou Wave. L'activation se fait sous 2h après confirmation du paiement.
       </div>
     </div>
 
@@ -665,46 +661,9 @@
 
 <footer></footer>
 
-<script src="https://checkout.flutterwave.com/v3.js"></script>
 <script src="assets/js/footer.js"></script>
 <script src="assets/js/nav.js"></script>
 <script>
-function openFlutterwave(amount, planName) {
-  /* Récupérer l'email de l'utilisateur connecté si possible */
-  const userEmail = window.SLCM?.getCurrentUser ? '' : '';
-
-  FlutterwaveCheckout({
-    public_key: "FLWPUBK-VOTRE-CLE-PUBLIQUE-ICI", /* ← Remplacer par votre clé Flutterwave */
-    tx_ref: "SLCM-BOOST-" + Date.now(),
-    amount: amount,
-    currency: "XAF",
-    payment_options: "mobilemoney, card",
-    customer: {
-      email: userEmail || "client@selogercm.com",
-      name:  "Client SE LOGER CM",
-    },
-    customizations: {
-      title:       "SE LOGER CM — " + planName,
-      description: planName + " · Boost Vitrine annonce immobilière",
-      logo:        "https://selogercm.com/assets/img/logo.png",
-    },
-    callback: function(data) {
-      if (data.status === "successful") {
-        /* Paiement réussi — rediriger vers WhatsApp pour envoyer la ref annonce */
-        const msg = encodeURIComponent(
-          "✅ Paiement confirmé !\n" +
-          "Formule : " + planName + "\n" +
-          "Référence paiement : " + data.transaction_id + "\n\n" +
-          "Référence de l'annonce à booster : [À COMPLÉTER]"
-        );
-        window.open("https://wa.me/237650840714?text=" + msg, "_blank");
-        alert("✅ Paiement réussi ! Redirigé vers WhatsApp pour finaliser l'activation.");
-      }
-    },
-    onclose: function() {}
-  });
-}
-
 function toggleFaq(el) {
   const answer = el.nextElementSibling;
   const isOpen = answer.classList.contains('open');
