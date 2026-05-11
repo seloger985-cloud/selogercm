@@ -127,7 +127,10 @@
       <div class="footer-inner">
         <div class="footer-top">
           <div class="footer-brand-col">
-            <img src="./assets/img/logo.png" alt="SE LOGER CM" class="footer-logo">
+            <picture>
+              <source srcset="./assets/img/logo.webp" type="image/webp">
+              <img src="./assets/img/logo.png" alt="SE LOGER CM" class="footer-logo" width="120" height="36">
+            </picture>
             <span class="footer-name">SE LOGER CM</span>
             <p>${C.tagline[lang]}</p>
             <div class="footer-social">
