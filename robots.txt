@@ -1,10 +1,10 @@
 User-agent: *
 Allow: /
+Allow: /agent.html
+Allow: /agent-profile.html
 Disallow: /admin.html
 Disallow: /admin_dashboard.html
 Disallow: /admin_dashboard
-Disallow: /agent.html
-Disallow: /agent-profile.html
 Disallow: /agent-dashboard.html
 Disallow: /dashboard.html
 Disallow: /ops.html

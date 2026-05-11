@@ -11,9 +11,7 @@
 
   <!-- Canonical — mise à jour dynamiquement après chargement -->
   <link rel="canonical" href="https://selogercm.com/listing_detail.html">
-  <link rel="alternate" hreflang="fr"        href="https://www.selogercm.com/listing_detail.html">
-  <link rel="alternate" hreflang="en"        href="https://www.selogercm.com/listing_detail.html">
-  <link rel="alternate" hreflang="x-default" href="https://www.selogercm.com/listing_detail.html">
+  <link rel="alternate" hreflang="x-default" href="https://www.selogercm.com/annonce">
 
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
   <meta property="og:type"        content="website">
@@ -1176,8 +1174,13 @@
 
                 /* Avatar */
                 const initials = (agentData.name || 'A').charAt(0).toUpperCase();
-                if (agentData.agent_photo) {
-                  agentAvatarEl.innerHTML = `<img src="${agentData.agent_photo}" alt="${escapeHtml(agentData.name)}" style="width:100%;height:100%;object-fit:cover">`;
+                if (agentData.agent_photo && /^https?:\/\//.test(agentData.agent_photo)) {
+                  const img = document.createElement('img');
+                  img.src = agentData.agent_photo;
+                  img.alt = escapeHtml(agentData.name);
+                  img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+                  agentAvatarEl.innerHTML = '';
+                  agentAvatarEl.appendChild(img);
                 } else {
                   agentAvatarEl.textContent = initials;
                 }
@@ -1394,8 +1397,12 @@
     function renderAgentModal(p) {
       /* Avatar */
       const avatarEl = document.getElementById('modalAvatar');
-      if (p.agent_photo) {
-        avatarEl.innerHTML = `<img src="${p.agent_photo}" alt="${escapeHtml(p.name || 'Agent')}">`;
+      if (p.agent_photo && /^https?:\/\//.test(p.agent_photo)) {
+        const img = document.createElement('img');
+        img.src = p.agent_photo;
+        img.alt = escapeHtml(p.name || 'Agent');
+        avatarEl.innerHTML = '';
+        avatarEl.appendChild(img);
       } else {
         avatarEl.innerHTML = `<span>${(p.name || 'A').charAt(0).toUpperCase()}</span>`;
       }
