@@ -67,14 +67,14 @@ exports.handler = async function (event) {
     if (SB_KEY) {
       if (isArticle && articleId) {
         /* ── Partage article de blog ── */
-        const apiUrl = `${SUPABASE_URL}/rest/v1/blog_articles?id=eq.${encodeURIComponent(articleId)}&select=title,excerpt,cover_url&limit=1`;
+        const apiUrl = `${SUPABASE_URL}/rest/v1/blog_articles?id=eq.${encodeURIComponent(articleId)}&select=title,excerpt,cover&limit=1`;
         const res  = await fetch(apiUrl, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' } });
         const data = await res.json();
         const art  = data && data[0];
         if (art) {
           title = `${art.title || 'Article'} | SE LOGER CM`;
           desc  = art.excerpt || desc;
-          img   = art.cover_url || DEFAULT_IMG;
+          img   = art.cover || DEFAULT_IMG;
         }
       } else if (slug) {
         /* ── Partage annonce ── */
