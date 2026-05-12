@@ -338,12 +338,25 @@
       return;
     }
 
-    const listings = await window.SLCM_listings.getListings({
+    let listings = await window.SLCM_listings.getListings({
       mode:      page.mode,
       type:      page.type      || undefined,
       district:  page.district  || undefined,
       furnished: page.furnished !== undefined ? page.furnished : undefined,
     });
+
+    /* Fallback 1 : même mode + même type, sans filtre quartier */
+    if (!listings.length && page.district) {
+      listings = await window.SLCM_listings.getListings({
+        mode: page.mode,
+        type: page.type || undefined,
+      });
+    }
+
+    /* Fallback 2 : même mode uniquement */
+    if (!listings.length) {
+      listings = await window.SLCM_listings.getListings({ mode: page.mode });
+    }
 
     if (!listings.length) {
       grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#aaa;padding:1.5rem">
