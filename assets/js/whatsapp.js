@@ -94,13 +94,9 @@ const SLCM_WA = (() => {
         overflow: hidden;
       }
       #slcm-wa-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,.55); }
-      #slcm-wa-fab .wa-label { display: none; font-size: .82rem; font-weight: 800; white-space: nowrap; }
+      #slcm-wa-fab .wa-label { display: none; }
       @media (max-width: 600px) {
-        #slcm-wa-fab {
-          bottom: 16px; right: auto; left: 16px;
-          width: auto; padding: 0 1.1rem; gap: .45rem; height: 50px;
-        }
-        #slcm-wa-fab .wa-label { display: block; }
+        #slcm-wa-fab { display: none !important; }
       }
     `;
     document.head.appendChild(style);

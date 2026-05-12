@@ -39,52 +39,64 @@ function firstImage(ad) {
 }
 
 exports.handler = async function (event) {
-  const path = event.path || '';
-  const slug = decodeURIComponent(path.replace('/share/', '').split('?')[0]);
-  const targetUrl = `${SITE}/annonce/${slug}`;
-  const shareUrl  = `${SITE}/share/${slug}`;
+  const path   = event.path || '';
+  const qs     = event.queryStringParameters || {};
+  const isArticle = qs.type === 'article' || path.includes('/share/article/');
+  const articleId  = qs.id || path.replace(/.*\/share\/article\//, '').split('?')[0];
+  const slug   = decodeURIComponent(path.replace('/share/', '').replace('article/', '').split('?')[0]);
+
+  const targetUrl = isArticle
+    ? `${SITE}/article?id=${encodeURIComponent(articleId)}`
+    : `${SITE}/annonce/${slug}`;
+  const shareUrl = isArticle
+    ? `${SITE}/share/article/${articleId}`
+    : `${SITE}/share/${slug}`;
 
   /* Détection crawler vs humain via User-Agent */
   const userAgent = (event.headers && (event.headers['user-agent'] || event.headers['User-Agent'])) || '';
   const isCrawler = CRAWLER_REGEX.test(userAgent);
 
-  /* Valeurs par défaut (cas sans slug ou erreur Supabase) */
+  /* Valeurs par défaut */
   let title = 'SE LOGER CM | Immobilier Cameroun';
-  let desc  = 'Découvrez cette annonce immobilière sur SE LOGER CM.';
+  let desc  = isArticle
+    ? 'Conseils et actualités immobilières au Cameroun par SE LOGER CM.'
+    : 'Découvrez cette annonce immobilière sur SE LOGER CM.';
   let img   = DEFAULT_IMG;
 
-  /* Récupération de l'annonce depuis Supabase */
   try {
-    if (SB_KEY && slug) {
-      const apiUrl =
-        `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}` +
-        `&select=title,description,price,city,district,images&limit=1`;
-
-      const res = await fetch(apiUrl, {
-        headers: {
-          apikey: SB_KEY,
-          Authorization: `Bearer ${SB_KEY}`,
-          Accept: 'application/json'
+    if (SB_KEY) {
+      if (isArticle && articleId) {
+        /* ── Partage article de blog ── */
+        const apiUrl = `${SUPABASE_URL}/rest/v1/blog_articles?id=eq.${encodeURIComponent(articleId)}&select=title,excerpt,cover_url&limit=1`;
+        const res  = await fetch(apiUrl, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' } });
+        const data = await res.json();
+        const art  = data && data[0];
+        if (art) {
+          title = `${art.title || 'Article'} | SE LOGER CM`;
+          desc  = art.excerpt || desc;
+          img   = art.cover_url || DEFAULT_IMG;
         }
-      });
-
-      const data = await res.json();
-      const ad = data && data[0];
-
-      if (ad) {
-        const price    = ad.price ? Number(ad.price).toLocaleString('fr-FR') + ' FCFA' : '';
-        const location = [ad.district, ad.city].filter(Boolean).join(', ');
-        title = `${ad.title || 'Annonce immobilière'} | SE LOGER CM`;
-        desc  = `${price}${location ? ' · ' + location : ''}. Contact rapide WhatsApp.`;
-        img   = firstImage(ad);
+      } else if (slug) {
+        /* ── Partage annonce ── */
+        const apiUrl =
+          `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}` +
+          `&select=title,description,price,city,district,images&limit=1`;
+        const res  = await fetch(apiUrl, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' } });
+        const data = await res.json();
+        const ad   = data && data[0];
+        if (ad) {
+          const price    = ad.price ? Number(ad.price).toLocaleString('fr-FR') + ' FCFA' : '';
+          const location = [ad.district, ad.city].filter(Boolean).join(', ');
+          title = `${ad.title || 'Annonce immobilière'} | SE LOGER CM`;
+          desc  = `${price}${location ? ' · ' + location : ''}. Contact rapide WhatsApp.`;
+          img   = firstImage(ad);
+        }
       }
     }
   } catch (e) {
     console.error('OG error:', e.message);
   }
 
-  /* Le meta refresh n'est inclus QUE pour les humains.
-     Les crawlers reçoivent la page sans redirection pour scraper les meta tags. */
   const refreshTag = isCrawler
     ? ''
     : `<meta http-equiv="refresh" content="0; url=${esc(targetUrl)}">`;

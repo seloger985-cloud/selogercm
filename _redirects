@@ -20,8 +20,9 @@
 /profil-agent      /profil-agent.html    200
 
 # OG tags pour partage social
-/share/:slug       /.netlify/functions/og?slug=:slug  200
-/share             /.netlify/functions/og             200
+/share/article/:id /.netlify/functions/og?type=article&id=:id  200
+/share/:slug       /.netlify/functions/og?slug=:slug            200
+/share             /.netlify/functions/og                       200
 
 # Pages légales
 /mentions-legales  /mentions-legales.html  200
