@@ -128,6 +128,27 @@
     /* Error state */
     .error-state { text-align: center; padding: 4rem 2rem; color: #666; }
 
+    /* Share bar */
+    .share-bar {
+      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+      padding: 1.2rem 1.5rem; background: #fff;
+      border-radius: 14px; margin: 2rem 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .share-bar span { font-size: .82rem; font-weight: 700; color: #555; margin-right: .25rem; }
+    .share-btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .45rem 1rem; border-radius: 999px;
+      font-size: .82rem; font-weight: 700; text-decoration: none;
+      transition: opacity .2s, transform .2s; border: none; cursor: pointer;
+    }
+    .share-btn:hover { opacity: .85; transform: translateY(-1px); }
+    .share-btn.wa  { background: #25d366; color: #fff; }
+    .share-btn.fb  { background: #1877f2; color: #fff; }
+    .share-btn.tw  { background: #000; color: #fff; }
+    .share-btn.copy { background: #f0f0f0; color: #333; }
+    .share-btn.copy.copied { background: #e8fdf0; color: #128c47; }
+
     @media (max-width: 600px) {
       .article-cover { height: 220px; }
     }
@@ -227,6 +248,22 @@
 
       <div class="article-body">${art.content}</div>
 
+      <div class="share-bar" id="shareBar">
+        <span>Partager :</span>
+        <a class="share-btn wa" id="shareWa" href="#" target="_blank" rel="noopener">
+          <i class="fab fa-whatsapp"></i> WhatsApp
+        </a>
+        <a class="share-btn fb" id="shareFb" href="#" target="_blank" rel="noopener">
+          <i class="fab fa-facebook-f"></i> Facebook
+        </a>
+        <a class="share-btn tw" id="shareTw" href="#" target="_blank" rel="noopener">
+          <i class="fab fa-x-twitter"></i> X
+        </a>
+        <button class="share-btn copy" id="shareCopy" type="button">
+          <i class="fas fa-link"></i> Copier le lien
+        </button>
+      </div>
+
       <div class="article-cta">
         <h3>Un projet immobilier à Douala ?</h3>
         <p>Notre équipe est disponible pour vous accompagner — location, vente, gestion ou investissement.</p>
@@ -237,6 +274,27 @@
 
       ${relatedHtml}
     `;
+
+    /* ── Partage social ── */
+    const shareUrl   = encodeURIComponent(window.location.href);
+    const shareTitle = encodeURIComponent(art.title + ' — SE LOGER CM');
+    const waEl   = document.getElementById('shareWa');
+    const fbEl   = document.getElementById('shareFb');
+    const twEl   = document.getElementById('shareTw');
+    const copyEl = document.getElementById('shareCopy');
+    if (waEl)   waEl.href   = `https://wa.me/?text=${shareTitle}%20${shareUrl}`;
+    if (fbEl)   fbEl.href   = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+    if (twEl)   twEl.href   = `https://twitter.com/intent/tweet?text=${shareTitle}&url=${shareUrl}`;
+    if (copyEl) copyEl.addEventListener('click', () => {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        copyEl.classList.add('copied');
+        copyEl.innerHTML = '<i class="fas fa-check"></i> Lien copié !';
+        setTimeout(() => {
+          copyEl.classList.remove('copied');
+          copyEl.innerHTML = '<i class="fas fa-link"></i> Copier le lien';
+        }, 2500);
+      });
+    });
   });
   </script>
   <script src="assets/js/cookies.js" defer></script>

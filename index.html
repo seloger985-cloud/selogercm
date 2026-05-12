@@ -476,6 +476,15 @@
   /* ── Accueil : annonces via CDN cache (homepage-listings function) ── */
   document.addEventListener('DOMContentLoaded', async () => {
     const empty = '<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce pour le moment.</p>';
+
+    /* Rotation déterministe côté client (tranche de 30 min) */
+    function rotate(arr, limit) {
+      if (!arr.length) return arr;
+      const seed   = Math.floor(Date.now() / (30 * 60 * 1000));
+      const offset = seed % arr.length;
+      return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, limit || arr.length);
+    }
+
     function cards(list) {
       return list.length ? list.map(l => SLCM_listings.renderCard(l)).join('') : empty;
     }
@@ -490,8 +499,8 @@
       if (!res.ok) throw new Error('function ' + res.status);
       const data = await res.json();
 
-      fillGrid('unfurnishedGrid',  data.unfurnished    || []);
-      fillGrid('furnishedGrid',    data.furnished      || []);
+      fillGrid('unfurnishedGrid',  rotate(data.unfurnished  || [], 6));
+      fillGrid('furnishedGrid',    rotate(data.furnished    || [], 6));
       fillGrid('commercialRentGrid', data.commercialRent || []);
       fillGrid('villasGrid',       data.villas         || []);
       fillGrid('terrainsGrid',     data.terrains       || []);
