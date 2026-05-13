@@ -18,7 +18,7 @@
 
 const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
 const SB_KEY = process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const SITE = 'https://selogercm.com';
+const SITE = 'https://www.selogercm.com';
 const DEFAULT_IMG = `${SITE}/assets/img/og-cover.png`;
 
 /* User-Agents des crawlers sociaux qu'on doit servir SANS redirection.
@@ -33,8 +33,16 @@ function esc(v = '') {
     .replace(/"/g, '&quot;');
 }
 
+/* Transforme une image portrait (smartphone) en 1200×630 paysage pour OG.
+   wsrv.nl est un CDN open-source gratuit — aucun compte requis.
+   Sans transform, Facebook réduit les images portrait à une vignette à gauche. */
+function ogImage(url) {
+  if (!url) return DEFAULT_IMG;
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=1200&h=630&fit=cover&output=jpg&q=80`;
+}
+
 function firstImage(ad) {
-  if (Array.isArray(ad.images) && ad.images.length) return ad.images[0];
+  if (Array.isArray(ad.images) && ad.images.length) return ogImage(ad.images[0]);
   return DEFAULT_IMG;
 }
 
@@ -77,10 +85,10 @@ exports.handler = async function (event) {
           img   = art.cover || DEFAULT_IMG;
         }
       } else if (slug) {
-        /* ── Partage annonce ── */
-        const apiUrl =
-          `${SUPABASE_URL}/rest/v1/listings?slug=eq.${encodeURIComponent(slug)}` +
-          `&select=title,description,price,city,district,images&limit=1`;
+        /* ── Partage annonce : cherche par slug d'abord, puis par id (UUID) ── */
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const filter  = UUID_RE.test(slug) ? `id=eq.${encodeURIComponent(slug)}` : `slug=eq.${encodeURIComponent(slug)}`;
+        const apiUrl  = `${SUPABASE_URL}/rest/v1/listings?${filter}&select=title,description,price,city,district,images&limit=1`;
         const res  = await fetch(apiUrl, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' } });
         const data = await res.json();
         const ad   = data && data[0];
