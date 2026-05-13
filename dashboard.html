@@ -35,6 +35,11 @@
     .stat-card.blue .num   { color:#1565c0; }
     .stat-card .lbl   { font-size:.75rem; color:#888; font-weight:600; margin-top:2px; }
 
+    .expiry-badge { position:absolute; bottom:10px; left:10px; border-radius:999px; padding:.2rem .6rem; font-size:.68rem; font-weight:800; color:#fff; }
+    .expiry-badge.expired  { background:#dc2626; }
+    .expiry-badge.expiring { background:#f59e0b; }
+    .btn-renew { background:#dcfce7; color:#16a34a; border:1px solid #bbf7d0 !important; }
+
     .quick-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:2rem; }
     .btn-action { display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1.2rem; border-radius:12px; font-family:inherit; font-size:.88rem; font-weight:700; cursor:pointer; text-decoration:none; transition:transform .15s,opacity .15s; border:none; }
     .btn-action:hover { transform:translateY(-2px); opacity:.9; }
@@ -149,6 +154,7 @@
       <div class="stat-card blue"><div class="num" id="statLoue">0</div><div class="lbl">Loués / Vendus</div></div>
       <div class="stat-card gray2"><div class="num" id="statNego">0</div><div class="lbl">En négociation</div></div>
       <div class="stat-card" style="border-left-color:#8b5cf6"><div class="num" id="statVues" style="color:#8b5cf6">0</div><div class="lbl">Vues totales</div></div>
+      <div class="stat-card" style="border-left-color:#dc2626"><div class="num" id="statExpired" style="color:#dc2626">0</div><div class="lbl">Expirées</div></div>
     </div>
 
     <div class="quick-actions">
@@ -174,6 +180,7 @@
       <button class="filter-pill" data-filter="disponible">Disponibles</button>
       <button class="filter-pill" data-filter="negociation">En négociation</button>
       <button class="filter-pill" data-filter="loue">Loués / Vendus</button>
+      <button class="filter-pill" data-filter="expired">⚠️ Expirées</button>
     </div>
 
     <div id="listingsGrid" class="listing-grid"></div>
@@ -326,12 +333,16 @@ async function loadMyListings(userId) {
 function renderGrid() {
   const grid  = document.getElementById('listingsGrid');
   const empty = document.getElementById('emptyState');
-  const list  = currentFilter ? allListings.filter(a => a.statut === currentFilter) : allListings;
+  const now   = new Date();
+  const list  = currentFilter === 'expired'
+    ? allListings.filter(a => a.expires_at && new Date(a.expires_at) < now)
+    : currentFilter ? allListings.filter(a => a.statut === currentFilter) : allListings;
 
-  document.getElementById('statTotal').textContent = allListings.length;
-  document.getElementById('statDispo').textContent = allListings.filter(a => (a.statut||'disponible') === 'disponible').length;
-  document.getElementById('statLoue').textContent  = allListings.filter(a => a.statut === 'loue').length;
-  document.getElementById('statNego').textContent  = allListings.filter(a => a.statut === 'negociation').length;
+  document.getElementById('statTotal').textContent   = allListings.length;
+  document.getElementById('statDispo').textContent   = allListings.filter(a => (a.statut||'disponible') === 'disponible').length;
+  document.getElementById('statLoue').textContent    = allListings.filter(a => a.statut === 'loue').length;
+  document.getElementById('statNego').textContent    = allListings.filter(a => a.statut === 'negociation').length;
+  document.getElementById('statExpired').textContent = allListings.filter(a => a.expires_at && new Date(a.expires_at) < now).length;
   const totalViews = allListings.reduce((sum, a) => sum + (a.views || 0), 0);
   document.getElementById('statVues').textContent = totalViews;
 
@@ -341,17 +352,29 @@ function renderGrid() {
   grid.style.display = 'grid'; empty.style.display = 'none';
 
   grid.innerHTML = list.map(ad => {
-    const img  = ad.images?.[0] || 'assets/img/no-image.png';
-    const title = ad.title_fr || ad.title || 'Annonce';
-    const st   = ad.statut || 'disponible';
-    const stLab = { disponible:'Disponible', negociation:'En négociation', loue:'Loué / Vendu' }[st];
-    const mode  = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';
+    const img    = ad.images?.[0] || 'assets/img/no-image.png';
+    const title  = ad.title_fr || ad.title || 'Annonce';
+    const st     = ad.statut || 'disponible';
+    const stLab  = { disponible:'Disponible', negociation:'En négociation', loue:'Loué / Vendu' }[st];
+    const mode   = ad.rentSale === 'sale' ? 'À vendre' : 'À louer';
     const pCount = ad.images?.length || 0;
+
+    const expiresAt   = ad.expires_at ? new Date(ad.expires_at) : null;
+    const isExpired   = expiresAt && expiresAt < now;
+    const daysLeft    = expiresAt ? Math.ceil((expiresAt - now) / (1000*60*60*24)) : null;
+    const isExpiring  = !isExpired && daysLeft !== null && daysLeft <= 7;
+    const expiryBadge = isExpired
+      ? '<span class="expiry-badge expired">Expirée</span>'
+      : isExpiring ? `<span class="expiry-badge expiring">Expire dans ${daysLeft}j</span>` : '';
+    const renewBtn = (isExpired || isExpiring)
+      ? `<button class="btn-renew" onclick="prolongListing('${ad.id}')">🔄 +30j</button>` : '';
+
     return `
       <div class="dash-card">
         <div class="thumb">
           <img src="${img}" alt="${title}" loading="lazy">
           <span class="status-badge s-${st}">${stLab}</span>
+          ${expiryBadge}
           ${pCount > 1 ? `<span class="photo-count"><i class="fas fa-camera"></i> ${pCount}</span>` : ''}
         </div>
         <div class="info">
@@ -365,11 +388,13 @@ function renderGrid() {
             <span style="color:#aaa">vue${(ad.views||0)>1?'s':''}</span>
             ${(ad.views||0) >= 10 ? '<span style="background:#fff4e8;color:#ff7a00;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:800">🔥 Populaire</span>' : ''}
           </div>
+          ${expiresAt && !isExpired ? `<div style="font-size:.7rem;color:${isExpiring?'#f59e0b':'#aaa'};margin-top:3px;font-weight:600">📅 Expire le ${expiresAt.toLocaleDateString('fr-FR')}</div>` : ''}
         </div>
         <div class="card-actions">
           <button class="btn-view"   onclick="viewListing('${ad.id}')"><i class="fas fa-eye"></i> Voir</button>
           <button class="btn-edit"   onclick="openEdit('${ad.id}')"><i class="fas fa-edit"></i> Modifier</button>
           <button class="btn-status" onclick="openStatus('${ad.id}')"><i class="fas fa-toggle-on"></i> Statut</button>
+          ${renewBtn}
           <button class="btn-boost"  onclick="openBoostRequest('${ad.id}', '${ad.title_fr || ad.title}', '${ad.ref || ''}', '${ad.rentSale || ad.rent_sale}')">⚡ Boost</button>
           <button class="btn-delete" onclick="deleteListing('${ad.id}')"><i class="fas fa-trash"></i></button>
         </div>
@@ -378,6 +403,20 @@ function renderGrid() {
 }
 
 function viewListing(id) { window.location.href = '/annonce?id=' + id; }
+
+async function prolongListing(id) {
+  const newExpiry = new Date();
+  newExpiry.setDate(newExpiry.getDate() + 30);
+  const { error } = await window.SLCM_DB.client
+    .from('listings')
+    .update({ expires_at: newExpiry.toISOString(), status: 'active' })
+    .eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  const idx = allListings.findIndex(a => a.id === id);
+  if (idx !== -1) allListings[idx].expires_at = newExpiry.toISOString();
+  renderGrid();
+  showToast('Annonce prolongée de 30 jours ✅');
+}
 
 async function deleteListing(id) {
   const ad = allListings.find(a => a.id === id);

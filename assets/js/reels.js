@@ -22,7 +22,7 @@ const SLCM_reels = (() => {
   const MOBILE_LIMIT  = 8;
 
   const MOBILE_QUOTA = {
-    rentUnfurnished: 5,
+    rentUnfurnished: 4,
     rentFurnishedOrCommercial: 2,
     sale: 1
   };
