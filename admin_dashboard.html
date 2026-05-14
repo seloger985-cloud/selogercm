@@ -677,10 +677,14 @@
         ? { kyc_status: 'verified', verified_at: now }
         : { kyc_status: 'rejected' };
 
-      const { error } = await window.SLCM_DB.client
-        .from('profiles').update(updates).eq('id', profileId);
+      const { data: updated, error } = await window.SLCM_DB.client
+        .from('profiles').update(updates).eq('id', profileId).select('id');
 
       if (error) { alert('Erreur : ' + error.message); return; }
+      if (!updated || !updated.length) {
+        alert('Mise à jour bloquée — vérifiez la policy RLS UPDATE sur la table profiles.\nSQL : CREATE POLICY "Admin update all profiles" ON profiles FOR UPDATE TO authenticated USING ((auth.jwt()->\'user_metadata\'->>\'role\')=\'admin\') WITH CHECK ((auth.jwt()->\'user_metadata\'->>\'role\')=\'admin\');');
+        return;
+      }
 
       /* Retire la carte sans recharger toute la liste */
       document.getElementById(`kycCard-${profileId}`)?.remove();
