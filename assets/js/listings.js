@@ -13,8 +13,7 @@ const SLCM_listings = (() => {
     'id', 'title', 'images', 'video_url',
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
-    'type', 'status', 'created_at', 'owner_phone', 'owner_id',
-    'profiles!owner_id(kyc_status,is_pro)'
+    'type', 'status', 'created_at', 'owner_phone'
   ].join(',');
 
   /* ── Formatage prix ─────────────────────────────────────────────── */
@@ -202,10 +201,6 @@ const SLCM_listings = (() => {
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
     const isBoosted = listing.boost_expires_at && new Date(listing.boost_expires_at) > Date.now();
-    const ownerProfile = listing.profiles;
-    const isVerifiedAgent = ownerProfile?.kyc_status === 'verified';
-    const isProAgent      = !!ownerProfile?.is_pro;
-
     const badge = isBoosted
       ? '<div class="listing-badge premium" style="background:#ff7a00">⚡ VITRINE</div>'
       : listing.premium
@@ -214,11 +209,6 @@ const SLCM_listings = (() => {
           ? '<div class="listing-badge">Meublé</div>'
           : '';
 
-    const agentBadges = (isVerifiedAgent || isProAgent) ? `
-      <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px">
-        ${isVerifiedAgent ? '<span style="background:rgba(22,163,74,.9);color:#fff;border-radius:999px;padding:.15rem .5rem;font-size:.65rem;font-weight:800">✅ Vérifié</span>' : ''}
-        ${isProAgent      ? '<span style="background:rgba(146,64,14,.9);color:#fff;border-radius:999px;padding:.15rem .5rem;font-size:.65rem;font-weight:800">⭐ Pro</span>' : ''}
-      </div>` : '';
     const fav = showFav
       ? `<button class="fav-btn" data-id="${listing.id}" title="Ajouter aux favoris" onclick="event.preventDefault()">
            <i class="far fa-heart"></i>
@@ -230,7 +220,6 @@ const SLCM_listings = (() => {
          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" width="400" height="200" style="width:100%;height:100%;object-fit:cover">
             ${badge}
-            ${agentBadges}
             ${hasVideo ? '<div class="card-video-badge"><span class="pulse-dot"></span><i class="fas fa-video"></i> Vidéo</div>' : ''}
             ${fav}
           </div>
