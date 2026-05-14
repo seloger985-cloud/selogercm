@@ -603,9 +603,9 @@
 
       const { data, error } = await window.SLCM_DB.client
         .from('profiles')
-        .select('id, name, email, kyc_status, kyc_doc_url, kyc_doc_verso, created_at')
+        .select('id, name, agent_phone, phone, agent_photo, kyc_status, kyc_doc_url, kyc_doc_verso, verified_at')
         .eq('kyc_status', status)
-        .order('created_at', { ascending: false });
+        .order('verified_at', { ascending: false, nullsFirst: true });
 
       if (error) { grid.innerHTML = `<p style="color:red">Erreur : ${error.message}</p>`; return; }
 
@@ -624,10 +624,10 @@
       grid.innerHTML = data.map(p => `
         <div class="kyc-card" id="kycCard-${p.id}">
           <div class="kyc-card-head">
-            <div class="kyc-avatar">🧑</div>
+            <div class="kyc-avatar">${p.agent_photo ? `<img src="${esc(p.agent_photo)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover">` : '🧑'}</div>
             <div>
               <div class="kyc-name">${esc(p.name || '—')}</div>
-              <div class="kyc-email">${esc(p.email || '—')}</div>
+              <div class="kyc-email">${esc(p.agent_phone || p.phone || '—')}</div>
             </div>
           </div>
           <div class="kyc-docs">
