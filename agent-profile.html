@@ -223,9 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Tout est OK — afficher la page */
   document.getElementById('mainContent').style.display = 'block';
 
-  /* Déconnexion */
-  document.getElementById('signOutBtn').addEventListener('click', () => SLCM.signOut());
-
   await loadAgents();
   bindFilters();
   bindNote();
