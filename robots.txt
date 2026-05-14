@@ -12,6 +12,6 @@ Disallow: /connexion
 Disallow: /.netlify/
 # Allow public sitemap endpoints
 Allow: /sitemap-listings.xml
-Allow: /.netlify/functions/sitemap-listings
+Allow: /sitemap-articles.xml
 
 Sitemap: https://www.selogercm.com/sitemap-index.xml
