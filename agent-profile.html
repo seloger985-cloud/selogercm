@@ -121,7 +121,7 @@
   </div>
 </header>
 
-<main>
+<main style="display:none" id="mainContent">
   <div class="wrap">
 
     <div class="page-head">
@@ -216,17 +216,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (!window.SLCM_DB?.client) { document.body.innerHTML = '<p style="padding:2rem">Erreur de connexion.</p>'; return; }
 
-  /* Vérification admin */
-  const { data: { user } } = await window.SLCM_DB.client.auth.getUser();
-  if (!user) { window.location.href = '/connexion'; return; }
-  const { data: profile } = await window.SLCM_DB.client.from('profiles').select('role').eq('id', user.id).single();
-  if (!profile || profile.role !== 'admin') { window.location.href = '/'; return; }
+  /* Vérification admin — utilise user_metadata.role (même source que auth.js) */
+  const user = await SLCM.requireAdmin();
+  if (!user) return; /* requireAdmin redirige lui-même vers /connexion */
+
+  /* Tout est OK — afficher la page */
+  document.getElementById('mainContent').style.display = 'block';
 
   /* Déconnexion */
-  document.getElementById('signOutBtn').addEventListener('click', async () => {
-    await window.SLCM_DB.client.auth.signOut();
-    window.location.href = '/';
-  });
+  document.getElementById('signOutBtn').addEventListener('click', () => SLCM.signOut());
 
   await loadAgents();
   bindFilters();
