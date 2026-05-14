@@ -238,7 +238,11 @@ async function loadAgents() {
     .select('id, name, agent_phone, phone, agent_photo, kyc_status, is_pro, is_suspended, admin_note, verified_at, created_at')
     .order('created_at', { ascending: false });
 
-  if (error) { showToast('Erreur : ' + error.message); return; }
+  if (error) {
+    document.getElementById('agentGrid').innerHTML = `<div style="grid-column:1/-1;background:#fee2e2;border-radius:12px;padding:1rem;color:#dc2626;font-weight:700">
+      Erreur Supabase : ${error.message}</div>`;
+    return;
+  }
   allAgents = data || [];
 
   /* Charger le nb d'annonces par agent */
