@@ -471,7 +471,10 @@
         <i class="fas fa-user"></i>
       </div>
       <div class="agent-modal-name" id="modalName">—</div>
-      <div class="agent-modal-verified" id="modalVerified" style="display:none">✅ Agent Vérifié</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:.2rem">
+        <div class="agent-modal-verified" id="modalVerified" style="display:none">✅ Agent Vérifié</div>
+        <div class="agent-modal-verified" id="modalPro" style="display:none;background:#fef3c7;color:#92400e">⭐ Agent Pro</div>
+      </div>
       <div class="agent-modal-bio" id="modalBio"></div>
       <div class="agent-modal-stats" id="modalStats" style="display:none">
         <div class="agent-modal-stat">
@@ -994,7 +997,10 @@
                     <div id="agentAvatar" style="width:44px;height:44px;border-radius:50%;background:#eee;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;color:#888;font-size:1.1rem"></div>
                     <div>
                       <div id="agentName" style="font-weight:800;font-size:.9rem;color:#111"></div>
-                      <div id="agentBadge" style="display:none;font-size:.72rem;color:var(--orange);font-weight:700">✅ Agent Vérifié</div>
+                      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
+                        <div id="agentBadge" style="display:none;font-size:.72rem;color:#16a34a;font-weight:700">✅ Vérifié</div>
+                        <div id="agentProBadge" style="display:none;font-size:.72rem;color:#92400e;font-weight:700">⭐ Pro</div>
+                      </div>
                     </div>
                   </div>
                   <div class="agent-trigger-hint">
@@ -1020,9 +1026,9 @@
                  style="background:#fff8f0;border:2px solid var(--orange);color:var(--orange);font-weight:800;margin-top:.3rem">
                 <i class="fas fa-calendar-check"></i> Réserver une visite
               </a>
-              <p class="contact-note">
+              <p class="contact-note" id="contactNote">
                 <i class="fas fa-shield-alt"></i>
-                SE LOGER CM vérifie toutes les annonces
+                Annonce publiée sur SE LOGER CM
               </p>
 
               <!-- Partage social -->
@@ -1188,9 +1194,23 @@
                 /* Nom */
                 if (agentNameEl) agentNameEl.textContent = agentData.name || 'Agent SE LOGER CM';
 
-                /* Badge vérifié */
+                /* Badges vérifié + pro */
                 if (agentBadgeEl && agentData.kyc_status === 'verified') {
-                  agentBadgeEl.style.display = 'block';
+                  agentBadgeEl.style.display = 'inline-block';
+                }
+                const agentProBadgeEl = document.getElementById('agentProBadge');
+                if (agentProBadgeEl && agentData.is_pro) {
+                  agentProBadgeEl.style.display = 'inline-block';
+                }
+
+                /* Mention de confiance dynamique */
+                const noteEl = document.getElementById('contactNote');
+                if (noteEl) {
+                  if (agentData.kyc_status === 'verified' && agentData.is_pro) {
+                    noteEl.innerHTML = '<i class="fas fa-shield-alt" style="color:#16a34a"></i> Agent Pro certifié par SE LOGER CM';
+                  } else if (agentData.kyc_status === 'verified') {
+                    noteEl.innerHTML = '<i class="fas fa-shield-alt" style="color:#16a34a"></i> Identité vérifiée par SE LOGER CM';
+                  }
                 }
 
                 /* Afficher la section */
@@ -1410,9 +1430,12 @@
       /* Nom */
       document.getElementById('modalName').textContent = p.name || 'Agent SE LOGER CM';
 
-      /* Vérifié */
-      if (p.is_pro && p.verified_at) {
-        document.getElementById('modalVerified').style.display = 'block';
+      /* Badges vérifié + pro */
+      if (p.kyc_status === 'verified') {
+        document.getElementById('modalVerified').style.display = 'inline-block';
+      }
+      if (p.is_pro) {
+        document.getElementById('modalPro').style.display = 'inline-block';
       }
 
       /* Bio */
