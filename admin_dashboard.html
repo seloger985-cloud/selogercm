@@ -621,7 +621,28 @@
         grid.innerHTML = ''; empty.style.display = 'block'; return;
       }
 
-      grid.innerHTML = data.map(p => `
+      /* Générer les URLs signées (1h) pour les docs KYC — bucket privé */
+      function extractKycPath(url) {
+        if (!url) return null;
+        const m = url.match(/\/object\/(?:public|sign)\/kyc-docs\/(.+?)(\?|$)/);
+        return m ? m[1] : null;
+      }
+      async function signedUrl(url) {
+        const path = extractKycPath(url);
+        if (!path) return url;
+        const { data: s } = await window.SLCM_DB.client.storage
+          .from('kyc-docs').createSignedUrl(path, 3600);
+        return s?.signedUrl || url;
+      }
+
+      /* Préparer toutes les URLs signées en parallèle */
+      const profiles = await Promise.all(data.map(async p => ({
+        ...p,
+        _rectoSigned: await signedUrl(p.kyc_doc_url),
+        _versoSigned: await signedUrl(p.kyc_doc_verso),
+      })));
+
+      grid.innerHTML = profiles.map(p => `
         <div class="kyc-card" id="kycCard-${p.id}">
           <div class="kyc-card-head">
             <div class="kyc-avatar">${p.agent_photo ? `<img src="${esc(p.agent_photo)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover">` : '🧑'}</div>
@@ -632,11 +653,13 @@
           </div>
           <div class="kyc-docs">
             <div>
-              <img class="kyc-doc-img" src="${esc(p.kyc_doc_url || '')}" alt="Recto" onclick="window.open(this.src,'_blank')">
+              <img class="kyc-doc-img" src="${esc(p._rectoSigned || '')}" alt="Recto"
+                   onclick="window.open('${esc(p._rectoSigned || '')}','_blank')">
               <div class="kyc-doc-label">RECTO</div>
             </div>
             <div>
-              <img class="kyc-doc-img" src="${esc(p.kyc_doc_verso || '')}" alt="Verso" onclick="window.open(this.src,'_blank')">
+              <img class="kyc-doc-img" src="${esc(p._versoSigned || '')}" alt="Verso"
+                   onclick="window.open('${esc(p._versoSigned || '')}','_blank')">
               <div class="kyc-doc-label">VERSO</div>
             </div>
           </div>
