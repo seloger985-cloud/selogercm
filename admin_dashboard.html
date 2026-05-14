@@ -104,6 +104,24 @@
     .pager button:hover:not(:disabled) { border-color:#111; }
     .pager button:disabled { opacity:.35; cursor:not-allowed; }
     .pager-info { font-size:.82rem; color:#888; font-weight:600; }
+
+    /* ── KYC ── */
+    .kyc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+    .kyc-card { background:#fff; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.07); overflow:hidden; }
+    .kyc-card-head { padding:14px 16px 10px; display:flex; align-items:center; gap:10px; }
+    .kyc-avatar { width:42px; height:42px; border-radius:50%; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .kyc-name { font-weight:800; font-size:.92rem; color:#111; }
+    .kyc-email { font-size:.75rem; color:#888; }
+    .kyc-docs { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 14px 12px; }
+    .kyc-doc-img { width:100%; aspect-ratio:3/2; object-fit:cover; border-radius:8px; background:#eee; cursor:pointer; transition:opacity .2s; }
+    .kyc-doc-img:hover { opacity:.85; }
+    .kyc-doc-label { font-size:.68rem; font-weight:700; color:#888; text-align:center; margin-top:4px; }
+    .kyc-actions { display:flex; gap:8px; padding:0 14px 14px; }
+    .kyc-approve { flex:1; padding:.55rem; border:none; border-radius:8px; background:#dcfce7; color:#16a34a; font-family:inherit; font-weight:800; font-size:.82rem; cursor:pointer; transition:opacity .2s; }
+    .kyc-approve:hover { opacity:.82; }
+    .kyc-reject  { flex:1; padding:.55rem; border:none; border-radius:8px; background:#fee2e2; color:#dc2626; font-family:inherit; font-weight:800; font-size:.82rem; cursor:pointer; transition:opacity .2s; }
+    .kyc-reject:hover { opacity:.82; }
+    .kyc-badge-pending  { display:inline-block; background:#dbeafe; color:#1d4ed8; border-radius:999px; padding:.15rem .55rem; font-size:.68rem; font-weight:800; margin-left:6px; }
   </style>
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -184,6 +202,7 @@
       <div class="admin-tabs" id="adminTabs">
         <button class="admin-tab active" data-tab="annonces">📋 Annonces<span class="tab-count" id="tabCountAnn"></span></button>
         <button class="admin-tab" data-tab="blog">📝 Blog</button>
+        <button class="admin-tab" data-tab="kyc">🪪 KYC<span class="tab-count" id="tabCountKyc"></span></button>
       </div>
 
       <!-- ── Tab : Annonces ── -->
@@ -192,6 +211,20 @@
           <div id="results" class="grid"></div>
           <div id="empty" class="empty" style="display:none">No listing matches your filters.</div>
           <div class="pager" id="pager"></div>
+        </div>
+      </div>
+
+      <!-- ── Tab : KYC ── -->
+      <div id="tabKyc" style="display:none">
+        <div class="panel">
+          <h2>Vérifications d'identité <span id="kycPendingBadge"></span></h2>
+          <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+            <button class="btn btn-ghost kyc-filter-btn active" data-status="pending">⏳ En attente</button>
+            <button class="btn btn-ghost kyc-filter-btn" data-status="verified">✅ Validées</button>
+            <button class="btn btn-ghost kyc-filter-btn" data-status="rejected">❌ Rejetées</button>
+          </div>
+          <div id="kycGrid" class="kyc-grid"></div>
+          <div id="kycEmpty" class="empty" style="display:none">Aucune demande dans cette catégorie.</div>
         </div>
       </div>
 
@@ -546,7 +579,103 @@
       document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b===btn));
       document.getElementById('tabAnnonces').style.display = tab === 'annonces' ? 'block' : 'none';
       document.getElementById('tabBlog').style.display     = tab === 'blog'     ? 'block' : 'none';
+      document.getElementById('tabKyc').style.display      = tab === 'kyc'      ? 'block' : 'none';
+      if (tab === 'kyc') loadKyc('pending');
     });
+
+    /* ══════════════ KYC ══════════════ */
+    let _kycStatus = 'pending';
+
+    document.querySelectorAll('.kyc-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.kyc-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadKyc(btn.dataset.status);
+      });
+    });
+
+    async function loadKyc(status = 'pending') {
+      _kycStatus = status;
+      const grid  = document.getElementById('kycGrid');
+      const empty = document.getElementById('kycEmpty');
+      grid.innerHTML = '<p style="color:#aaa;padding:1rem">Chargement…</p>';
+      empty.style.display = 'none';
+
+      const { data, error } = await window.SLCM_DB.client
+        .from('profiles')
+        .select('id, name, email, kyc_status, kyc_doc_url, kyc_doc_verso, created_at')
+        .eq('kyc_status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) { grid.innerHTML = `<p style="color:red">Erreur : ${error.message}</p>`; return; }
+
+      /* Badge compteur onglet pending */
+      if (status === 'pending') {
+        const count = (data || []).length;
+        document.getElementById('tabCountKyc').textContent = count ? ` (${count})` : '';
+        document.getElementById('kycPendingBadge').innerHTML = count
+          ? `<span class="kyc-badge-pending">${count} en attente</span>` : '';
+      }
+
+      if (!data || !data.length) {
+        grid.innerHTML = ''; empty.style.display = 'block'; return;
+      }
+
+      grid.innerHTML = data.map(p => `
+        <div class="kyc-card" id="kycCard-${p.id}">
+          <div class="kyc-card-head">
+            <div class="kyc-avatar">🧑</div>
+            <div>
+              <div class="kyc-name">${esc(p.name || '—')}</div>
+              <div class="kyc-email">${esc(p.email || '—')}</div>
+            </div>
+          </div>
+          <div class="kyc-docs">
+            <div>
+              <img class="kyc-doc-img" src="${esc(p.kyc_doc_url || '')}" alt="Recto" onclick="window.open(this.src,'_blank')">
+              <div class="kyc-doc-label">RECTO</div>
+            </div>
+            <div>
+              <img class="kyc-doc-img" src="${esc(p.kyc_doc_verso || '')}" alt="Verso" onclick="window.open(this.src,'_blank')">
+              <div class="kyc-doc-label">VERSO</div>
+            </div>
+          </div>
+          ${status === 'pending' ? `
+          <div class="kyc-actions">
+            <button class="kyc-approve" onclick="kycDecision('${p.id}','verified')">✅ Valider</button>
+            <button class="kyc-reject"  onclick="kycDecision('${p.id}','rejected')">❌ Rejeter</button>
+          </div>` : ''}
+        </div>`).join('');
+    }
+
+    async function kycDecision(profileId, decision) {
+      const now = new Date().toISOString();
+      const updates = decision === 'verified'
+        ? { kyc_status: 'verified', verified_at: now }
+        : { kyc_status: 'rejected' };
+
+      const { error } = await window.SLCM_DB.client
+        .from('profiles').update(updates).eq('id', profileId);
+
+      if (error) { alert('Erreur : ' + error.message); return; }
+
+      /* Retire la carte sans recharger toute la liste */
+      document.getElementById(`kycCard-${profileId}`)?.remove();
+      const remaining = document.querySelectorAll('#kycGrid .kyc-card').length;
+      if (!remaining) {
+        document.getElementById('kycGrid').innerHTML = '';
+        document.getElementById('kycEmpty').style.display = 'block';
+      }
+      /* Met à jour le badge */
+      const countEl = document.getElementById('tabCountKyc');
+      const cur = parseInt(countEl.textContent.replace(/\D/g,'')) || 0;
+      const next = Math.max(0, cur - 1);
+      countEl.textContent = next ? ` (${next})` : '';
+    }
+
+    function esc(v='') {
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
     (async () => { await render(); })();
 
