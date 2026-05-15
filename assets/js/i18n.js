@@ -49,6 +49,8 @@
     unfurnishedSub:   { fr: 'Premium • Non Meublé',         en: 'Premium • Unfurnished' },
     furnishedTitle:   { fr: 'Top Appartements Meublés',     en: 'Top Furnished Apartments' },
     furnishedSub:     { fr: 'Premium • Meublé',             en: 'Premium • Furnished' },
+    commercialTitle:  { fr: 'Locaux Commerciaux',           en: 'Commercial Spaces' },
+    commercialSub:    { fr: 'Boutiques • Bureaux • Entrepôts à louer', en: 'Shops • Offices • Warehouses for rent' },
 
     /* ── Section partenaire ── */
     partner:    { fr: 'Devenez partenaire',                          en: 'Partner with us' },

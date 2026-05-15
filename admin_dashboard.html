@@ -477,6 +477,16 @@
           if (error) { alert('Erreur: ' + error.message); return; }
           _all = []; await render();
         }
+        if (btn.classList.contains('b-sold')) {
+          const newStatut = ad.rent_sale === 'sale' ? 'vendu' : 'loue';
+          const label = newStatut === 'vendu' ? 'vendu' : 'loué';
+          if (!confirm(`Marquer ce bien comme ${label} ?`)) return;
+          const { error } = await window.SLCM_DB.client.from('listings')
+            .update({ statut: newStatut, sold_rented_at: new Date().toISOString() })
+            .eq('id', id);
+          if (error) { alert('Erreur: ' + error.message); return; }
+          _all = []; await render(); return;
+        }
         if (btn.classList.contains('delete')) {
           if (!confirm('Delete this listing?')) return;
           const { error } = await window.SLCM_DB.client.from('listings').delete().eq('id', id);
@@ -530,6 +540,10 @@
               <button class="b-boost" style="background:#fff4e8;color:#ff7a00;border:1px solid #ffd4a8">
                 ${ad.boost_expires_at && new Date(ad.boost_expires_at) > new Date() ? '🔥 Boosté' : '⚡ Boost'}
               </button>
+              ${ad.statut !== 'loue' && ad.statut !== 'vendu' ? `
+              <button class="b-sold" style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7" data-id="${ad.id}" data-mode="${ad.rent_sale}">
+                ${ad.rent_sale === 'sale' ? '🔑 Vendu' : '🏠 Loué'}
+              </button>` : `<span style="font-size:.75rem;font-weight:700;color:#888">${ad.statut === 'vendu' ? '✅ Vendu' : '✅ Loué'}</span>`}
               <button class="b-danger delete">Delete</button>
             </div>
           </div>

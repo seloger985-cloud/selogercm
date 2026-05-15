@@ -94,7 +94,6 @@ const SLCM_reels = (() => {
       .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
-      .order('premium', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(20);
 
@@ -109,14 +108,13 @@ const SLCM_reels = (() => {
     return isMobile ? applyMobileQuota(rotated) : rotated.slice(0, DESKTOP_LIMIT);
   }
 
-  /* Rotation déterministe basée sur l'heure (tranches de 6h).
-     Préserve l'ordre relatif (premium d'abord, puis date) en faisant juste
-     un décalage circulaire — donc tous les reels gardent leur "rang" mais
-     un reel différent est en tête à chaque tranche. */
+  /* Rotation déterministe basée sur l'heure (tranches de 3h).
+     Pool trié du plus récent au plus ancien. Décalage circulaire toutes les 3h
+     pour exposer tous les reels équitablement. */
   function rotatePool(arr) {
     if (arr.length <= 1) return arr;
-    const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-    const seed = Math.floor(Date.now() / SIX_HOURS_MS);
+    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+    const seed = Math.floor(Date.now() / THREE_HOURS_MS);
     const offset = seed % arr.length;
     return [...arr.slice(offset), ...arr.slice(0, offset)];
   }

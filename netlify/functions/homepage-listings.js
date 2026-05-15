@@ -30,8 +30,8 @@ exports.handler = async function () {
       sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.false&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=6`),
       /* Location meublé — premium */
       sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.true&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=6`),
-      /* Locaux commerciaux à louer */
-      sbFetch(`${base}&rent_sale=eq.rent&type=in.(commercial,warehouse,shop)&order=created_at.desc&limit=6`),
+      /* Locaux commerciaux à louer — inclut bureaux et espaces de travail */
+      sbFetch(`${base}&rent_sale=eq.rent&type=in.(commercial,warehouse,shop,bureau,office)&order=created_at.desc&limit=6`),
       /* Villas & maisons à vendre */
       sbFetch(`${base}&rent_sale=eq.sale&premium=eq.true&type=in.(villa,house,duplex)&order=created_at.desc&limit=3`),
       /* Terrains à vendre */
@@ -56,6 +56,12 @@ exports.handler = async function () {
       villasFinal = allSale.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 3);
     }
 
+    /* Biens premium récemment loués/vendus — visibles 10j avec badge */
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    const soldRecent = await sbFetch(
+      `${base}&premium=eq.true&statut=in.(loue,vendu)&sold_rented_at=gte.${tenDaysAgo}&order=sold_rented_at.desc&limit=4`
+    );
+
     const payload = {
       unfurnished:    unFinal,
       furnished:      fuFinal,
@@ -63,6 +69,7 @@ exports.handler = async function () {
       villas:         villasFinal,
       terrains:       terrains || [],
       commercialSale: commercialSale || [],
+      soldRecent:     soldRecent || [],
     };
 
     return {

@@ -301,11 +301,20 @@
         </div>
       </section>
 
+      <!-- Biens récemment loués/vendus — visibles 10j -->
+      <section class="snap section-soft" id="soldRecentSection" style="display:none" aria-label="Récemment loués ou vendus">
+        <div class="container px pt pb">
+          <h2 class="section-title">Récemment Loués &amp; Vendus</h2>
+          <p class="section-sub">Ces biens premium viennent de trouver preneur — pour votre inspiration</p>
+          <div id="soldRecentGrid" class="grid grid-3"></div>
+        </div>
+      </section>
+
       <!-- Locaux Commerciaux à louer -->
       <section class="snap section-soft" aria-label="Locaux Commerciaux">
         <div class="container px pt pb">
-          <h2 class="section-title">Locaux Commerciaux</h2>
-          <p class="section-sub">Boutiques • Bureaux • Entrepôts à louer</p>
+          <h2 class="section-title" data-i18n="commercialTitle">Locaux Commerciaux</h2>
+          <p class="section-sub" data-i18n="commercialSub">Boutiques • Bureaux • Entrepôts à louer</p>
           <div id="commercialRentGrid" class="grid grid-3" aria-live="polite"></div>
         </div>
       </section>
@@ -513,6 +522,22 @@
       fillGrid('villasGrid',       data.villas         || []);
       fillGrid('terrainsGrid',     data.terrains       || []);
       fillGrid('commercialSaleGrid', data.commercialSale || []);
+
+      /* Biens récemment loués/vendus (badge overlay) */
+      if ((data.soldRecent || []).length) {
+        const soldEl = document.getElementById('soldRecentGrid');
+        const soldSection = document.getElementById('soldRecentSection');
+        if (soldEl && soldSection) {
+          soldSection.style.display = 'block';
+          soldEl.innerHTML = (data.soldRecent || []).map(l => {
+            const base = SLCM_listings.renderCard(l);
+            const badge = l.statut === 'vendu'
+              ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;border-radius:16px 16px 0 0"><span style="background:#111;color:#fff;padding:.4rem 1rem;border-radius:999px;font-weight:800;font-size:.88rem">🔑 Vendu</span></div>'
+              : '<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;border-radius:16px 16px 0 0"><span style="background:#1565c0;color:#fff;padding:.4rem 1rem;border-radius:999px;font-weight:800;font-size:.88rem">🏠 Loué</span></div>';
+            return base.replace('<div class="listing-thumb"', '<div class="listing-thumb" style="position:relative"').replace('</div>\n          <div class="listing-body"', badge + '</div>\n          <div class="listing-body"');
+          }).join('');
+        }
+      }
 
     } catch (err) {
       /* Fallback Supabase direct si la function échoue */

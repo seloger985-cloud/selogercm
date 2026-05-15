@@ -33,18 +33,13 @@ function esc(v = '') {
     .replace(/"/g, '&quot;');
 }
 
-/* Transforme une image portrait en 1200×630 paysage via Supabase Image Transform (plan Pro).
-   Remplace le précédent workaround wsrv.nl. */
+/* Transforme une image portrait en 1200×630 paysage pour OG Facebook/WhatsApp.
+   wsrv.nl : CDN open-source gratuit, pas de compte requis.
+   Note: Supabase Image Transform testé mais cause des redirections que
+   Facebook interprète comme l'URL /annonce au lieu de /share. */
 function ogImage(url) {
   if (!url) return DEFAULT_IMG;
-  /* Supabase Storage URL → render/image transform */
-  const transformed = url.replace(
-    '/storage/v1/object/public/',
-    '/storage/v1/render/image/public/'
-  );
-  /* Si l'URL n'est pas Supabase, on la retourne telle quelle */
-  if (transformed === url) return url;
-  return `${transformed}?width=1200&height=630&resize=cover&quality=80&format=webp`;
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=1200&h=630&fit=cover&output=jpg&q=80`;
 }
 
 function firstImage(ad) {
