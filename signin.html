@@ -129,7 +129,24 @@
       </div>
       <input type="hidden" id="selectedRole" value="proprietaire">
       <div class="field"><label>Nom complet <span style="color:var(--orange)">*</span></label><input id="regName" type="text" placeholder="Frantz Fanon" required></div>
-      <div class="field"><label>Téléphone <span style="color:var(--orange)">*</span></label><input id="regPhone" type="tel" placeholder="+237 6XX XXX XXX" required></div>
+            <div class="field">
+        <label>Téléphone <span style="color:var(--orange)">*</span></label>
+        <div style="display:flex;gap:6px">
+          <select id="regPhoneCode" style="width:110px;padding:.75rem .5rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.88rem;background:#fafafa;flex-shrink:0">
+            <option value="+237">🇨🇲 +237</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+32">🇧🇪 +32</option>
+            <option value="+41">🇨🇭 +41</option>
+            <option value="+242">🇨🇬 +242</option>
+            <option value="+241">🇬🇦 +241</option>
+            <option value="+225">🇨🇮 +225</option>
+            <option value="+221">🇸🇳 +221</option>
+          </select>
+          <input id="regPhone" type="tel" placeholder="6XX XXX XXX" required style="flex:1">
+        </div>
+      </div>
       <div class="field"><label>Adresse email <span style="color:var(--orange)">*</span></label><input id="regEmail" type="email" placeholder="votre@email.com" required></div>
       <div class="field"><label>Mot de passe <span style="color:var(--orange)">*</span></label>
         <div style="position:relative">
@@ -235,9 +252,11 @@ function showOtpPanel(phone) {
 }
 
 document.getElementById('registerBtn').addEventListener('click', async () => {
-  const role    = document.getElementById('selectedRole').value;
-  const name    = document.getElementById('regName').value.trim();
-  const phone   = document.getElementById('regPhone').value.trim();
+  const role       = document.getElementById('selectedRole').value;
+  const name       = document.getElementById('regName').value.trim();
+  const phoneLocal = document.getElementById('regPhone').value.trim().replace(/[\s\-]/g, '').replace(/^0+/, '');
+  const phoneCode  = document.getElementById('regPhoneCode').value;
+  const phone      = phoneCode + phoneLocal; /* E.164 ex: +237650840714 */
   const email   = document.getElementById('regEmail').value.trim().toLowerCase();
   const pass    = document.getElementById('regPass').value;
   const confirm = document.getElementById('regPassConfirm').value;
@@ -245,10 +264,10 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
   const ok      = document.getElementById('registerSuccess');
   err.textContent = ''; ok.textContent = '';
 
-  if (!name || !phone || !email || !pass || !confirm) { err.textContent = 'Veuillez remplir tous les champs obligatoires.'; return; }
+  if (!name || !phoneLocal || !email || !pass || !confirm) { err.textContent = 'Veuillez remplir tous les champs obligatoires.'; return; }
   if (pass.length < 8) { err.textContent = 'Le mot de passe doit contenir au moins 8 caractères.'; return; }
   if (pass !== confirm) { err.textContent = 'Les mots de passe ne correspondent pas.'; return; }
-  if (!/^[+0-9\s]{8,15}$/.test(phone)) { err.textContent = 'Numéro invalide (ex: +237 6XX XXX XXX).'; return; }
+  if (!/^[0-9]{6,12}$/.test(phoneLocal)) { err.textContent = 'Numéro invalide — sans indicatif ni espaces (ex: 650840714).'; return; }
 
   const btn = document.getElementById('registerBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création…';
@@ -276,11 +295,10 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       kyc_status: role === 'agent_externe' ? 'pending' : 'none'
     });
 
-    /* 3. Envoyer SMS OTP */
-    const phoneClean = phone.replace(/\s/g, '');
-    _pendingPhone = phoneClean;
+    /* 3. Envoyer SMS OTP — phone est déjà en E.164 */
+    _pendingPhone = phone;
     _pendingEmail = email;
-    const { error: otpErr } = await client.auth.updateUser({ phone: phoneClean });
+    const { error: otpErr } = await client.auth.updateUser({ phone });
 
     if (otpErr) {
       /* Afficher l'erreur OTP pour diagnostic */
