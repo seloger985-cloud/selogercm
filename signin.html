@@ -283,10 +283,9 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     const { error: otpErr } = await client.auth.updateUser({ phone: phoneClean });
 
     if (otpErr) {
-      /* OTP indisponible — compte créé, on redirige quand même */
-      console.warn('OTP send failed:', otpErr.message);
-      ok.textContent = '✅ Compte créé ! Connexion en cours…';
-      setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
+      /* Afficher l'erreur OTP pour diagnostic */
+      err.textContent = 'SMS OTP — ' + otpErr.message;
+      console.error('OTP send failed:', otpErr);
       return;
     }
 
