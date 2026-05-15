@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -26,7 +26,11 @@
     .cookie-table th { background: #fff8f0; color: #111; font-weight: 700; }
     .btn-prefs { background: var(--orange); color: #fff; border: none; padding: .8rem 1.5rem; border-radius: 999px; font-family: inherit; font-weight: 700; cursor: pointer; margin-top: 1rem; display: inline-flex; align-items: center; gap: .5rem; }
   </style>
-</head>
+  <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style></head>
 <body>
 
 <header>

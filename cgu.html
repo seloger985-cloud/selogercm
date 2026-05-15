@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -23,7 +23,11 @@
     .legal-back { display: inline-flex; align-items: center; gap: .4rem; color: var(--orange); text-decoration: none; font-weight: 700; margin-bottom: 1rem; font-size: .9rem; }
     .legal-warn { background: #fff8f0; border-left: 4px solid var(--orange); padding: 1rem 1.2rem; border-radius: 8px; margin: 1rem 0; font-size: .9rem; color: #555; }
   </style>
-</head>
+  <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style></head>
 <body>
 
 <header>

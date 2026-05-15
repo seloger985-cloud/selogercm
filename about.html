@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -275,7 +275,11 @@
       .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,.2); }
     }
   </style>
-</head>
+  <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style></head>
 <body>
   <!-- GTM noscript -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"

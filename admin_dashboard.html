@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -130,7 +130,11 @@
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
   <!-- End Google Tag Manager -->
-</head>
+  <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style></head>
 <body>
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"

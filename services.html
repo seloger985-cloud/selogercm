@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -170,7 +170,11 @@
       .btn-white-outline { margin: .5rem 0 0; }
     }
   </style>
-</head>
+  <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style></head>
 <body>
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
