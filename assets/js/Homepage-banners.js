@@ -235,9 +235,10 @@
   font-weight: 700;
   margin: 0;
   line-height: 1.3;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .slcm-slide-cta {
   font-size: 12px;
@@ -280,8 +281,8 @@
   background: #ea580c;
   border-radius: 0 3px 3px 0;
 }
-@media (max-width: 680px) {
-  /* Sur mobile : abandon du position:absolute → height naturelle */
+@media (max-width: 900px) {
+  /* Tablettes et mobile : stack vertical, hauteur naturelle */
   .slcm-slide-track { height: auto; min-height: 0; }
   .slcm-slide-item {
     position: relative; inset: auto;
@@ -292,7 +293,7 @@
   }
   .slcm-slide-item.active { display: flex; }
   .slcm-slide-content { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
-  .slcm-slide-title { font-size: 13px; white-space: normal; line-height: 1.4; }
+  .slcm-slide-title { font-size: 14px; -webkit-line-clamp: 3; line-height: 1.4; }
   .slcm-slide-kicker { font-size: 9px; }
   .slcm-slide-cta { font-size: 11px; padding: 7px 14px; align-self: flex-start; }
   .slcm-slide-dots { bottom: 10px; right: 14px; }

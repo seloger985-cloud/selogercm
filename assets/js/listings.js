@@ -13,7 +13,7 @@ const SLCM_listings = (() => {
     'id', 'title', 'images', 'video_url',
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
-    'type', 'status', 'created_at', 'owner_phone',
+    'type', 'status', 'statut', 'created_at', 'owner_phone',
     'owner_kyc_verified', 'owner_is_pro'
   ].join(',');
 
@@ -240,6 +240,14 @@ const SLCM_listings = (() => {
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
     const isBoosted = listing.boost_expires_at && new Date(listing.boost_expires_at) > Date.now();
+    /* Badge Loué / Vendu — overlay semi-transparent sur la vignette */
+    const soldBadge = (listing.statut === 'loue' || listing.statut === 'vendu') ? `
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;pointer-events:none">
+        <span style="background:${listing.statut === 'vendu' ? '#111' : '#1565c0'};color:#fff;padding:.35rem 1rem;border-radius:999px;font-weight:800;font-size:.82rem">
+          ${listing.statut === 'vendu' ? '🔑 Vendu' : '🏠 Loué'}
+        </span>
+      </div>` : '';
+
     const agentBadges = (listing.owner_kyc_verified || listing.owner_is_pro) ? `
       <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px">
         ${listing.owner_kyc_verified ? '<span style="background:rgba(22,163,74,.9);color:#fff;border-radius:999px;padding:.15rem .5rem;font-size:.65rem;font-weight:800">✅ Vérifié</span>' : ''}
@@ -265,6 +273,7 @@ const SLCM_listings = (() => {
          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" width="400" height="200" style="width:100%;height:100%;object-fit:cover">
             ${badge}
+            ${soldBadge}
             ${agentBadges}
             ${hasVideo ? '<div class="card-video-badge"><span class="pulse-dot"></span><i class="fas fa-video"></i> Vidéo</div>' : ''}
             ${fav}

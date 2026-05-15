@@ -6,7 +6,7 @@
 
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SUPABASE_ANON = process.env.SB_ANON_KEY   || process.env.SUPABASE_ANON_KEY || '';
-const CARD_FIELDS   = 'id,title,images,video_url,rent_sale,furnished,premium,boost_expires_at,price,price_per_day,bedrooms,district,city,type,status,created_at,owner_phone';
+const CARD_FIELDS   = 'id,title,images,video_url,rent_sale,furnished,premium,boost_expires_at,price,price_per_day,bedrooms,district,city,type,status,statut,created_at,owner_phone';
 
 async function sbFetch(params) {
   const url = `${SUPABASE_URL}/rest/v1/listings?${params}`;
@@ -56,11 +56,19 @@ exports.handler = async function () {
       villasFinal = allSale.filter(l => ['villa','house','duplex','apartment'].includes(l.type)).slice(0, 3);
     }
 
-    /* Biens premium récemment loués/vendus — visibles 10j avec badge */
+    /* Biens premium récemment loués/vendus — fusionnés dans leurs sections d'origine */
     const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
-    const soldRecent = await sbFetch(
-      `${base}&premium=eq.true&statut=in.(loue,vendu)&sold_rented_at=gte.${tenDaysAgo}&order=sold_rented_at.desc&limit=4`
-    );
+    const baseSold = `select=${CARD_FIELDS}&premium=eq.true&statut=in.(loue,vendu)&sold_rented_at=gte.${tenDaysAgo}&order=sold_rented_at.desc&limit=6`;
+    const soldRecent = await sbFetch(baseSold).catch(() => []);
+
+    /* Fusionner dans les sections d'origine si pas déjà présents */
+    const existingIds = new Set([...unFinal, ...fuFinal, ...villasFinal].map(l => l.id));
+    for (const l of (soldRecent || [])) {
+      if (existingIds.has(l.id)) continue;
+      if (l.furnished) fuFinal = [...fuFinal, l].slice(0, 6);
+      else if (['villa','house','duplex'].includes(l.type)) villasFinal = [...villasFinal, l].slice(0, 4);
+      else unFinal = [...unFinal, l].slice(0, 6);
+    }
 
     const payload = {
       unfurnished:    unFinal,
@@ -69,7 +77,6 @@ exports.handler = async function () {
       villas:         villasFinal,
       terrains:       terrains || [],
       commercialSale: commercialSale || [],
-      soldRecent:     soldRecent || [],
     };
 
     return {

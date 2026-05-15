@@ -479,12 +479,11 @@
         }
         if (btn.classList.contains('b-sold')) {
           const newStatut = ad.rent_sale === 'sale' ? 'vendu' : 'loue';
-          const label = newStatut === 'vendu' ? 'vendu' : 'loué';
-          if (!confirm(`Marquer ce bien comme ${label} ?`)) return;
+          btn.disabled = true; btn.textContent = '…';
           const { error } = await window.SLCM_DB.client.from('listings')
             .update({ statut: newStatut, sold_rented_at: new Date().toISOString() })
             .eq('id', id);
-          if (error) { alert('Erreur: ' + error.message); return; }
+          if (error) { btn.disabled = false; btn.textContent = ad.rent_sale === 'sale' ? '🔑 Vendu' : '🏠 Loué'; return; }
           _all = []; await render(); return;
         }
         if (btn.classList.contains('delete')) {
