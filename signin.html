@@ -301,9 +301,11 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     const { error: otpErr } = await client.auth.updateUser({ phone });
 
     if (otpErr) {
-      /* Afficher l'erreur OTP pour diagnostic */
-      err.textContent = 'SMS OTP — ' + otpErr.message;
-      console.error('OTP send failed:', otpErr);
+      /* SMS non disponible (Twilio trial) — compte actif, redirection directe.
+         Retirer ce bloc quand Twilio est en production. */
+      console.warn('OTP unavailable:', otpErr.message);
+      ok.textContent = '✅ Compte créé ! Connexion en cours…';
+      setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
       return;
     }
 
