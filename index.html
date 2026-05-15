@@ -32,6 +32,11 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800;900&display=swap" as="style" onload="this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800;900&display=swap" rel="stylesheet"></noscript>
+  <!-- Pré-définir --nav-h pour éviter le saut de body quand nav.js injecte padding-top -->
+  <style>
+    :root { --nav-h: 68px; }
+    body  { padding-top: var(--nav-h); }
+  </style>
   <!-- Styles témoignages (partagés avec about.html) -->
   <style>
     .temoignages-grid {
@@ -180,7 +185,10 @@
   <header>
     <div class="container px navbar">
       <a class="brand" href="/" aria-label="SE LOGER CM — Home">
-        <img src="./assets/img/logo.png" alt="SE LOGER CM logo" loading="lazy">
+        <picture>
+          <source srcset="./assets/img/logo.webp" type="image/webp">
+          <img src="./assets/img/logo.png" alt="SE LOGER CM logo" width="36" height="36" fetchpriority="high">
+        </picture>
         <span>SE LOGER CM</span>
       </a>
       <div class="nav-right">
