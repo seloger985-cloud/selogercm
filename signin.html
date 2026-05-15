@@ -50,6 +50,19 @@
     .btn-whatsapp { width: 100%; padding: .8rem; border: none; border-radius: 12px; background: #e8fdf0; color: #128c47; font-family: inherit; font-size: .92rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .5rem; transition: background .2s; text-decoration: none; }
     .btn-whatsapp:hover { background: #d0f5e3; }
     footer { text-align: center; padding: 1rem; font-size: .85rem; color: rgba(255,255,255,.8); }
+
+    /* OTP step */
+    .otp-wrap { text-align: center; padding: .5rem 0; }
+    .otp-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .otp-title { font-size: 1.1rem; font-weight: 800; color: #111; margin-bottom: .3rem; }
+    .otp-sub { font-size: .85rem; color: #888; margin-bottom: 1.5rem; line-height: 1.5; }
+    .otp-input { width: 100%; text-align: center; font-size: 1.8rem; font-weight: 900; letter-spacing: .5rem;
+      padding: .75rem; border: 2px solid #e5e5e5; border-radius: 12px; font-family: inherit;
+      background: #fafafa; transition: border-color .2s; }
+    .otp-input:focus { outline: none; border-color: var(--orange); background: #fff; }
+    .otp-resend { background: none; border: none; color: var(--orange); font-family: inherit;
+      font-size: .82rem; font-weight: 700; cursor: pointer; margin-top: .75rem; display: inline-block; }
+    .otp-resend:disabled { color: #aaa; cursor: not-allowed; }
   </style>
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
   <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
@@ -116,7 +129,7 @@
       </div>
       <input type="hidden" id="selectedRole" value="proprietaire">
       <div class="field"><label>Nom complet <span style="color:var(--orange)">*</span></label><input id="regName" type="text" placeholder="Frantz Fanon" required></div>
-      <div class="field"><label>Téléphone</label><input id="regPhone" type="tel" placeholder="+237 6XX XXX XXX"></div>
+      <div class="field"><label>Téléphone <span style="color:var(--orange)">*</span></label><input id="regPhone" type="tel" placeholder="+237 6XX XXX XXX" required></div>
       <div class="field"><label>Adresse email <span style="color:var(--orange)">*</span></label><input id="regEmail" type="email" placeholder="votre@email.com" required></div>
       <div class="field"><label>Mot de passe <span style="color:var(--orange)">*</span></label>
         <div style="position:relative">
@@ -210,6 +223,17 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
 });
 
 /* ── Inscription ── */
+let _pendingPhone = '';
+let _pendingEmail = '';
+
+function showOtpPanel(phone) {
+  document.getElementById('otpPhoneDisplay').textContent = phone;
+  panelReg.classList.remove('active');
+  document.getElementById('panelOTP').classList.add('active');
+  tabRegister.classList.remove('active');
+  setTimeout(() => document.getElementById('otpCode').focus(), 100);
+}
+
 document.getElementById('registerBtn').addEventListener('click', async () => {
   const role    = document.getElementById('selectedRole').value;
   const name    = document.getElementById('regName').value.trim();
@@ -220,10 +244,12 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
   const err     = document.getElementById('registerError');
   const ok      = document.getElementById('registerSuccess');
   err.textContent = ''; ok.textContent = '';
-  if (!name || !email || !pass || !confirm) { err.textContent = 'Veuillez remplir les champs obligatoires.'; return; }
+
+  if (!name || !phone || !email || !pass || !confirm) { err.textContent = 'Veuillez remplir tous les champs obligatoires.'; return; }
   if (pass.length < 8) { err.textContent = 'Le mot de passe doit contenir au moins 8 caractères.'; return; }
   if (pass !== confirm) { err.textContent = 'Les mots de passe ne correspondent pas.'; return; }
-  if (phone && !/^[+0-9\s]{8,15}$/.test(phone)) { err.textContent = 'Numéro de téléphone invalide.'; return; }
+  if (!/^[+0-9\s]{8,15}$/.test(phone)) { err.textContent = 'Numéro invalide (ex: +237 6XX XXX XXX).'; return; }
+
   const btn = document.getElementById('registerBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création…';
   try {
@@ -233,41 +259,83 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     }
     const client = window.SLCM_DB?.client;
     if (!client) { err.textContent = 'Connexion impossible. Réessayez.'; return; }
+
+    /* 1. Créer le compte email/password */
     const { data, error } = await client.auth.signUp({
       email, password: pass,
       options: { data: { name, role } }
     });
     if (error) { err.textContent = error.message; return; }
-    /* Supabase ne retourne pas d'erreur pour email dupliqué — détecter via identities vide */
     if (!data.user || data.user.identities?.length === 0) {
-      err.textContent = 'Cette adresse email est déjà utilisée.';
+      err.textContent = 'Cette adresse email est déjà utilisée.'; return;
+    }
+
+    /* 2. Créer le profil en base */
+    await client.from('profiles').upsert({
+      id: data.user.id, name, phone, role,
+      kyc_status: role === 'agent_externe' ? 'pending' : 'none'
+    });
+
+    /* 3. Envoyer SMS OTP */
+    const phoneClean = phone.replace(/\s/g, '');
+    _pendingPhone = phoneClean;
+    _pendingEmail = email;
+    const { error: otpErr } = await client.auth.updateUser({ phone: phoneClean });
+
+    if (otpErr) {
+      /* OTP indisponible — compte créé, on redirige quand même */
+      console.warn('OTP send failed:', otpErr.message);
+      ok.textContent = '✅ Compte créé ! Connexion en cours…';
+      setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
       return;
     }
 
-    /* Vérifier si le téléphone est déjà utilisé */
-    if (phone) {
-      const { data: existing } = await client
-        .from('profiles')
-        .select('id')
-        .eq('phone', phone)
-        .maybeSingle();
-      if (existing) {
-        err.textContent = 'Ce numéro de téléphone est déjà associé à un compte.';
-        return;
-      }
-    }
+    /* 4. Afficher le step de vérification */
+    showOtpPanel(phone);
 
-    /* Créer le profil */
-    await client.from('profiles').upsert({
-      id: data.user.id, name, phone: phone || null, role,
-      kyc_status: role === 'agent_externe' ? 'pending' : 'none'
-    });
-    ok.textContent = '✅ Compte créé ! Vérifiez votre email puis connectez-vous.';
-    setTimeout(() => { tabSignin.click(); document.getElementById('signinEmail').value = email; }, 2000);
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
   } finally {
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Créer mon compte';
+  }
+});
+
+/* ── Vérification OTP ── */
+document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
+  const code = document.getElementById('otpCode').value.trim();
+  const err  = document.getElementById('otpError');
+  const ok   = document.getElementById('otpSuccess');
+  err.textContent = ''; ok.textContent = '';
+  if (!code || code.length < 6) { err.textContent = 'Entrez le code à 6 chiffres reçu par SMS.'; return; }
+
+  const btn = document.getElementById('otpVerifyBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
+  try {
+    const { error } = await window.SLCM_DB.client.auth.verifyOtp({
+      phone: _pendingPhone,
+      token: code,
+      type: 'phone_change'
+    });
+    if (error) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
+    ok.textContent = '✅ Téléphone vérifié ! Bienvenue sur SE LOGER CM.';
+    setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
+  } catch(e) {
+    err.textContent = 'Une erreur est survenue. Réessayez.';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirmer';
+  }
+});
+
+/* ── Renvoyer OTP ── */
+document.getElementById('otpResendBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('otpResendBtn');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  try {
+    await window.SLCM_DB.client.auth.updateUser({ phone: _pendingPhone });
+    document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé.';
+    setTimeout(() => { document.getElementById('otpSuccess').textContent = ''; }, 3000);
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le code'; }, 30000);
   }
 });
 
