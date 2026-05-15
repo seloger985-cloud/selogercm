@@ -174,19 +174,54 @@ const SLCM_listings = (() => {
     return true;
   }
 
+  /* ── Resize côté client avant upload (Canvas API) ──────────────── */
+  function resizeImage(file, maxW, maxH, quality) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          const ratio = Math.min(maxW / w, maxH / h, 1);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(
+            (blob) => resolve(blob || file),
+            'image/webp', quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ── URL de transform Supabase Image (Pro) ──────────────────────── */
+  function getTransformUrl(publicUrl, { width, height, quality = 80 } = {}) {
+    if (!publicUrl || !publicUrl.includes('/storage/v1/object/public/')) return publicUrl;
+    const base = publicUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    return `${base}?width=${width}&height=${height}&resize=cover&quality=${quality}&format=webp`;
+  }
+
   /* ── Upload photos vers Supabase Storage ────────────────────────── */
   async function uploadImages(files, listingId) {
     const client = await sb();
     if (!client) { console.error('uploadImages: client non disponible'); return []; }
     const urls = [];
     for (const file of files) {
-      const ext  = file.name.split('.').pop();
+      /* Resize à 1200×900 max en WebP avant upload */
+      const resized = await resizeImage(file, 1200, 900, 0.82);
+      const ext  = resized.type === 'image/webp' ? 'webp' : (file.name.split('.').pop() || 'jpg');
       const path = `listings/${listingId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { data: uploadData, error } = await client.storage.from('listing-images').upload(path, file, {
-        cacheControl: '3600', upsert: false
+      const { error } = await client.storage.from('listing-images').upload(path, resized, {
+        cacheControl: '3600', upsert: false, contentType: resized.type
       });
-      if (error) {
-      } else {
+      if (!error) {
         const { data } = client.storage.from('listing-images').getPublicUrl(path);
         urls.push(data.publicUrl);
       }
@@ -196,7 +231,10 @@ const SLCM_listings = (() => {
 
   /* ── Générer une card HTML ──────────────────────────────────────── */
   function renderCard(listing, { showFav = true } = {}) {
-    const img   = (listing.images && listing.images[0]) || 'assets/img/no-image.png';
+    const rawImg = (listing.images && listing.images[0]) || '';
+    const img = rawImg
+      ? getTransformUrl(rawImg, { width: 400, height: 280 })
+      : 'assets/img/no-image.png';
     const hasVideo = !!listing.video_url;
     const title = listing.title || listing.title_fr || 'Annonce';
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
@@ -258,7 +296,7 @@ const SLCM_listings = (() => {
   return {
     getListings, getPremiumListings, getListingById,
     getMyListings, createListing, updateListing, deleteListing,
-    uploadImages, renderCard, fmtPrice
+    uploadImages, renderCard, fmtPrice, getTransformUrl
   };
 })();
 
