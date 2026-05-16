@@ -213,24 +213,12 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
   try {
     const user = await SLCM.loginUser(email, pass);
     if (!user) { err.textContent = 'Email ou mot de passe incorrect.'; return; }
-    let redirect = new URLSearchParams(window.location.search).get('redirect');
-    if (!redirect) {
-      if (SLCM.isAdmin(user)) {
-        redirect = '/admin';
-      } else if (SLCM.isAgent(user)) {
-        redirect = '/agent';
-      } else {
-        /* Lire le rôle dans profiles — attendre que le client soit prêt */
-        const client = await SLCM.waitForClient();
-        if (client) {
-          const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).single();
-          redirect = (profile?.role === 'agent_externe') ? '/agent-profile' : '/mon-espace';
-        } else {
-          /* Fallback : lire depuis les metadata Supabase Auth */
-          redirect = (user.user_metadata?.role === 'agent_externe') ? '/agent-profile' : '/mon-espace';
-        }
-      }
-    }
+    /* Redirection immédiate — rôle lu depuis user_metadata (pas de requête DB) */
+    const redirect = new URLSearchParams(window.location.search).get('redirect')
+      || (SLCM.isAdmin(user)                              ? '/admin'
+        : SLCM.isAgent(user)                              ? '/agent'
+        : user.user_metadata?.role === 'agent_externe'    ? '/agent-profile'
+        :                                                   '/mon-espace');
     window.location.href = redirect;
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
