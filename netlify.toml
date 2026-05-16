@@ -11,6 +11,15 @@
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
 
+[functions."cron-expire"]
+  schedule = "0 2 * * *"
+
+[functions."cron-relance"]
+  schedule = "0 8 * * *"
+
+[functions."cron-cleanup"]
+  schedule = "0 3 * * 0"
+
 
 # ── Pages principales ─────────────────────────────────────────
 [[redirects]]
