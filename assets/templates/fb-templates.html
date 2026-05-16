@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Templates Facebook — SE LOGER CM</title>
+<style>
+  :root { --orange:#ff7a00; --dark:#111; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#f6f7f9; color:#111; }
+
+  header {
+    background:#111; padding:18px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  header span { color:#fff; font-size:1.1rem; font-weight:800; }
+  header span em { color:#ff7a00; font-style:normal; }
+  header small { color:#888; font-size:.8rem; }
+
+  .controls {
+    max-width:1100px; margin:24px auto; padding:0 20px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .style-btn {
+    padding:8px 22px; border-radius:999px; border:2px solid #ddd;
+    background:#fff; font-size:.88rem; font-weight:700; cursor:pointer;
+    transition:all .15s;
+  }
+  .style-btn.active { background:#111; color:#fff; border-color:#111; }
+  .style-btn.orange.active { background:#ff7a00; border-color:#ff7a00; color:#fff; }
+  .filter-label { font-size:.82rem; color:#888; font-weight:600; margin-left:8px; }
+
+  .grid {
+    max-width:1100px; margin:0 auto 40px; padding:0 20px;
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px;
+  }
+
+  .card {
+    background:#fff; border-radius:14px;
+    box-shadow:0 2px 12px rgba(0,0,0,.07);
+    overflow:hidden; display:flex; flex-direction:column;
+  }
+  .card-head {
+    padding:12px 16px; display:flex; align-items:center;
+    justify-content:space-between; border-bottom:1px solid #f0f0f0;
+  }
+  .card-type {
+    font-size:.78rem; font-weight:800; text-transform:uppercase;
+    letter-spacing:.5px; color:#888;
+  }
+  .card-style {
+    font-size:.7rem; font-weight:800; padding:3px 10px;
+    border-radius:999px;
+  }
+  .card-style.sobre { background:#f0f0f0; color:#555; }
+  .card-style.premium { background:#fff4e8; color:#ff7a00; }
+
+  .card-body {
+    padding:14px 16px; flex:1;
+    font-size:.82rem; line-height:1.7; color:#333;
+    white-space:pre-wrap; font-family:monospace;
+    background:#fafafa;
+  }
+
+  .card-footer {
+    padding:10px 16px; border-top:1px solid #f0f0f0;
+    display:flex; gap:8px;
+  }
+  .btn-copy {
+    flex:1; padding:8px; border-radius:8px; border:none;
+    background:#111; color:#fff; font-size:.82rem; font-weight:700;
+    cursor:pointer; transition:background .15s;
+  }
+  .btn-copy:hover { background:#333; }
+  .btn-copy.copied { background:#2e7d32; }
+
+  /* Hide/show by style */
+  .card[data-style="sobre"]   { display:flex; }
+  .card[data-style="premium"] { display:none; }
+  body.show-premium .card[data-style="sobre"]   { display:none; }
+  body.show-premium .card[data-style="premium"] { display:flex; }
+  body.show-all .card { display:flex !important; }
+
+  @media(max-width:600px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <span>SE <em>LOGER</em> CM — Templates Facebook</span>
+  <small>Copier · Coller · Publier</small>
+</header>
+
+<div class="controls">
+  <span class="filter-label">Style :</span>
+  <button class="style-btn active" onclick="setStyle('sobre',this)">Sobre</button>
+  <button class="style-btn orange" onclick="setStyle('premium',this)">Premium</button>
+  <button class="style-btn" onclick="setStyle('all',this)">Tous</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const TEMPLATES = [
+
+  /* ════════ SOBRE ════════ */
+  { type:"Appartement à louer", style:"sobre", text:
+`📍 [Quartier], Douala
+🏠 Appartement [X] chambres — [meublé / non meublé]
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact direct : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Douala #Location #Immobilier #[Quartier]`},
+
+  { type:"Appartement à vendre", style:"sobre", text:
+`📍 [Quartier], Douala
+🏠 Appartement [X] chambres à vendre
+💰 [Prix] FCFA
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact direct : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Vente #Immobilier #Douala #[Quartier]`},
+
+  { type:"Studio à louer", style:"sobre", text:
+`📍 [Quartier], Douala
+🏠 Studio [meublé / non meublé]
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Studio #Location #Douala #[Quartier]`},
+
+  { type:"Villa à louer", style:"sobre", text:
+`📍 [Quartier], Douala
+🏡 Villa [X] chambres
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Villa #Location #Douala #[Quartier]`},
+
+  { type:"Villa à vendre", style:"sobre", text:
+`📍 [Quartier], Douala
+🏡 Villa [X] chambres à vendre
+💰 [Prix] FCFA
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Villa #Vente #Douala #[Quartier]`},
+
+  { type:"Duplex à louer", style:"sobre", text:
+`📍 [Quartier], Douala
+🏠 Duplex [X] chambres
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Duplex #Location #Douala #[Quartier]`},
+
+  { type:"Duplex à vendre", style:"sobre", text:
+`📍 [Quartier], Douala
+🏠 Duplex [X] chambres à vendre
+💰 [Prix] FCFA
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Caractéristique 3]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Duplex #Vente #Douala #[Quartier]`},
+
+  { type:"Appartement meublé", style:"sobre", text:
+`📍 [Quartier], Douala
+🛋️ Appartement meublé [X] chambres
+💰 [Prix/jour] FCFA/jour · [Prix/mois] FCFA/mois
+
+✔ Clim · Wifi · [Équipement]
+✔ Courte et longue durée
+✔ [Caractéristique]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Meublé #Location #Douala #[Quartier]`},
+
+  { type:"Terrain à vendre", style:"sobre", text:
+`📍 [Quartier], Douala
+🌍 Terrain [superficie] m²
+💰 [Prix] FCFA
+
+✔ Titre foncier : [oui / en cours]
+✔ [Caractéristique]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Terrain #Vente #Immobilier #Douala`},
+
+  { type:"Local commercial", style:"sobre", text:
+`📍 [Quartier], Douala
+🏪 Local commercial — [superficie] m²
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ Accès : [description]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Commerce #Douala #[Quartier]`},
+
+  { type:"Bureau / Espace de travail", style:"sobre", text:
+`📍 [Quartier], Douala
+🖥️ Bureau / Espace de travail — [superficie] m²
+💰 [Prix] FCFA / mois
+
+✔ [Caractéristique 1]
+✔ [Caractéristique 2]
+✔ [Climatisé / Wifi / Parking]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Bureau #Travail #Douala #[Quartier]`},
+
+  { type:"Entrepôt / Magasin", style:"sobre", text:
+`📍 [Quartier], Douala
+🏭 Entrepôt / Magasin — [superficie] m²
+💰 [Prix] FCFA / mois
+
+✔ Hauteur sous plafond : [X] m
+✔ [Accès poids lourds / quai de chargement]
+✔ [Caractéristique]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Entrepôt #Logistique #Douala`},
+
+  { type:"Immeuble à vendre", style:"sobre", text:
+`📍 [Quartier], Douala
+🏢 Immeuble R+[X] — [nb appartements] appartements
+💰 [Prix] FCFA
+
+✔ Revenu locatif : ~[montant] FCFA/mois
+✔ [Caractéristique 1]
+✔ Titre foncier : [oui / en cours]
+
+Contact : [Numéro]
+🔗 selogercm.com/annonce/[slug]
+
+#Immeuble #Investissement #Douala`},
+
+  /* ════════ PREMIUM ════════ */
+  { type:"Appartement à louer", style:"premium", text:
+`Rare opportunité — [Quartier], Douala
+
+Appartement [X] chambres de standing, [meublé / non meublé].
+Adresse premium. Aucun compromis.
+
+— [Caractéristique 1]
+— [Caractéristique 2]
+— [Caractéristique 3]
+
+[Prix] FCFA / mois
+Contact direct propriétaire : [Numéro]
+
+Annonce vérifiée · SE LOGER CM
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Appartement à vendre", style:"premium", text:
+`[Quartier], Douala — À vendre
+
+Appartement [X] chambres · [superficie] m²
+[Prix] FCFA
+
+Un bien d'exception dans l'une des adresses les plus
+valorisées de Douala.
+
+— [Caractéristique 1]
+— [Caractéristique 2]
+— [Caractéristique 3]
+
+Visite sur rendez-vous : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Studio à louer", style:"premium", text:
+`[Quartier], Douala
+
+Studio de caractère, [meublé / non meublé].
+Idéal professionnel exigeant, expatrié, mobilité.
+
+— [Caractéristique 1]
+— [Caractéristique 2]
+
+[Prix] FCFA / mois · Contact : [Numéro]
+
+SE LOGER CM · Annonce vérifiée
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Villa à louer / vendre", style:"premium", text:
+`[Quartier] · Douala
+
+Villa [X] chambres — [superficie] m²
+[À louer / À vendre] · [Prix] FCFA
+
+Pour ceux qui ne font pas de compromis sur le cadre de vie.
+
+— [Caractéristique 1]
+— [Caractéristique 2]
+— [Jardin / Piscine / Gardien 24h]
+
+Visite sur rendez-vous : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Duplex premium", style:"premium", text:
+`[Quartier], Douala — Duplex d'exception
+
+[X] chambres · [superficie] m² · [X] niveaux
+[À louer / À vendre] · [Prix] FCFA
+
+Architecture soignée. Volumes généreux.
+Rare sur le marché doualaais.
+
+— [Caractéristique 1]
+— [Caractéristique 2]
+— [Caractéristique 3]
+
+Contact : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Appartement meublé premium", style:"premium", text:
+`[Quartier], Douala — Disponible maintenant
+
+Appartement meublé [X] chambres · Haut standing
+Courte & longue durée
+
+[Prix court séjour] FCFA/nuit
+[Prix mensuel] FCFA/mois
+
+Clim · Wifi fibre · Groupe électrogène · [Équipement]
+
+Idéal : expatriés · missions · investisseurs de passage
+
+Contact & réservation : [Numéro]
+
+SE LOGER CM · Annonce vérifiée
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Terrain à vendre premium", style:"premium", text:
+`[Quartier], Douala — Foncier rare
+
+[superficie] m² · Titre foncier [disponible]
+[Prix] FCFA
+
+Emplacement stratégique. [Description de l'accès / environnement].
+Idéal construction / projet immobilier / investissement.
+
+Dossier complet sur demande.
+Contact : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Local commercial premium", style:"premium", text:
+`[Quartier], Douala — Emplacement de choix
+
+Local commercial · [superficie] m²
+[Prix] FCFA / mois
+
+Flux piétons & véhicules. Visibilité garantie.
+[Caractéristique 1] · [Caractéristique 2]
+
+Disponible immédiatement.
+Contact : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Entrepôt / Logistique premium", style:"premium", text:
+`[Quartier], Douala — Infrastructure logistique
+
+Entrepôt [superficie] m²
+[Prix] FCFA / mois
+
+Hauteur [X] m · [Accès PL / quai] · [Électricité industrielle]
+Sécurisation [X] / [Gardiennage]
+
+Idéal stockage, distribution, activité industrielle légère.
+
+Contact : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+  { type:"Immeuble — investissement", style:"premium", text:
+`[Quartier], Douala — Bloc de rapport
+
+Immeuble R+[X] · [nb appartements] appartements
+Prix : [Prix] FCFA
+
+Revenu locatif brut estimé : [montant] FCFA / mois
+Rendement : ~[X]% / an
+
+Titre foncier [disponible / en cours].
+Dossier technique sur demande.
+
+Contact : [Numéro]
+
+SE LOGER CM · Annonces vérifiées
+🔗 selogercm.com/annonce/[slug]`},
+
+];
+
+/* ── Render ── */
+const grid = document.getElementById('grid');
+TEMPLATES.forEach((t, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.style = t.style;
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="card-type">${t.type}</span>
+      <span class="card-style ${t.style}">${t.style === 'sobre' ? 'Sobre' : '⭐ Premium'}</span>
+    </div>
+    <div class="card-body">${escHtml(t.text)}</div>
+    <div class="card-footer">
+      <button class="btn-copy" onclick="copyText(${i}, this)">📋 Copier</button>
+    </div>`;
+  grid.appendChild(card);
+});
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyText(i, btn) {
+  navigator.clipboard.writeText(TEMPLATES[i].text).then(() => {
+    btn.textContent = '✅ Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function setStyle(style, btn) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.body.classList.remove('show-premium','show-all');
+  if (style === 'premium') document.body.classList.add('show-premium');
+  if (style === 'all')     document.body.classList.add('show-all');
+}
+</script>
+
+</body>
+</html>
