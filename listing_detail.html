@@ -1113,11 +1113,15 @@
 
         if (waBtn) {
           waBtn.href = 'https://wa.me/' + ownerPhone + '?text=' + waMsg;
-          if (window.SLCM_notify) {
-            waBtn.addEventListener('click', () => {
-              SLCM_notify.onWhatsAppClick(title, ad.city || '', price);
-            });
-          }
+          waBtn.addEventListener('click', () => {
+            if (window.SLCM_notify) SLCM_notify.onWhatsAppClick(title, ad.city || '', price);
+            /* Realtime : enregistrer le clic pour notifier l'agent en temps réel */
+            if (window.SLCM_DB?.client && ad.id) {
+              window.SLCM_DB.client.from('listing_events')
+                .insert({ listing_id: ad.id, type: 'whatsapp_click' })
+                .then(() => {}).catch(() => {});
+            }
+          });
         }
 
         /* ── Bouton Appeler — utilise le même ownerPhone (fallback HTML si JS échoue) ── */

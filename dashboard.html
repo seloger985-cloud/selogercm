@@ -159,7 +159,9 @@
       <div class="stat-card gray2"><div class="num" id="statNego">0</div><div class="lbl">En négociation</div></div>
       <div class="stat-card" style="border-left-color:#8b5cf6"><div class="num" id="statVues" style="color:#8b5cf6">0</div><div class="lbl">Vues totales</div></div>
       <div class="stat-card" style="border-left-color:#dc2626"><div class="num" id="statExpired" style="color:#dc2626">0</div><div class="lbl">Expirées</div></div>
+      <div class="stat-card" style="border-left-color:#25d366"><div class="num" id="statWa" style="color:#25d366">0</div><div class="lbl">WhatsApp aujourd'hui <span id="statWaLive" style="display:none;background:#25d366;color:#fff;border-radius:999px;padding:.1rem .4rem;font-size:.6rem;font-weight:800;animation:pulse 1.5s infinite">●</span></div></div>
     </div>
+    <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
 
     <div class="quick-actions">
       <a href="/publier" class="btn-action primary"><i class="fas fa-plus"></i> Publier une annonce</a>
@@ -587,7 +589,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   allListings = await loadMyListings(user.id);
   renderGrid();
+
+  /* ── WhatsApp Realtime ── */
+  await initWaRealtime(user.id);
 });
+
+async function initWaRealtime(userId) {
+  const client = window.SLCM_DB.client;
+
+  /* 1. Compteur initial — clics WA aujourd'hui */
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const { data: todayEvents } = await client
+    .from('listing_events')
+    .select('id, listing_id')
+    .eq('type', 'whatsapp_click')
+    .gte('created_at', todayStart.toISOString());
+
+  let waCount = (todayEvents || []).length;
+  document.getElementById('statWa').textContent = waCount;
+
+  /* 2. Abonnement Realtime — nouveaux clics WA */
+  client.channel('wa-realtime-' + userId)
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'listing_events'
+    }, (payload) => {
+      if (payload.new?.type !== 'whatsapp_click') return;
+      /* RLS garantit que seuls les events des annonces de l'agent arrivent ici */
+      waCount++;
+      document.getElementById('statWa').textContent = waCount;
+      document.getElementById('statWaLive').style.display = 'inline';
+
+      /* Toast avec le titre de l'annonce */
+      const adTitle = allListings.find(a => a.id === payload.new.listing_id)?.title_fr
+        || allListings.find(a => a.id === payload.new.listing_id)?.title
+        || 'une annonce';
+      showToast('📱 Clic WhatsApp — ' + adTitle);
+    })
+    .subscribe();
+}
 </script>
 </body>
 </html>
