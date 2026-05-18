@@ -22,9 +22,10 @@ const SLCM_reels = (() => {
   const MOBILE_LIMIT  = 6;  /* 6 vidéos par section sur mobile */
 
   const MOBILE_QUOTA = {
-    rentUnfurnished: 4,
+    rentUnfurnished: 3,
     rentFurnishedOrCommercial: 2,
     sale: 1
+    /* 6e slot : wildcard → total = MOBILE_LIMIT = 6 */
   };
 
   let reels = [];
