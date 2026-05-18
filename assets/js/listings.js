@@ -13,7 +13,7 @@ const SLCM_listings = (() => {
     'id', 'title', 'images', 'video_url',
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
-    'type', 'status', 'statut', 'created_at', 'owner_phone',
+    'type', 'status', 'statut', 'rental_segment', 'created_at', 'owner_phone',
     'owner_kyc_verified', 'owner_is_pro'
   ].join(',');
 
@@ -254,13 +254,17 @@ const SLCM_listings = (() => {
         ${listing.owner_is_pro       ? '<span style="background:rgba(146,64,14,.9);color:#fff;border-radius:999px;padding:.15rem .5rem;font-size:.65rem;font-weight:800">⭐ Pro</span>' : ''}
       </div>` : '';
 
+    const segmentLabels = { long_stay: 'Longue durée', short_stay: 'Court séjour', flexible: 'Flexible' };
+    const segmentBadge = listing.rental_segment && segmentLabels[listing.rental_segment]
+      ? `<div class="listing-badge" style="background:#1565c0;color:#fff">${segmentLabels[listing.rental_segment]}</div>` : '';
+
     const badge = isBoosted
       ? '<div class="listing-badge premium" style="background:#ff7a00">⚡ VITRINE</div>'
       : listing.premium
         ? '<div class="listing-badge premium">PREMIUM</div>'
-        : listing.furnished
+        : listing.furnished && !listing.rental_segment
           ? '<div class="listing-badge">Meublé</div>'
-          : '';
+          : segmentBadge || '';
 
     const fav = showFav
       ? `<button class="fav-btn" data-id="${listing.id}" title="Ajouter aux favoris" onclick="event.preventDefault()">

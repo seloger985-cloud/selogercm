@@ -18,8 +18,8 @@
 const SLCM_reels = (() => {
 
   const MOBILE_BREAKPOINT = 768;
-  const DESKTOP_LIMIT = 8;
-  const MOBILE_LIMIT  = 8;
+  const DESKTOP_LIMIT = 12; /* Carrousel Netflix fusionné sur desktop */
+  const MOBILE_LIMIT  = 6;  /* 6 vidéos par section sur mobile */
 
   const MOBILE_QUOTA = {
     rentUnfurnished: 4,
@@ -35,6 +35,35 @@ const SLCM_reels = (() => {
 
   async function sb() {
     return window.SLCM_DB ? window.SLCM_DB.init() : null;
+  }
+
+  /* ── Lecteur vidéo universel : MP4 (Supabase) + HLS (Cloudflare Stream) ── */
+  function loadVideo(videoEl, src, autoplay) {
+    if (!src || !videoEl) return;
+    const isHLS = src.includes('.m3u8') || src.includes('videodelivery.net');
+
+    /* Détruire une instance hls.js précédente sur cet élément */
+    if (videoEl._hls) { videoEl._hls.destroy(); videoEl._hls = null; }
+
+    if (isHLS) {
+      if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: false, startLevel: -1 });
+        hls.loadSource(src);
+        hls.attachMedia(videoEl);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (autoplay) videoEl.play().catch(() => {});
+        });
+        videoEl._hls = hls;
+      } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+        /* Safari : HLS natif */
+        videoEl.src = src;
+        if (autoplay) videoEl.play().catch(() => {});
+      }
+    } else {
+      /* MP4 standard */
+      videoEl.src = src;
+      if (autoplay) videoEl.play().catch(() => {});
+    }
   }
 
   function escapeHtml(str) {
@@ -89,23 +118,28 @@ const SLCM_reels = (() => {
     const client = await sb();
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
 
+    /* Desktop : pool élargi (12 vidéos — toutes catégories fusionnées)
+       Mobile  : pool réduit (6 vidéos — Section 1 seulement, non meublé)  */
+    const limit = isMobile ? 15 : 30;
     const { data, error } = await client
       .from('listings')
       .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(limit);
 
     if (error) { console.error('[reels] loadReels:', error); return []; }
     const pool = (data || []).filter(r => r.video_url && r.video_url.trim());
-
-    /* Rotation A1 : décalage circulaire du pool global toutes les 6h.
-       Pattern cohérent avec rotatePremium dans listings.js (mais 6h au lieu de 30 min,
-       car les reels n'ont pas besoin de tourner aussi vite que les annonces premium). */
     const rotated = rotatePool(pool);
 
-    return isMobile ? applyMobileQuota(rotated) : rotated.slice(0, DESKTOP_LIMIT);
+    /* Mobile Section 1 : non meublé prioritaire (Section 2 prend les meublés) */
+    if (isMobile) {
+      const s1 = rotated.filter(r => !r.furnished);
+      return applyMobileQuota(s1.length >= 3 ? s1 : rotated);
+    }
+    /* Desktop : tout le pool fusionné jusqu'à 12 */
+    return rotated.slice(0, DESKTOP_LIMIT);
   }
 
   /* Rotation déterministe basée sur l'heure (tranches de 3h).
@@ -558,7 +592,9 @@ const SLCM_reels = (() => {
       if (i === idx) {
         card.classList.add('is-active');
         if (video) {
-          if (!video.src && video.dataset.src) video.src = video.dataset.src;
+          if (!video.src && !video._hls && video.dataset.src) {
+            loadVideo(video, video.dataset.src, false);
+          }
           video.currentTime = 0;
           video.play().catch(() => {});
         }
@@ -567,11 +603,11 @@ const SLCM_reels = (() => {
         if (video) { video.pause(); video.currentTime = 0; }
       }
     });
-    /* Pre-warm la vidéo suivante : charge uniquement les métadonnées */
+    /* Pre-warm la vidéo suivante */
     const nextCard = cards[idx + 1];
     if (nextCard) {
       const nv = nextCard.querySelector('.reel-video');
-      if (nv && !nv.src && nv.dataset.src) { nv.src = nv.dataset.src; nv.preload = 'metadata'; }
+      if (nv && !nv.src && !nv._hls && nv.dataset.src) { loadVideo(nv, nv.dataset.src, false); }
     }
 
     const track = document.getElementById('reelsTrack');
@@ -773,7 +809,7 @@ const SLCM_reels = (() => {
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
             /* Reset du compteur quand on arrive sur un slide */
             playCountByIndex.set(idx, 0);
-            if (!video.src && video.dataset.src) video.src = video.dataset.src;
+            if (!video.src && !video._hls && video.dataset.src) loadVideo(video, video.dataset.src, false);
             video.currentTime = 0;
             video.play().catch(() => {});
             viewerIndex = idx;
@@ -781,7 +817,7 @@ const SLCM_reels = (() => {
             const nextSlide = slides[idx + 1];
             if (nextSlide) {
               const nv = nextSlide.querySelector('.viewer-video');
-              if (nv && !nv.src && nv.dataset.src) { nv.src = nv.dataset.src; nv.preload = 'metadata'; }
+              if (nv && !nv.src && !nv._hls && nv.dataset.src) loadVideo(nv, nv.dataset.src, false);
             }
           } else {
             video.pause();
@@ -814,8 +850,8 @@ const SLCM_reels = (() => {
       if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
       const video = target?.querySelector('.viewer-video');
       if (video) {
-        if (!video.src && video.dataset.src) video.src = video.dataset.src;
-        video.play().catch(() => {});
+        if (!video.src && !video._hls && video.dataset.src) loadVideo(video, video.dataset.src, true);
+        else video.play().catch(() => {});
       }
     });
   }
@@ -868,6 +904,53 @@ const SLCM_reels = (() => {
     }, 200);
   }
 
+  /* ── Config des sections homepage ── */
+  const SECTION_CONFIGS = {
+    reelsSection: {
+      title:    'Visitez depuis chez vous',
+      sub:      'Les biens du moment en vidéo',
+      cta:      'Voir toutes les visites →',
+      cfTag:    'homepage-section-1',
+      /* Supabase fallback : résidentiel non meublé */
+      sbFilter: (q) => q.eq('furnished', false).not('video_url', 'is', null),
+    },
+    reelsSection2: {
+      title:    'Ils ont leur style, trouvez le vôtre',
+      sub:      'Meublés, studios, espaces de travail — en vidéo',
+      cta:      'Voir les meublés et espaces pros →',
+      cfTag:    'homepage-section-2',
+      /* Supabase fallback : meublé + commercial + studio */
+      sbFilter: (q) => q.or('furnished.eq.true,type.in.(commercial,office,studio)').not('video_url', 'is', null),
+    },
+  };
+
+  /* ── Charger via Cloudflare Stream (si disponible) ── */
+  async function loadFromCF(tag) {
+    try {
+      const res = await fetch(`/.netlify/functions/cf-stream-videos?tag=${encodeURIComponent(tag)}&limit=6`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.videos?.length) return null;
+      /* Convertir format CF → format interne reels */
+      return data.videos.map(v => ({
+        id:         v.listing_id || v.id,
+        title:      v.title,
+        city:       v.location?.split(',')[1]?.trim() || '',
+        district:   v.location?.split(',')[0]?.trim() || '',
+        price:      parseInt(v.price?.replace(/\D/g,'')) || 0,
+        rent_sale:  'rent',
+        type:       'apartment',
+        furnished:  false,
+        video_url:  v.hls,
+        images:     [v.thumbnail],
+        premium:    v.premium || false,
+        created_at: new Date().toISOString(),
+        owner_phone:'237650840714',
+        _cf: true,
+      }));
+    } catch { return null; }
+  }
+
   async function init() {
     injectStyles();
 
@@ -877,8 +960,43 @@ const SLCM_reels = (() => {
       tries++;
     }
 
+    /* ── Section 1 ── */
     reels = await loadReels();
     buildSection();
+
+    /* ── Section 2 : mobile uniquement ── */
+    const anchor2 = document.getElementById('reelsSection2');
+    if (anchor2) {
+      if (!isMobile) {
+        /* Desktop : masquer Section 2 — les 12 vidéos sont dans Section 1 */
+        anchor2.classList.add('is-empty');
+      } else {
+        const cfg2 = SECTION_CONFIGS.reelsSection2;
+        let reels2 = await loadFromCF(cfg2.cfTag);
+        if (!reels2) {
+          const client = await sb();
+          if (client) {
+            let q = client.from('listings').select(
+              'id,title,city,district,price,rent_sale,type,furnished,video_url,images,premium,created_at,owner_phone'
+            ).eq('status','active');
+            q = cfg2.sbFilter(q);
+            const { data } = await q.order('created_at',{ascending:false}).limit(20);
+            reels2 = (data||[]).filter(r => r.video_url?.trim()).slice(0, MOBILE_LIMIT);
+          }
+        }
+
+        if (reels2?.length) {
+          const savedReels = reels;
+          reels = reels2;
+          anchor2.classList.remove('is-empty');
+          buildMobileSection(anchor2);
+          reels = savedReels;
+        } else {
+          anchor2.classList.add('is-empty');
+        }
+      }
+    }
+
     window.addEventListener('resize', handleResize);
   }
 

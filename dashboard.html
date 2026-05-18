@@ -213,14 +213,38 @@
       <div class="field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
       <div class="field"><label>Type</label>
         <select id="editType">
-          <option value="apartment">Appartement</option><option value="house">Maison</option>
-          <option value="villa">Villa</option><option value="studio">Studio</option>
-          <option value="duplex">Duplex</option><option value="warehouse">Entrepôt</option>
+          <option value="apartment">Appartement</option>
+          <option value="house">Maison</option>
+          <option value="villa">Villa</option>
+          <option value="studio">Studio</option>
+          <option value="duplex">Duplex</option>
+          <option value="warehouse">Entrepôt</option>
+          <option value="commercial">Local commercial</option>
+          <option value="shop">Boutique</option>
+          <option value="office">Bureau</option>
           <option value="plots-of-land">Terrain</option>
+          <option value="immeuble">Immeuble</option>
         </select>
       </div>
       <div class="field"><label>Opération</label>
         <select id="editMode"><option value="rent">À louer</option><option value="sale">À vendre</option></select>
+      </div>
+      <div class="field"><label>Meublé</label>
+        <select id="editFurnished">
+          <option value="false">Non meublé</option>
+          <option value="true">Meublé</option>
+        </select>
+      </div>
+      <div class="field"><label>Chambres</label>
+        <select id="editBedrooms">
+          <option value="">—</option>
+          <option value="0">Studio / 0</option>
+          <option value="1">1 chambre</option>
+          <option value="2">2 chambres</option>
+          <option value="3">3 chambres</option>
+          <option value="4">4 chambres</option>
+          <option value="5">5 chambres +</option>
+        </select>
       </div>
       <div class="field"><label>Ville</label>
         <select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select>
@@ -439,9 +463,11 @@ function openEdit(id) {
   document.getElementById('editId').value    = id;
   document.getElementById('editTitle').value = ad.title_fr || ad.title || '';
   document.getElementById('editPrice').value = ad.price || '';
-  document.getElementById('editType').value  = ad.type || 'apartment';
-  document.getElementById('editMode').value  = ad.rentSale || 'rent';
-  document.getElementById('editCity').value  = ad.city || 'Douala';
+  document.getElementById('editType').value      = ad.type || 'apartment';
+  document.getElementById('editMode').value      = ad.rentSale || ad.rent_sale || 'rent';
+  document.getElementById('editFurnished').value = String(!!ad.furnished);
+  document.getElementById('editBedrooms').value  = ad.bedrooms != null ? String(ad.bedrooms) : '';
+  document.getElementById('editCity').value      = ad.city || 'Douala';
   document.getElementById('editDesc').value  = ad.description || '';
   refreshEditDistricts(ad.city||'Douala', ad.district||'');
   document.getElementById('editOverlay').classList.add('open');
@@ -469,6 +495,8 @@ document.getElementById('editSave').addEventListener('click', async () => {
     price:       Number(document.getElementById('editPrice').value)||0,
     type:        document.getElementById('editType').value,
     rent_sale:   document.getElementById('editMode').value,
+    furnished:   document.getElementById('editFurnished').value === 'true',
+    bedrooms:    document.getElementById('editBedrooms').value !== '' ? Number(document.getElementById('editBedrooms').value) : null,
     city:        document.getElementById('editCity').value,
     district:    document.getElementById('editDistrict').value,
     description: document.getElementById('editDesc').value.trim(),

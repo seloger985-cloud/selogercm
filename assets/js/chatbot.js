@@ -10,16 +10,49 @@
   style.textContent = `
     :root { --orange: #ff7a00; }
 
-    /* Bouton déclencheur */
-    .chat-trigger {
-      position: fixed; bottom: 90px; right: 24px; z-index: 998;
+    /* ── FAB unifié (WA + IA + Telegram) ── */
+    #slcm-fab-main {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
       background: var(--orange); color: #fff; border: none;
       width: 56px; height: 56px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; cursor: pointer;
-      box-shadow: 0 4px 16px rgba(255,122,0,.45);
-      transition: transform .2s, box-shadow .2s;
-      animation: pulse-chat 2.5s ease-in-out infinite;
+      font-size: 1.4rem; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255,122,0,.45);
+      transition: transform .2s, background .2s;
+    }
+    #slcm-fab-main:hover { transform: scale(1.08); }
+    #slcm-fab-menu {
+      position: fixed; bottom: 90px; right: 24px; z-index: 998;
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: flex-end;
+      opacity: 0; pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity .2s, transform .2s;
+    }
+    #slcm-fab-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .fab-menu-item {
+      display: flex; align-items: center; gap: 8px;
+      border: none; cursor: pointer; padding: 0; background: none;
+    }
+    .fab-menu-label {
+      background: #111; color: #fff; font-size: .75rem; font-weight: 700;
+      padding: .3rem .75rem; border-radius: 8px; white-space: nowrap;
+    }
+    .fab-menu-btn {
+      width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: #fff;
+      box-shadow: 0 3px 12px rgba(0,0,0,.2);
+      transition: transform .15s;
+    }
+    .fab-menu-btn:hover { transform: scale(1.1); }
+    .fab-wa  { background: #25d366; }
+    .fab-ai  { background: var(--orange); }
+    .fab-tg  { background: #2aabee; }
+
+    /* Bouton déclencheur (kept for compatibility, hidden) */
+    .chat-trigger {
+      display: none !important;
     }
     .chat-trigger:hover {
       transform: scale(1.1);
@@ -162,14 +195,7 @@
     .chat-send:hover { opacity: .88; transform: scale(1.05); }
     .chat-send:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
-    /* Tooltip label */
-    .chat-trigger-label {
-      position: fixed; bottom: 100px; right: 88px; z-index: 998;
-      background: #111; color: #fff; font-size: .75rem; font-weight: 600;
-      padding: .3rem .75rem; border-radius: 8px; white-space: nowrap;
-      opacity: 0; pointer-events: none; transition: opacity .2s;
-    }
-    .chat-trigger:hover + .chat-trigger-label { opacity: 1; }
+    .chat-trigger-label { display: none; }
 
     @media (max-width: 480px) {
       .chat-window { width: calc(100vw - 24px); right: 12px; bottom: 140px; }
@@ -231,7 +257,7 @@ Ne réponds JAMAIS en dehors du format JSON.`;
       if (!window.SLCM_DB?.client) return [];
       const { data } = await window.SLCM_DB.client
         .from('listings')
-        .select('*')
+        .select('id,title,price,district,city,type,rent_sale,furnished,bedrooms,images,slug,statut,rental_segment')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(50);
@@ -301,6 +327,62 @@ Ne réponds JAMAIS en dehors du format JSON.`;
     document.body.appendChild(trigger);
     document.body.appendChild(label);
     document.body.appendChild(win);
+
+    /* ── FAB unifié ── */
+    const fabMenu = document.createElement('div');
+    fabMenu.id = 'slcm-fab-menu';
+    fabMenu.innerHTML = `
+      <button class="fab-menu-item" id="fabWaBtn">
+        <span class="fab-menu-label">WhatsApp</span>
+        <div class="fab-menu-btn fab-wa"><i class="fab fa-whatsapp"></i></div>
+      </button>
+      <button class="fab-menu-item" id="fabAiBtn">
+        <span class="fab-menu-label">Assistant IA</span>
+        <div class="fab-menu-btn fab-ai"><i class="fas fa-robot"></i></div>
+      </button>
+      <button class="fab-menu-item" id="fabTgBtn">
+        <span class="fab-menu-label">Telegram</span>
+        <div class="fab-menu-btn fab-tg"><i class="fab fa-telegram"></i></div>
+      </button>
+    `;
+    const fabMain = document.createElement('button');
+    fabMain.id = 'slcm-fab-main';
+    fabMain.setAttribute('aria-label', 'Nous contacter');
+    fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
+    document.body.appendChild(fabMenu);
+    document.body.appendChild(fabMain);
+
+    let fabOpen = false;
+    fabMain.addEventListener('click', () => {
+      fabOpen = !fabOpen;
+      fabMenu.classList.toggle('open', fabOpen);
+      fabMain.innerHTML = fabOpen
+        ? `<i class="fas fa-times"></i>`
+        : `<i class="fas fa-comment-dots"></i>`;
+    });
+    document.getElementById('fabWaBtn').addEventListener('click', () => {
+      fabMenu.classList.remove('open'); fabOpen = false;
+      fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
+      if (window.SLCM_whatsapp) SLCM_whatsapp.openChat({ text: '' });
+      else window.open('https://wa.me/237650840714', '_blank');
+    });
+    document.getElementById('fabAiBtn').addEventListener('click', () => {
+      fabMenu.classList.remove('open'); fabOpen = false;
+      fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
+      toggleChat();
+    });
+    document.getElementById('fabTgBtn').addEventListener('click', () => {
+      fabMenu.classList.remove('open'); fabOpen = false;
+      fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
+      window.open('https://t.me/seloger237', '_blank');
+    });
+    /* Fermer menu si clic extérieur */
+    document.addEventListener('click', (e) => {
+      if (fabOpen && !fabMain.contains(e.target) && !fabMenu.contains(e.target)) {
+        fabOpen = false; fabMenu.classList.remove('open');
+        fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
+      }
+    });
 
     // Événements
     trigger.addEventListener('click', toggleChat);

@@ -123,6 +123,23 @@
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
       gap: 1.2rem !important;
     }
+    /* ── Cards responsive mobile : 3 visibles + bouton Voir plus ── */
+    @media (max-width: 767px) {
+      .listing-card.card-hidden { display: none; }
+      .btn-voir-plus {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        width: 100%; margin-top: 1rem; padding: .75rem;
+        background: #fff; border: 1.5px solid #e5e5e5;
+        border-radius: 12px; font-family: inherit; font-size: .88rem;
+        font-weight: 700; color: #555; cursor: pointer;
+        transition: border-color .15s, color .15s;
+      }
+      .btn-voir-plus:hover { border-color: #ff7a00; color: #ff7a00; }
+    }
+    @media (min-width: 768px) {
+      .btn-voir-plus { display: none !important; }
+      .listing-card.card-hidden { display: block !important; }
+    }
     /* Réserver l'espace avant chargement JS → évite le CLS */
     #unfurnishedGrid:empty, #furnishedGrid:empty,
     #villasGrid:empty, #commercialRentGrid:empty,
@@ -230,8 +247,8 @@
           <form id="searchForm" method="get" action="listings_v2.html" aria-label="Search filter" class="search-grid">
             <input type="hidden" name="mode" id="modeInput">
             <div class="field-black">
-              <label class="hidden" for="city">City</label>
-              <select id="city" name="city" aria-label="City" data-i18n-placeholder="city">
+              <label class="hidden" for="city">Ville</label>
+              <select id="city" name="city" aria-label="Ville" data-i18n-placeholder="city">
                 <option value="" data-i18n="home.city">Ville</option>
                 <option>Douala</option>
                 <option>Yaoundé</option>
@@ -239,32 +256,36 @@
               </select>
             </div>
             <div class="field-black">
-              <label class="hidden" for="district">District</label>
-              <select id="district" name="district" aria-label="District" data-i18n-placeholder="district">
+              <label class="hidden" for="district">Quartier</label>
+              <select id="district" name="district" aria-label="Quartier" data-i18n-placeholder="district">
                 <option value="" data-i18n="home.district">Quartier</option>
               </select>
             </div>
             <div class="field-black">
-              <label class="hidden" for="type">Type</label>
-              <select id="type" name="type" aria-label="Type" data-i18n-placeholder="type">
+              <label class="hidden" for="type">Type de bien</label>
+              <select id="type" name="type" aria-label="Type de bien" data-i18n-placeholder="type">
                 <option value="" data-i18n="home.type">Type de bien</option>
-                <option value="apartment" data-i18n="apartment">Apartment</option>
-                <option value="house" data-i18n="house">House</option>
+                <option value="apartment" data-i18n="apartment">Appartement</option>
+                <option value="house" data-i18n="house">Maison</option>
                 <option value="studio" data-i18n="studio">Studio</option>
                 <option value="villa" data-i18n="villa">Villa</option>
+                <option value="duplex">Duplex</option>
+                <option value="commercial">Local commercial</option>
+                <option value="office">Bureau</option>
+                <option value="plots-of-land">Terrain</option>
               </select>
             </div>
             <div class="field-black">
-              <label class="hidden" for="bedrooms">Bedrooms</label>
-              <select id="bedrooms" name="bedrooms" aria-label="Bedrooms" data-i18n-placeholder="bedrooms">
+              <label class="hidden" for="bedrooms">Chambres</label>
+              <select id="bedrooms" name="bedrooms" aria-label="Chambres" data-i18n-placeholder="bedrooms">
                 <option value="" data-i18n="home.bedrooms">Chambres</option>
                 <option value="1">1</option><option value="2">2</option>
                 <option value="3">3</option><option value="4">4+</option>
               </select>
             </div>
             <div class="field-black">
-              <label class="hidden" for="price">Price</label>
-              <select id="price" name="price" aria-label="Price">
+              <label class="hidden" for="price">Budget</label>
+              <select id="price" name="price" aria-label="Budget">
                 <!-- Options injectées selon RENT / SALE -->
               </select>
             </div>
@@ -286,27 +307,39 @@
       <!-- Top Unfurnished -->
       <section id="unfurnished" class="snap section-soft" aria-label="Top Unfurnished">
         <div class="container px pt pb">
-          <h2 class="section-title" data-i18n="home.unfurnishedTitle">Appartements non meublés</h2>
-          <p class="section-sub" data-i18n="home.premium">Premium • Non meublé</p>
+          <h2 class="section-title" data-i18n="home.unfurnishedTitle">À louer — Nos sélections</h2>
+          <p class="section-sub" data-i18n="home.premium">Appartements et maisons non meublés</p>
           <div id="unfurnishedGrid" class="grid grid-3" aria-live="polite"></div>
+          <button class="btn-voir-plus" onclick="revealCards('unfurnishedGrid', this)">
+            <i class="fas fa-chevron-down"></i> Voir les 6 annonces
+          </button>
         </div>
       </section>
 
       <!-- Top Furnished -->
       <section id="furnishedSection" class="snap section-soft" aria-label="Top Furnished">
         <div class="container px pt pb">
-          <h2 class="section-title" data-i18n="home.furnishedTitle">Appartements meublés</h2>
-          <p class="section-sub" data-i18n="home.premium">Premium • Meublé</p>
+          <h2 class="section-title" data-i18n="home.furnishedTitle">Prêt à vivre</h2>
+          <p class="section-sub" data-i18n="home.premium">Meublé · Longue durée · Court séjour</p>
           <div id="furnishedGrid" class="grid grid-3"></div>
+          <button class="btn-voir-plus" onclick="revealCards('furnishedGrid', this)">
+            <i class="fas fa-chevron-down"></i> Voir les 6 annonces
+          </button>
         </div>
       </section>
+
+      <!-- ══ REELS SECTION 2 ══ -->
+      <section id="reelsSection2" aria-label="Visites Express meublés et espaces pros"></section>
 
       <!-- Locaux Commerciaux à louer -->
       <section class="snap section-soft" aria-label="Locaux Commerciaux">
         <div class="container px pt pb">
-          <h2 class="section-title" data-i18n="commercialTitle">Locaux Commerciaux</h2>
-          <p class="section-sub" data-i18n="commercialSub">Boutiques • Bureaux • Entrepôts à louer</p>
+          <h2 class="section-title" data-i18n="commercialTitle">Développez votre activité</h2>
+          <p class="section-sub" data-i18n="commercialSub">Bureaux · Commerces · Entrepôts disponibles</p>
           <div id="commercialRentGrid" class="grid grid-3" aria-live="polite"></div>
+          <button class="btn-voir-plus" onclick="revealCards('commercialRentGrid', this)">
+            <i class="fas fa-chevron-down"></i> Voir les 6 annonces
+          </button>
         </div>
       </section>
     </div>
@@ -498,7 +531,14 @@
     }
     function fillGrid(id, list) {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = cards(list);
+      if (!el) return;
+      el.innerHTML = cards(list);
+      /* Sur mobile : masquer les cards 4-6 */
+      if (window.innerWidth < 768) {
+        el.querySelectorAll('.listing-card').forEach((c, i) => {
+          if (i >= 3) c.classList.add('card-hidden');
+        });
+      }
     }
 
     try {
@@ -705,6 +745,14 @@ form.addEventListener('submit', async (e) => {
     });
   });
   </script>
+  <script>
+  function revealCards(gridId, btn) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.querySelectorAll('.listing-card.card-hidden').forEach(c => c.classList.remove('card-hidden'));
+    btn.style.display = 'none';
+  }
+  </script>
   <script src="assets/js/lang.js" defer></script>
   <script>
   /* Re-appliquer les traductions immédiatement au changement de langue */
@@ -740,7 +788,8 @@ form.addEventListener('submit', async (e) => {
   <script src="assets/js/footer.js" defer></script>
   <script src="assets/js/nav.js" defer></script>
   <script src="assets/js/homepage-boost.js" defer></script>
-  <script src="assets/js/Homepage-banners.js?v=2" defer></script>
+  <!-- Homepage-banners.js désactivé — brief refonte mai 2026 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js" defer></script>
   <script src="assets/js/reels.js" defer></script>
   <script src="assets/js/favorites.js" defer></script>
   <script src="assets/js/chatbot.js" defer></script>

@@ -247,6 +247,15 @@
           <input id="furnished" type="checkbox">
           <label for="furnished">Meublé</label>
         </div>
+        <div class="checkline" id="rentalSegmentRow" style="display:none">
+          <label for="rentalSegment" style="font-weight:700;margin-right:.5rem">Durée :</label>
+          <select id="rentalSegment" style="border:1.5px solid #e5e5e5;border-radius:8px;padding:.3rem .6rem;font-family:inherit;font-size:.85rem;background:#fff">
+            <option value="">Non précisé</option>
+            <option value="long_stay">Longue durée</option>
+            <option value="short_stay">Court séjour</option>
+            <option value="flexible">Flexible</option>
+          </select>
+        </div>
         <div class="checkline">
           <input id="parking" type="checkbox">
           <label for="parking">🚗 Parking</label>
@@ -384,7 +393,14 @@
         }
 
         /* Booléens */
-        if (d.furnished)  document.getElementById('furnished').checked  = true;
+        if (d.furnished)  {
+          document.getElementById('furnished').checked = true;
+          syncRentalSegment();
+        }
+        if (d.rental_segment) {
+          const rs = document.getElementById('rentalSegment');
+          if (rs) rs.value = d.rental_segment;
+        }
         if (d.parking)    document.getElementById('parking').checked    = true;
         if (d.generator)  document.getElementById('generator').checked  = true;
         if (d.pool)       document.getElementById('pool').checked       = true;
@@ -429,6 +445,13 @@
     const modeRentBtn=document.getElementById('modeRent');
     const modeSaleBtn=document.getElementById('modeSale');
     const priceHint=document.getElementById('priceHint');
+
+    function syncRentalSegment() {
+      const isFurnished = document.getElementById('furnished').checked;
+      const row = document.getElementById('rentalSegmentRow');
+      if (row) row.style.display = (isFurnished && currentMode === 'rent') ? 'flex' : 'none';
+    }
+    document.getElementById('furnished').addEventListener('change', syncRentalSegment);
 
     function syncPricePerDay() {
       const isFurnished = document.getElementById('furnished').checked;
@@ -790,8 +813,9 @@
         business_activity: document.getElementById('businessActivity').value.trim() || null,
 
         /* Booléens */
-        furnished:     document.getElementById('furnished').checked,
-        parking:       document.getElementById('parking').checked,
+        furnished:        document.getElementById('furnished').checked,
+        rental_segment:   document.getElementById('rentalSegment')?.value || null,
+        parking:          document.getElementById('parking').checked,
         generator:     document.getElementById('generator').checked,
         pool:          document.getElementById('pool').checked,
 
