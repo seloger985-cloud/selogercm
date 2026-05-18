@@ -28,9 +28,9 @@ exports.handler = async function (event) {
   }
 
   try {
-    /* Récupérer toutes les vidéos prêtes puis filtrer par meta.section */
+    /* Récupérer toutes les vidéos puis filtrer par meta.section + state=ready */
     const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream?status=ready&limit=100`,
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream?limit=100`,
       { headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` } }
     );
 
