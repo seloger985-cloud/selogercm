@@ -201,11 +201,11 @@ const SLCM_listings = (() => {
     });
   }
 
-  /* ── URL de transform Supabase Image (Pro) ──────────────────────── */
-  function getTransformUrl(publicUrl, { width, height, quality = 80 } = {}) {
-    if (!publicUrl || !publicUrl.includes('/storage/v1/object/public/')) return publicUrl;
-    const base = publicUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-    return `${base}?width=${width}&height=${height}&resize=cover&quality=${quality}&format=webp`;
+  /* ── URL de transform — désactivé (Supabase Image Transform hors quota)
+     Cloudflare Images prendra le relais après migration.
+     En attendant : URL originale retournée telle quelle. ── */
+  function getTransformUrl(publicUrl) {
+    return publicUrl || '';
   }
 
   /* ── Upload photos vers Supabase Storage ────────────────────────── */
