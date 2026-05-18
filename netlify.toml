@@ -1,4 +1,4 @@
-﻿[build]
+[build]
   publish = "."
 
 [build.environment]
@@ -21,7 +21,7 @@
   schedule = "0 3 * * 0"
 
 
-# ── Pages principales ─────────────────────────────────────────
+# Pages principales
 [[redirects]]
   from = "/pricing"
   to = "/pricing.html"
@@ -37,13 +37,13 @@
   to = "/douala.html"
   status = 200
 
-# ── Routing annonces ──────────────────────────────────────────
+# Routing annonces
 [[redirects]]
   from = "/annonce"
   to = "/listing_detail.html"
   status = 200
 
-# ── Pages SEO par quartier / type ─────────────────────────────
+# Pages SEO par quartier / type
 [[redirects]]
   from = "/appartements-bonapriso"
   to = "/seo-landing.html"
@@ -94,38 +94,44 @@
   to = "/seo-landing.html"
   status = 200
 
-# ── Partage réseaux sociaux ──────────────────────────────────
+# Partage reseaux sociaux
 [[redirects]]
   from = "/share/*"
   to = "/.netlify/functions/og"
   status = 200
   force = true
-# ── Sitemap listings (annonces dynamiques) ─────────────────────
+
+# Sitemaps dynamiques
 [[redirects]]
   from = "/sitemap-listings.xml"
   to = "/.netlify/functions/sitemap-listings"
   status = 200
 
-# ── Headers pour sitemap dynamique ─────────────────────────────
+[[redirects]]
+  from = "/sitemap-articles.xml"
+  to = "/.netlify/functions/sitemap-articles"
+  status = 200
+
+# Headers sitemap
 [[headers]]
   for = "/sitemap-listings.xml"
   [headers.values]
     Cache-Control = "public, max-age=7200, stale-while-revalidate=86400"
     Content-Type = "application/xml; charset=utf-8"
 
-# ── Cache statique : assets versionnés (JS/CSS/images) ───────
+# Cache statique assets
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# ── Cache HTML court (mise à jour fréquente) ─────────────────
+# Cache HTML
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=300, stale-while-revalidate=86400"
 
-# ── Pas de cache sur les routes dynamiques ────────────────────
+# Pas de cache routes dynamiques
 [[headers]]
   for = "/share/*"
   [headers.values]
