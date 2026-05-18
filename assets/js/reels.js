@@ -33,6 +33,7 @@ const SLCM_reels = (() => {
   let activeIndex = 0;
   let viewerOpen = false;
   let viewerIndex = 0;
+  let _viewerReels = null; /* reels actifs dans le viewer (null = section 1) */
 
   async function sb() {
     return window.SLCM_DB ? window.SLCM_DB.init() : null;
@@ -159,14 +160,15 @@ const SLCM_reels = (() => {
     if (document.getElementById('slcmReelsStyles')) return;
     const style = document.createElement('style');
     style.id = 'slcmReelsStyles';
+    /* [id^="reelsSection"] cible [id^="reelsSection"] ET #reelsSection2 */
     style.textContent = `
-      #reelsSection {
+      [id^="reelsSection"] {
         background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
         color: #fff;
         position: relative;
         overflow: hidden;
       }
-      #reelsSection.is-empty { display: none; }
+      [id^="reelsSection"].is-empty { display: none; }
 
       @keyframes reelPulse {
         0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
@@ -175,33 +177,33 @@ const SLCM_reels = (() => {
 
       /* ══════ DESKTOP — carousel inchangé ══════ */
       @media (min-width: ${MOBILE_BREAKPOINT}px) {
-        #reelsSection { padding: 2.5rem 0 3rem; }
-        #reelsSection .reels-header {
+        [id^="reelsSection"] { padding: 2.5rem 0 3rem; }
+        [id^="reelsSection"] .reels-header {
           max-width: 1200px; margin: 0 auto 1.5rem; padding: 0 1rem;
           display: flex; align-items: center; justify-content: space-between;
           gap: 1rem; flex-wrap: wrap;
         }
-        #reelsSection .reels-title {
+        [id^="reelsSection"] .reels-title {
           font-size: 1.5rem; font-weight: 900; margin: 0;
           display: flex; align-items: center; gap: .6rem;
         }
-        #reelsSection .reels-title .pulse-dot {
+        [id^="reelsSection"] .reels-title .pulse-dot {
           width: 10px; height: 10px; border-radius: 50%;
           background: #ef4444; animation: reelPulse 1.5s ease-in-out infinite;
         }
-        #reelsSection .reels-sub { font-size: .85rem; color: #aaa; margin: 0; }
-        #reelsSection .reels-viewport {
+        [id^="reelsSection"] .reels-sub { font-size: .85rem; color: #aaa; margin: 0; }
+        [id^="reelsSection"] .reels-viewport {
           max-width: 1200px; margin: 0 auto; padding: 0 1rem;
           overflow: hidden; position: relative; min-height: 600px;
         }
-        #reelsSection .reels-track {
+        [id^="reelsSection"] .reels-track {
           display: flex; align-items: center; gap: 1rem;
           padding-left: calc(50% - 160px);
           padding-right: calc(50% - 160px);
           transition: transform .5s cubic-bezier(.2,.9,.3,1);
           will-change: transform;
         }
-        #reelsSection .reel-card {
+        [id^="reelsSection"] .reel-card {
           flex-shrink: 0;
           width: 200px; height: 355px;
           border-radius: 16px; overflow: hidden; position: relative;
@@ -212,13 +214,13 @@ const SLCM_reels = (() => {
                       opacity .3s;
           opacity: .55;
         }
-        #reelsSection .reel-card.is-active {
+        [id^="reelsSection"] .reel-card.is-active {
           width: 320px; height: 570px;
           opacity: 1; z-index: 2;
           box-shadow: 0 25px 60px rgba(255,122,0,.25);
         }
-        #reelsSection .reel-card:not(.is-active):hover { opacity: .8; }
-        #reelsSection .reel-nav {
+        [id^="reelsSection"] .reel-card:not(.is-active):hover { opacity: .8; }
+        [id^="reelsSection"] .reel-nav {
           position: absolute; top: 50%; transform: translateY(-50%);
           width: 48px; height: 48px; border-radius: 50%;
           background: rgba(255,255,255,.95); color: #111;
@@ -227,29 +229,29 @@ const SLCM_reels = (() => {
           font-size: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,.3);
           transition: transform .2s;
         }
-        #reelsSection .reel-nav:hover { transform: translateY(-50%) scale(1.1); }
-        #reelsSection .reel-prev { left: 1rem; }
-        #reelsSection .reel-next { right: 1rem; }
-        #reelsSection .reel-nav:disabled { opacity: .35; cursor: not-allowed; }
+        [id^="reelsSection"] .reel-nav:hover { transform: translateY(-50%) scale(1.1); }
+        [id^="reelsSection"] .reel-prev { left: 1rem; }
+        [id^="reelsSection"] .reel-next { right: 1rem; }
+        [id^="reelsSection"] .reel-nav:disabled { opacity: .35; cursor: not-allowed; }
       }
 
       /* ══════ MOBILE — bande de vignettes ══════ */
       @media (max-width: ${MOBILE_BREAKPOINT - 1}px) {
-        #reelsSection { padding: 1rem 0 1.25rem; }
-        #reelsSection .reels-header {
+        [id^="reelsSection"] { padding: 1rem 0 1.25rem; }
+        [id^="reelsSection"] .reels-header {
           padding: 0 1rem .75rem;
           display: flex; align-items: center; justify-content: space-between;
         }
-        #reelsSection .reels-title {
+        [id^="reelsSection"] .reels-title {
           font-size: 1rem; font-weight: 800; margin: 0;
           display: flex; align-items: center; gap: .5rem; color: #fff;
         }
-        #reelsSection .reels-title .pulse-dot {
+        [id^="reelsSection"] .reels-title .pulse-dot {
           width: 8px; height: 8px; border-radius: 50%;
           background: #ef4444; animation: reelPulse 1.5s ease-in-out infinite;
         }
-        #reelsSection .reels-sub { font-size: .75rem; color: #aaa; margin: 0; }
-        #reelsSection .reels-strip {
+        [id^="reelsSection"] .reels-sub { font-size: .75rem; color: #aaa; margin: 0; }
+        [id^="reelsSection"] .reels-strip {
           display: flex; gap: .6rem;
           padding: 0 1rem .25rem;
           overflow-x: auto; overflow-y: hidden;
@@ -257,8 +259,8 @@ const SLCM_reels = (() => {
           scrollbar-width: none;
           scroll-snap-type: x proximity;
         }
-        #reelsSection .reels-strip::-webkit-scrollbar { display: none; }
-        #reelsSection .reel-thumb {
+        [id^="reelsSection"] .reels-strip::-webkit-scrollbar { display: none; }
+        [id^="reelsSection"] .reel-thumb {
           flex-shrink: 0;
           width: 110px; height: 195px;
           border-radius: 12px; overflow: hidden;
@@ -269,31 +271,31 @@ const SLCM_reels = (() => {
           touch-action: manipulation;
           -webkit-tap-highlight-color: rgba(255,122,0,.3);
         }
-        #reelsSection .reel-thumb img {
+        [id^="reelsSection"] .reel-thumb img {
           width: 100%; height: 100%; object-fit: cover; display: block;
         }
-        #reelsSection .reel-thumb-overlay {
+        [id^="reelsSection"] .reel-thumb-overlay {
           position: absolute; left: 0; right: 0; bottom: 0;
           padding: .5rem;
           background: linear-gradient(0deg, rgba(0,0,0,.85) 0%, transparent 100%);
           color: #fff; pointer-events: none;
         }
-        #reelsSection .reel-thumb-title {
+        [id^="reelsSection"] .reel-thumb-title {
           font-size: .7rem; font-weight: 700; margin: 0 0 .15rem;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           text-shadow: 0 1px 2px rgba(0,0,0,.6);
         }
-        #reelsSection .reel-thumb-price {
+        [id^="reelsSection"] .reel-thumb-price {
           font-size: .7rem; font-weight: 800; color: #ff9633; margin: 0;
         }
-        #reelsSection .reel-thumb-premium {
+        [id^="reelsSection"] .reel-thumb-premium {
           position: absolute; top: .35rem; left: .35rem;
           background: #ff7a00; color: #fff;
           font-size: .55rem; font-weight: 900;
           padding: .15rem .35rem; border-radius: 3px;
           letter-spacing: .3px;
         }
-        #reelsSection .reel-thumb-play {
+        [id^="reelsSection"] .reel-thumb-play {
           position: absolute; top: 50%; left: 50%;
           transform: translate(-50%, -50%);
           width: 32px; height: 32px; border-radius: 50%;
@@ -304,7 +306,7 @@ const SLCM_reels = (() => {
           pointer-events: none;
         }
         /* B2 — Indicateur 'Voir les annonces' mobile (juste sous la bande) */
-        #reelsSection .reels-cta-next {
+        [id^="reelsSection"] .reels-cta-next {
           margin: .9rem 1rem 0;
           background: rgba(255,255,255,.08);
           border: 1px solid rgba(255,255,255,.15);
@@ -321,10 +323,10 @@ const SLCM_reels = (() => {
           width: calc(100% - 2rem);
           transition: background .2s;
         }
-        #reelsSection .reels-cta-next:active {
+        [id^="reelsSection"] .reels-cta-next:active {
           background: rgba(255,255,255,.15);
         }
-        #reelsSection .reels-cta-next .arrow {
+        [id^="reelsSection"] .reels-cta-next .arrow {
           display: inline-block;
           animation: reelsCtaArrow 1.6s ease-in-out infinite;
         }
@@ -429,41 +431,41 @@ const SLCM_reels = (() => {
       }
 
       /* ══════ Cards desktop : overlay vidéo + boutons ══════ */
-      #reelsSection .reel-video {
+      [id^="reelsSection"] .reel-video {
         width: 100%; height: 100%; object-fit: cover;
         display: block; background: #000;
       }
-      #reelsSection .reel-overlay {
+      [id^="reelsSection"] .reel-overlay {
         position: absolute; left: 0; right: 0; bottom: 0;
         padding: 1rem;
         background: linear-gradient(0deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,0) 100%);
         color: #fff; pointer-events: none;
       }
-      #reelsSection .reel-overlay a,
-      #reelsSection .reel-overlay button.reel-wa-btn { pointer-events: auto; }
-      #reelsSection .reel-title {
+      [id^="reelsSection"] .reel-overlay a,
+      [id^="reelsSection"] .reel-overlay button.reel-wa-btn { pointer-events: auto; }
+      [id^="reelsSection"] .reel-title {
         font-size: .95rem; font-weight: 800; margin: 0 0 .3rem;
         text-shadow: 0 1px 3px rgba(0,0,0,.6);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      #reelsSection .reel-loc { font-size: .8rem; opacity: .9; margin: 0 0 .5rem; }
-      #reelsSection .reel-price {
+      [id^="reelsSection"] .reel-loc { font-size: .8rem; opacity: .9; margin: 0 0 .5rem; }
+      [id^="reelsSection"] .reel-price {
         font-size: 1rem; font-weight: 900; color: #ff9633; margin: 0 0 .7rem;
       }
-      #reelsSection .reel-cta {
+      [id^="reelsSection"] .reel-cta {
         display: inline-block;
         background: #ff7a00; color: #fff; text-decoration: none;
         padding: .5rem 1rem; border-radius: 999px;
         font-weight: 700; font-size: .8rem;
       }
-      #reelsSection .reel-badge-premium {
+      [id^="reelsSection"] .reel-badge-premium {
         position: absolute; top: 1rem; left: 1rem;
         background: #ff7a00; color: #fff;
         font-size: .65rem; font-weight: 900;
         padding: .25rem .55rem; border-radius: 4px;
         letter-spacing: .5px;
       }
-      #reelsSection .reel-sound {
+      [id^="reelsSection"] .reel-sound {
         position: absolute; top: 1rem; right: 1rem;
         width: 40px; height: 40px; border-radius: 50%;
         background: rgba(0,0,0,.5); color: #fff;
@@ -532,8 +534,8 @@ const SLCM_reels = (() => {
   function buildDesktopSection(anchor) {
     anchor.innerHTML = `
       <div class="reels-header">
-        <h2 class="reels-title"><span class="pulse-dot"></span>Visites Express</h2>
-        <p class="reels-sub">Découvre les biens en vidéo · ${reels.length} visite${reels.length > 1 ? 's' : ''}</p>
+        <h2 class="reels-title"><span class="pulse-dot"></span>${heading}</h2>
+        <p class="reels-sub">Découvre les biens en vidéo · ${subtitle}</p>
       </div>
       <div class="reels-viewport">
         <div class="reels-track" id="reelsTrack">
@@ -551,8 +553,8 @@ const SLCM_reels = (() => {
     const track = document.getElementById('reelsTrack');
     if (!track) return;
 
-    const prev = document.querySelector('#reelsSection .reel-prev');
-    const next = document.querySelector('#reelsSection .reel-next');
+    const prev = document.querySelector('[id^="reelsSection"] .reel-prev');
+    const next = document.querySelector('[id^="reelsSection"] .reel-next');
     if (prev) prev.addEventListener('click', () => setActiveDesktopReel(activeIndex - 1));
     if (next) next.addEventListener('click', () => setActiveDesktopReel(activeIndex + 1));
 
@@ -587,7 +589,7 @@ const SLCM_reels = (() => {
     if (idx >= reels.length) idx = reels.length - 1;
     activeIndex = idx;
 
-    const cards = document.querySelectorAll('#reelsSection .reel-card');
+    const cards = document.querySelectorAll('[id^="reelsSection"] .reel-card');
     cards.forEach((card, i) => {
       const video = card.querySelector('.reel-video');
       if (i === idx) {
@@ -612,7 +614,7 @@ const SLCM_reels = (() => {
     }
 
     const track = document.getElementById('reelsTrack');
-    const viewport = document.querySelector('#reelsSection .reels-viewport');
+    const viewport = document.querySelector('[id^="reelsSection"] .reels-viewport');
     const activeCard = cards[idx];
     if (track && viewport && activeCard) {
       requestAnimationFrame(() => {
@@ -627,8 +629,8 @@ const SLCM_reels = (() => {
       });
     }
 
-    const prevBtn = document.querySelector('#reelsSection .reel-prev');
-    const nextBtn = document.querySelector('#reelsSection .reel-next');
+    const prevBtn = document.querySelector('[id^="reelsSection"] .reel-prev');
+    const nextBtn = document.querySelector('[id^="reelsSection"] .reel-next');
     if (prevBtn) prevBtn.disabled = (idx === 0);
     if (nextBtn) nextBtn.disabled = (idx === reels.length - 1);
   }
@@ -652,35 +654,40 @@ const SLCM_reels = (() => {
       </button>`;
   }
 
-  function buildMobileSection(anchor) {
+  function buildMobileSection(anchor, reelsData, title, sub) {
+    const data = reelsData || reels;
+    const sId = anchor.id || 'reelsSection';
+    const heading = title || 'Visites Express';
+    const subtitle = sub || (data.length + ' visite' + (data.length > 1 ? 's' : ''));
     anchor.innerHTML = `
       <div class="reels-header">
-        <h2 class="reels-title"><span class="pulse-dot"></span>Visites Express</h2>
-        <p class="reels-sub">${reels.length} visite${reels.length > 1 ? 's' : ''}</p>
+        <h2 class="reels-title"><span class="pulse-dot"></span>${heading}</h2>
+        <p class="reels-sub">${subtitle}</p>
       </div>
-      <div class="reels-strip" id="reelsStrip">
-        ${reels.map((r, i) => renderMobileThumb(r, i)).join('')}
+      <div class="reels-strip" id="${sId}-strip">
+        ${data.map((r, i) => renderMobileThumb(r, i)).join('')}
       </div>
-      <button class="reels-cta-next" type="button" id="reelsCtaNext">
+      <button class="reels-cta-next" type="button" id="${sId}-cta">
         Voir les annonces <span class="arrow">↓</span>
       </button>`;
 
-    bindMobileInteractions();
+    bindMobileInteractions(anchor, data);
   }
 
-  function bindMobileInteractions() {
-    const strip = document.getElementById('reelsStrip');
+  function bindMobileInteractions(anchor, reelsData) {
+    const data = reelsData || reels;
+    const strip = anchor.querySelector('.reels-strip');
     if (strip) {
       strip.querySelectorAll('.reel-thumb').forEach(thumb => {
         thumb.addEventListener('click', (e) => {
           e.preventDefault();
           const idx = parseInt(thumb.dataset.index, 10);
-          openViewer(idx);
+          _viewerReels = data; openViewer(idx);
         });
       });
     }
     /* B2 — Bouton 'Voir les annonces' qui scroll vers la section suivante */
-    const ctaNext = document.getElementById('reelsCtaNext');
+    const ctaNext = anchor.querySelector('.reels-cta-next');
     if (ctaNext) {
       ctaNext.addEventListener('click', () => {
         const reelsAnchor = document.getElementById('reelsSection');
@@ -738,7 +745,7 @@ const SLCM_reels = (() => {
     viewer.setAttribute('aria-hidden', 'true');
     viewer.innerHTML = `
       <div class="viewer-track" id="viewerTrack">
-        ${reels.map((r, i) => renderViewerSlide(r, i)).join('')}
+        ${(_viewerReels || reels).map((r, i) => renderViewerSlide(r, i)).join('')}
       </div>`;
     document.body.appendChild(viewer);
     bindViewerInteractions(viewer);
@@ -861,6 +868,7 @@ const SLCM_reels = (() => {
     const viewer = document.getElementById('slcmReelViewer');
     if (!viewer) return;
     viewerOpen = false;
+    _viewerReels = null; /* reset — section 1 par défaut au prochain ouverture */
     viewer.classList.remove('is-open');
     viewer.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('slcm-reel-viewer-open');
@@ -876,7 +884,7 @@ const SLCM_reels = (() => {
   /* ════════════════════ ORCHESTRATION ════════════════════ */
   function buildSection() {
     const anchor = document.getElementById('reelsSection');
-    if (!anchor) { console.warn('[reels] #reelsSection introuvable'); return; }
+    if (!anchor) { console.warn('[reels] [id^="reelsSection"] introuvable'); return; }
 
     if (!reels.length) {
       anchor.classList.add('is-empty');
@@ -990,7 +998,7 @@ const SLCM_reels = (() => {
           const savedReels = reels;
           reels = reels2;
           anchor2.classList.remove('is-empty');
-          buildMobileSection(anchor2);
+          buildMobileSection(anchor2, reels2, cfg2.title, cfg2.sub);
           reels = savedReels;
         } else {
           anchor2.classList.add('is-empty');
