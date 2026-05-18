@@ -19,7 +19,7 @@ const CF_ACCOUNT_HASH = process.env.CF_ACCOUNT_HASH;
 const SUPABASE_URL    = process.env.SUPABASE_URL    || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SERVICE_KEY     = process.env.SB_SERVICE_KEY  || '';
 
-const BATCH_SIZE = 10; /* listings par batch */
+const BATCH_SIZE = 3; /* listings par batch — réduit pour éviter timeout 26s Netlify */
 const CF_IMAGES_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`;
 
 function cfHeaders() {
@@ -29,29 +29,34 @@ function sbHeaders() {
   return { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' };
 }
 
-/* Upload une image Supabase vers Cloudflare Images via URL */
+/* Upload une image vers Cloudflare Images via URL — multipart manuel (évite FormData Node issues) */
 async function uploadImageFromUrl(supabaseUrl, listingId, photoIndex) {
-  const formData = new FormData();
-  formData.append('url', supabaseUrl);
-  formData.append('id', `listing_${listingId}_${photoIndex}`);
+  const cfId    = `${listingId.replace(/-/g,'').slice(0,16)}_${photoIndex}`;
+  const boundary = `----CFBoundary${Date.now()}`;
+
+  const body = `--${boundary}\r\nContent-Disposition: form-data; name="url"\r\n\r\n${supabaseUrl}\r\n--${boundary}\r\nContent-Disposition: form-data; name="id"\r\n\r\n${cfId}\r\n--${boundary}--`;
 
   const res = await fetch(CF_IMAGES_URL, {
-    method: 'POST',
-    headers: cfHeaders(),
-    body: formData,
+    method:  'POST',
+    headers: {
+      'Authorization': `Bearer ${CF_API_TOKEN}`,
+      'Content-Type':  `multipart/form-data; boundary=${boundary}`,
+    },
+    body,
   });
 
+  if (res.status === 409) {
+    /* Déjà uploadée */
+    return `https://imagedelivery.net/${CF_ACCOUNT_HASH}/${cfId}/public`;
+  }
   if (!res.ok) {
     const err = await res.text();
-    /* Image déjà uploadée → récupérer l'existante */
-    if (res.status === 409) {
-      return `https://imagedelivery.net/${CF_ACCOUNT_HASH}/listing_${listingId}_${photoIndex}/public`;
-    }
-    throw new Error(`CF Images upload error ${res.status}: ${err}`);
+    throw new Error(`CF Images ${res.status}: ${err.slice(0,200)}`);
   }
 
   const data = await res.json();
-  return data.result?.variants?.[0] || `https://imagedelivery.net/${CF_ACCOUNT_HASH}/${data.result.id}/public`;
+  const id   = data.result?.id || cfId;
+  return `https://imagedelivery.net/${CF_ACCOUNT_HASH}/${id}/public`;
 }
 
 /* Mettre à jour les images d'une annonce dans Supabase */
@@ -102,16 +107,14 @@ exports.handler = async function (event) {
       if (alreadyMigrated) { results.push({ id: listing.id, status: 'already_migrated' }); continue; }
 
       try {
-        const newImages = [];
-        for (let i = 0; i < listing.images.length; i++) {
-          const url = listing.images[i];
-          if (url.includes('imagedelivery.net')) {
-            newImages.push(url); /* déjà CF */
-          } else {
-            const cfUrl = await uploadImageFromUrl(url, listing.id.replace(/-/g, '').slice(0, 16), i);
-            newImages.push(cfUrl);
-          }
-        }
+        /* Upload toutes les photos en parallèle */
+        const newImages = await Promise.all(
+          listing.images.map((url, i) =>
+            url.includes('imagedelivery.net')
+              ? Promise.resolve(url)
+              : uploadImageFromUrl(url, listing.id.replace(/-/g,'').slice(0,16), i)
+          )
+        );
         await updateListingImages(listing.id, newImages);
         results.push({ id: listing.id, status: 'migrated', count: newImages.length });
       } catch (err) {
