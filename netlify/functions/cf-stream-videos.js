@@ -28,8 +28,9 @@ exports.handler = async function (event) {
   }
 
   try {
+    /* Récupérer toutes les vidéos prêtes puis filtrer par meta.section */
     const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream?search=${encodeURIComponent(tag)}&limit=${limit}`,
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream?status=ready&limit=100`,
       { headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` } }
     );
 
@@ -40,9 +41,9 @@ exports.handler = async function (event) {
 
     const data = await res.json();
 
-    /* Formater les données pour le front */
+    /* Filtrer par meta.section = tag (key=section, value=homepage-section-1|2) */
     const videos = (data.result || [])
-      .filter(v => v.status?.state === 'ready') /* Seulement les vidéos prêtes */
+      .filter(v => v.status?.state === 'ready' && v.meta?.section === tag)
       .slice(0, limit)
       .map(v => ({
         id:           v.uid,
