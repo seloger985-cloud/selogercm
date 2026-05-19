@@ -39,30 +39,29 @@ const SLCM_reels = (() => {
     return window.SLCM_DB ? window.SLCM_DB.init() : null;
   }
 
-  /* ── Lecteur vidéo universel : MP4 (Supabase) + HLS (Cloudflare Stream SDK) ── */
+  /* ── Lecteur vidéo universel : MP4 + HLS (hls.js pour Chrome/Firefox, natif pour Safari) ── */
   function loadVideo(videoEl, src, autoplay) {
     if (!src || !videoEl) return;
     const isHLS = src.includes('.m3u8') || src.includes('videodelivery.net');
 
-    /* Détruire une instance CF Stream précédente sur cet élément */
-    if (videoEl._cfStream) {
-      try { videoEl._cfStream.pause(); } catch(e) {}
-      videoEl._cfStream = null;
-    }
+    /* Détruire une instance hls.js précédente */
+    if (videoEl._hls) { videoEl._hls.destroy(); videoEl._hls = null; }
 
     if (isHLS) {
       if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
         /* Safari : HLS natif */
         videoEl.src = src;
         if (autoplay) videoEl.play().catch(() => {});
-      } else if (window.Stream) {
-        /* SDK Cloudflare Stream — zéro dépendance externe, zéro CSP */
-        videoEl.src = src;
-        const player = window.Stream(videoEl);
-        videoEl._cfStream = player;
-        if (autoplay) player.play().catch(() => {});
+      } else if (window.Hls && Hls.isSupported()) {
+        /* Chrome / Firefox via hls.js (cdn.jsdelivr.net autorisé dans CSP) */
+        const hls = new Hls({ enableWorker: false, startLevel: -1 });
+        hls.loadSource(src);
+        hls.attachMedia(videoEl);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (autoplay) videoEl.play().catch(() => {});
+        });
+        videoEl._hls = hls;
       } else {
-        /* Fallback : src direct (Safari ou navigateurs avec HLS natif) */
         videoEl.src = src;
         if (autoplay) videoEl.play().catch(() => {});
       }
