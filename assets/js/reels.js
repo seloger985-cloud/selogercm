@@ -538,8 +538,8 @@ const SLCM_reels = (() => {
   function buildDesktopSection(anchor) {
     anchor.innerHTML = `
       <div class="reels-header">
-        <h2 class="reels-title"><span class="pulse-dot"></span>${heading}</h2>
-        <p class="reels-sub">Découvre les biens en vidéo · ${subtitle}</p>
+        <h2 class="reels-title"><span class="pulse-dot"></span>Visitez depuis chez vous</h2>
+        <p class="reels-sub">Découvrez les biens en vidéo · ${reels.length} visite${reels.length > 1 ? 's' : ''}</p>
       </div>
       <div class="reels-viewport">
         <div class="reels-track" id="reelsTrack">
