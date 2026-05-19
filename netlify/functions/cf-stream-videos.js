@@ -12,6 +12,8 @@
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 const CF_API_TOKEN  = process.env.CF_API_TOKEN;
+const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://hozlyddiqodvjguqywty.supabase.co';
+const SB_ANON_KEY   = process.env.SB_ANON_KEY   || process.env.SUPABASE_ANON_KEY || '';
 const CACHE_TIME    = 300; /* 5 min */
 
 exports.handler = async function (event) {
@@ -55,23 +57,50 @@ exports.handler = async function (event) {
         body: JSON.stringify({ total: raw.length, videos: raw }) };
     }
 
-    /* Filtrer par meta.section + prête à lire (state=ready OU readyToStream=true) */
-    const videos = (data.result || [])
+    /* Filtrer par meta.section + prête à lire */
+    const filtered = (data.result || [])
       .filter(v => (v.status?.state === 'ready' || v.readyToStream === true) && v.meta?.section === tag)
-      .slice(0, limit)
-      .map(v => ({
-        id:           v.uid,
-        title:        v.meta?.title    || v.meta?.name || 'Visite',
-        price:        v.meta?.price    || '',
-        location:     v.meta?.location || '',
-        listing_id:   v.meta?.listing_id || null,
-        slug:         v.meta?.slug     || null,
-        premium:      v.meta?.premium === 'true',
-        thumbnail:    `https://videodelivery.net/${v.uid}/thumbnails/thumbnail.jpg?time=2s&height=400`,
-        hls:          `https://videodelivery.net/${v.uid}/manifest/video.m3u8`,
-        iframe:       `https://iframe.videodelivery.net/${v.uid}`,
-        duration:     v.duration || 0,
-      }));
+      .slice(0, limit);
+
+    /* Enrichir avec les données Supabase si listing_id présent */
+    const listingIds = filtered.map(v => v.meta?.listing_id).filter(Boolean);
+    let listingsMap = {};
+
+    if (listingIds.length && SB_ANON_KEY) {
+      try {
+        const sbRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&select=id,title,price,district,city,rent_sale,slug,premium,owner_phone`,
+          { headers: { 'apikey': SB_ANON_KEY, 'Authorization': `Bearer ${SB_ANON_KEY}` } }
+        );
+        if (sbRes.ok) {
+          const rows = await sbRes.json();
+          rows.forEach(l => { listingsMap[l.id] = l; });
+        }
+      } catch(e) { /* Supabase indisponible — on continue avec meta CF */ }
+    }
+
+    const videos = filtered.map(v => {
+      const l = listingsMap[v.meta?.listing_id] || {};
+      const district = l.district || v.meta?.location?.split(',')[0]?.trim() || '';
+      const city     = l.city     || v.meta?.location?.split(',')[1]?.trim() || '';
+      return {
+        id:         v.uid,
+        listing_id: v.meta?.listing_id || null,
+        slug:       l.slug   || v.meta?.slug   || null,
+        title:      l.title  || v.meta?.title  || v.meta?.name || 'Visite',
+        price:      l.price  || parseInt(v.meta?.price?.replace(/\D/g,'')) || 0,
+        location:   district && city ? `${district}, ${city}` : (district || city || ''),
+        district,
+        city,
+        rent_sale:  l.rent_sale || 'rent',
+        premium:    l.premium   || v.meta?.premium === 'true',
+        owner_phone: l.owner_phone || '',
+        thumbnail:  `https://videodelivery.net/${v.uid}/thumbnails/thumbnail.jpg?time=2s&height=400`,
+        hls:        `https://videodelivery.net/${v.uid}/manifest/video.m3u8`,
+        iframe:     `https://iframe.videodelivery.net/${v.uid}`,
+        duration:   v.duration || 0,
+      };
+    });
 
     return {
       statusCode: 200,
