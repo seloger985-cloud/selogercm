@@ -455,17 +455,8 @@
         if (btn.classList.contains('b-boost')) { openBoostModal(id); return; }
 
         if (btn.classList.contains('b-video')) {
-          const current = ad.video_url || '';
-          const promptMsg = current
-            ? 'URL HLS actuelle (Cloudflare Stream) :\n' + current + '\n\nColle une nouvelle URL HLS pour modifier, ou laisse vide pour supprimer.\nFormat : https://videodelivery.net/{uid}/manifest/video.m3u8'
-            : 'Colle l\'URL HLS Cloudflare Stream :\nhttps://videodelivery.net/{uid}/manifest/video.m3u8\n\nOu utilise le formulaire 🎬 + Reel pour uploader directement.';
-          const input = window.prompt(promptMsg, current);
-          if (input === null) return;
-          const trimmed = input.trim();
-          if (trimmed && !/^https?:\/\//i.test(trimmed)) { alert('URL invalide. Doit commencer par http:// ou https://'); return; }
-          const { error } = await window.SLCM_DB.client.from('listings').update({ video_url: trimmed || null }).eq('id', id);
-          if (error) { alert('Erreur: ' + error.message); return; }
-          _all = []; await render(); return;
+          openVideoModal(id, ad.video_url || '');
+          return;
         }
         if (btn.classList.contains('toggle-premium')) {
           const { error } = await window.SLCM_DB.client.from('listings').update({ premium: !ad.premium }).eq('id', id);
@@ -785,7 +776,62 @@
       await render();
     }
 
+    /* ── Modal URL vidéo ── */
+    function openVideoModal(listingId, currentUrl) {
+      document.getElementById('videoUrlListingId').value = listingId;
+      document.getElementById('videoUrlInput').value = currentUrl;
+      document.getElementById('videoUrlError').textContent = '';
+      document.getElementById('videoUrlOverlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('videoUrlInput').focus(), 100);
+    }
+
+    async function saveVideoUrl(deleteVideo) {
+      const listingId = document.getElementById('videoUrlListingId').value;
+      const errEl = document.getElementById('videoUrlError');
+      const btn   = document.getElementById('videoUrlSaveBtn');
+      errEl.textContent = '';
+
+      const url = deleteVideo ? '' : document.getElementById('videoUrlInput').value.trim();
+
+      if (!deleteVideo && url && !/^https?:\/\//i.test(url)) {
+        errEl.textContent = 'URL invalide — doit commencer par https://'; return;
+      }
+
+      btn.disabled = true; btn.textContent = '⏳';
+      const { error } = await window.SLCM_DB.client
+        .from('listings')
+        .update({ video_url: url || null })
+        .eq('id', listingId);
+
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+
+      if (error) { errEl.textContent = 'Erreur : ' + error.message; return; }
+
+      document.getElementById('videoUrlOverlay').style.display = 'none';
+      showToast(deleteVideo ? 'Vidéo supprimée' : '🎬 URL vidéo enregistrée');
+      _all = []; await render();
+    }
+
   </script>
+
+  <!-- Modal URL video -->
+  <div id="videoUrlOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:500px;padding:1.8rem">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">Ajouter une video</h2>
+      <p style="font-size:.8rem;color:#888;margin-bottom:1rem">Format : https://videodelivery.net/{uid}/manifest/video.m3u8<br>Ou utilise <strong>+ Reel</strong> pour uploader directement.</p>
+      <input type="hidden" id="videoUrlListingId">
+      <input id="videoUrlInput" type="text" placeholder="https://videodelivery.net/.../manifest/video.m3u8"
+        style="width:100%;border:1.5px solid #e5e5e5;border-radius:10px;padding:.75rem 1rem;font-family:inherit;font-size:.85rem;margin-bottom:.5rem">
+      <div id="videoUrlError" style="color:#c00;font-size:.8rem;min-height:1.2rem;margin-bottom:.75rem"></div>
+      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+        <button onclick="saveVideoUrl(true)" style="padding:.55rem .9rem;border-radius:10px;border:1.5px solid #fee2e2;background:#fee2e2;color:#dc2626;font-family:inherit;font-weight:700;cursor:pointer;font-size:.8rem">Supprimer video</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="document.getElementById('videoUrlOverlay').style.display='none'" style="padding:.65rem 1.2rem;border-radius:10px;border:1.5px solid #ddd;background:#fff;font-family:inherit;font-weight:700;cursor:pointer">Annuler</button>
+          <button id="videoUrlSaveBtn" onclick="saveVideoUrl(false)" style="padding:.65rem 1.4rem;border-radius:10px;border:none;background:#ff7a00;color:#fff;font-family:inherit;font-weight:800;cursor:pointer">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- Modal Boost Vitrine -->
   <div id="boostOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
     <div style="background:#fff;border-radius:18px;width:100%;max-width:460px;padding:2rem">
