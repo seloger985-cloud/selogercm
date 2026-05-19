@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -457,8 +457,8 @@
         if (btn.classList.contains('b-video')) {
           const current = ad.video_url || '';
           const promptMsg = current
-            ? 'URL vidéo actuelle :\n' + current + '\n\nColle une nouvelle URL pour modifier, ou laisse vide et OK pour supprimer.'
-            : 'Colle l\'URL publique de la vidéo (bucket Supabase listing-videos) :';
+            ? 'URL HLS actuelle (Cloudflare Stream) :\n' + current + '\n\nColle une nouvelle URL HLS pour modifier, ou laisse vide pour supprimer.\nFormat : https://videodelivery.net/{uid}/manifest/video.m3u8'
+            : 'Colle l\'URL HLS Cloudflare Stream :\nhttps://videodelivery.net/{uid}/manifest/video.m3u8\n\nOu utilise le formulaire 🎬 + Reel pour uploader directement.';
           const input = window.prompt(promptMsg, current);
           if (input === null) return;
           const trimmed = input.trim();
@@ -1183,11 +1183,20 @@
         </div>
 
         <div class="rf-field">
-          <label>Vidéo (.mp4, max 15 Mo) *</label>
+          <label for="rfFieldSection">Section homepage (optionnel)</label>
+          <select id="rfFieldSection">
+            <option value="">Aucune — vidéo liée à l'annonce uniquement</option>
+            <option value="homepage-section-1">Section 1 — Résidentiel (non meublé)</option>
+            <option value="homepage-section-2">Section 2 — Meublés & espaces pros</option>
+          </select>
+        </div>
+
+        <div class="rf-field">
+          <label>Vidéo (.mp4) *</label>
           <label class="rf-drop" id="rfDrop" for="rfFile">
             <div class="rf-drop-icon">🎬</div>
             <div class="rf-drop-label" id="rfDropLabel">Glisser-déposer ou cliquer pour choisir</div>
-            <div class="rf-drop-hint" id="rfDropHint">MP4 vertical 9:16 recommandé · max 15 Mo</div>
+            <div class="rf-drop-hint" id="rfDropHint">MP4 vertical 9:16 · 1080×1920 recommandé · max 150 Mo</div>
             <input id="rfFile" type="file" accept="video/mp4,.mp4">
           </label>
         </div>
@@ -1213,7 +1222,7 @@
   (function() {
     'use strict';
 
-    const MAX_SIZE = 15 * 1024 * 1024; // 15 Mo
+    const MAX_SIZE = 150 * 1024 * 1024; // 150 Mo (CF Stream direct upload)
     const POSTER_FRAMES = [0.05, 0.25, 0.50, 0.75]; // % de la durée
     const POSTER_LABELS = ['Début', '1/4', 'Milieu', '3/4'];
 
@@ -1317,7 +1326,7 @@
       selectedPosterIdx = -1;
       drop.classList.remove('has-file');
       dropLabel.textContent = 'Glisser-déposer ou cliquer pour choisir';
-      dropHint.textContent = 'MP4 vertical 9:16 recommandé · max 15 Mo';
+      dropHint.textContent = 'MP4 vertical 9:16 · 1080×1920 recommandé · max 150 Mo';
       fileInput.value = '';
       postersEl.classList.remove('is-visible');
       postersEl.innerHTML = '';
@@ -1370,7 +1379,7 @@
       /* Validation taille */
       if (file.size > MAX_SIZE) {
         const sizeMo = (file.size / 1024 / 1024).toFixed(1);
-        showStatus('error', `Vidéo trop lourde (${sizeMo} Mo). Max 15 Mo. Utilise HandBrake ou Veed.io pour compresser.`);
+        showStatus('error', `Vidéo trop lourde (${sizeMo} Mo). Max 15 Mo. Utilise HandBrake ou Veed.io pour compresser (cible 100 Mo max).`);
         return;
       }
 
@@ -1536,19 +1545,34 @@
       }
 
       try {
-        /* 1. Upload vidéo */
-        showStatus('info', '⏳ Upload de la vidéo...');
-        const videoExt = 'mp4';
         const stamp = Date.now();
-        const slug = slugify(fTitle.value);
-        const videoPath = `reels/${stamp}-${slug}.${videoExt}`;
-        const { error: vErr } = await supabase.storage
-          .from('listing-videos')
-          .upload(videoPath, selectedFile, { cacheControl: '3600', upsert: false });
-        if (vErr) throw new Error('Vidéo : ' + vErr.message);
-        const { data: vUrl } = supabase.storage.from('listing-videos').getPublicUrl(videoPath);
+        const slug  = slugify(fTitle.value);
+        const section = document.getElementById('rfFieldSection')?.value || '';
 
-        /* 2. Upload poster (base64 → blob) */
+        /* 1. Demander une URL d'upload direct à CF Stream */
+        showStatus('info', '⏳ Préparation de l\'upload vidéo...');
+        const cfUrlRes = await fetch('/.netlify/functions/cf-upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title:      fTitle.value.trim(),
+            listingId:  '',
+            section:    section,
+            maxDuration: 300,
+          }),
+        });
+        if (!cfUrlRes.ok) throw new Error('Impossible d\'obtenir l\'URL d\'upload CF Stream');
+        const { uploadURL, hlsUrl } = await cfUrlRes.json();
+
+        /* 2. Upload vidéo directement vers Cloudflare Stream (bypass Netlify) */
+        showStatus('info', '⏳ Upload de la vidéo vers Cloudflare Stream...');
+        const uploadRes = await fetch(uploadURL, {
+          method: 'PUT',
+          body: selectedFile,
+        });
+        if (!uploadRes.ok) throw new Error('Erreur upload CF Stream : ' + uploadRes.status);
+
+        /* 3. Upload poster → Supabase Images */
         showStatus('info', '⏳ Upload du poster...');
         const posterBlob = dataURLtoBlob(posterDataUrls[selectedPosterIdx]);
         const posterPath = `reels/${stamp}-${slug}-poster.jpg`;
@@ -1558,23 +1582,23 @@
         if (pErr) throw new Error('Poster : ' + pErr.message);
         const { data: pUrl } = supabase.storage.from('listing-images').getPublicUrl(posterPath);
 
-        /* 3. Créer la ligne listings */
+        /* 4. Créer la ligne listings */
         showStatus('info', '⏳ Création de l\'annonce...');
         const payload = {
-          title: fTitle.value.trim(),
+          title:       fTitle.value.trim(),
           description: fDesc.value.trim() || null,
-          type: fType.value,
-          rent_sale: fMode.value,
-          city: fCity.value,
-          district: fDist.value,
-          price: Number(fPrice.value),
-          furnished: fMode.value === 'rent' ? !!fFurn.checked : false,
-          premium: false,
-          status: 'active',
-          images: [pUrl.publicUrl],
-          video_url: vUrl.publicUrl,
-          slug: `${slug}-${stamp}`,
-          created_at: new Date().toISOString()
+          type:        fType.value,
+          rent_sale:   fMode.value,
+          city:        fCity.value,
+          district:    fDist.value,
+          price:       Number(fPrice.value),
+          furnished:   fMode.value === 'rent' ? !!fFurn.checked : false,
+          premium:     false,
+          status:      'active',
+          images:      [pUrl.publicUrl],
+          video_url:   hlsUrl,
+          slug:        `${slug}-${stamp}`,
+          created_at:  new Date().toISOString(),
         };
         const { error: insErr } = await supabase.from('listings').insert([payload]);
         if (insErr) throw new Error('Insertion : ' + insErr.message);
