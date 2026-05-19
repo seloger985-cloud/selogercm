@@ -1228,6 +1228,17 @@
           <div class="rf-charcount" id="rfDescCount">0 / 200</div>
         </div>
 
+        <!-- Équipements -->
+        <div class="rf-field">
+          <label>Équipements</label>
+          <div style="display:flex;flex-wrap:wrap;gap:.75rem;background:#f9f9f9;padding:.75rem;border-radius:10px">
+            <label class="rf-checkbox"><input id="rfFieldParking" type="checkbox"><span>🚗 Parking</span></label>
+            <label class="rf-checkbox"><input id="rfFieldGenerator" type="checkbox"><span>⚡ Groupe électrogène</span></label>
+            <label class="rf-checkbox"><input id="rfFieldPool" type="checkbox"><span>🏊 Piscine</span></label>
+            <label class="rf-checkbox" id="rfTitreFoncierWrap" style="display:none"><input id="rfFieldTitreFoncier" type="checkbox"><span>📄 Titre foncier</span></label>
+          </div>
+        </div>
+
         <div class="rf-field">
           <label for="rfFieldSection">Section homepage (optionnel)</label>
           <select id="rfFieldSection">
@@ -1249,6 +1260,17 @@
 
         <div class="rf-posters" id="rfPosters">
           <!-- Peuplé dynamiquement après génération -->
+        </div>
+
+        <!-- Barre de progression upload -->
+        <div id="rfProgressWrap" style="display:none;margin-bottom:.75rem">
+          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:#666;margin-bottom:.3rem">
+            <span id="rfProgressLabel">Upload en cours…</span>
+            <span id="rfProgressPct">0%</span>
+          </div>
+          <div style="background:#f0f0f0;border-radius:999px;height:8px;overflow:hidden">
+            <div id="rfProgressBar" style="height:100%;background:#ff7a00;border-radius:999px;width:0%;transition:width .3s"></div>
+          </div>
         </div>
 
         <div class="rf-status" id="rfStatus"></div>
@@ -1330,8 +1352,12 @@
 
     /* ── Mode loc/vente : afficher/cacher le toggle meublé ── */
     fMode.addEventListener('change', () => {
-      fFurnWrap.style.display = fMode.value === 'rent' ? '' : 'none';
-      if (fMode.value !== 'rent') fFurn.checked = false;
+      const isRent = fMode.value === 'rent';
+      fFurnWrap.style.display = isRent ? '' : 'none';
+      if (!isRent) fFurn.checked = false;
+      /* Titre foncier visible uniquement en vente */
+      const tfWrap = document.getElementById('rfTitreFoncierWrap');
+      if (tfWrap) tfWrap.style.display = isRent ? 'none' : '';
     });
 
     /* ── Compteur de caractères description ── */
@@ -1364,6 +1390,13 @@
       fPrice.value = '';
       fFurn.checked = false;
       fFurnWrap.style.display = '';
+      ['rfFieldParking','rfFieldGenerator','rfFieldPool','rfFieldTitreFoncier'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.checked = false;
+      });
+      const tfWrap = document.getElementById('rfTitreFoncierWrap');
+      if (tfWrap) tfWrap.style.display = 'none';
+      const pw = document.getElementById('rfProgressWrap');
+      if (pw) { pw.style.display = 'none'; document.getElementById('rfProgressBar').style.width = '0%'; }
       fDesc.value = '';
       descCount.textContent = '0 / 200';
       descCount.classList.remove('is-over');
@@ -1610,13 +1643,30 @@
         if (!cfUrlRes.ok) throw new Error('Impossible d\'obtenir l\'URL d\'upload CF Stream');
         const { uploadURL, hlsUrl } = await cfUrlRes.json();
 
-        /* 2. Upload vidéo directement vers Cloudflare Stream (bypass Netlify) */
+        /* 2. Upload vidéo directement vers CF Stream avec barre de progression */
         showStatus('info', '⏳ Upload de la vidéo vers Cloudflare Stream...');
-        const uploadRes = await fetch(uploadURL, {
-          method: 'PUT',
-          body: selectedFile,
+        const progressWrap = document.getElementById('rfProgressWrap');
+        const progressBar  = document.getElementById('rfProgressBar');
+        const progressPct  = document.getElementById('rfProgressPct');
+        const progressLbl  = document.getElementById('rfProgressLabel');
+        progressWrap.style.display = 'block';
+
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', uploadURL);
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              progressBar.style.width = pct + '%';
+              progressPct.textContent = pct + '%';
+              progressLbl.textContent = pct < 100 ? 'Upload en cours…' : 'Traitement CF Stream…';
+            }
+          };
+          xhr.onload  = () => xhr.status < 300 ? resolve() : reject(new Error('CF Stream HTTP ' + xhr.status));
+          xhr.onerror = () => reject(new Error('Erreur réseau — vérifiez votre connexion et réessayez'));
+          xhr.send(selectedFile);
         });
-        if (!uploadRes.ok) throw new Error('Erreur upload CF Stream : ' + uploadRes.status);
+        progressWrap.style.display = 'none';
 
         /* 3. Upload poster → Supabase Images */
         showStatus('info', '⏳ Upload du poster...');
@@ -1638,8 +1688,12 @@
           city:        fCity.value,
           district:    fDist.value,
           price:       Number(fPrice.value),
-          furnished:   fMode.value === 'rent' ? !!fFurn.checked : false,
-          premium:     false,
+          furnished:     fMode.value === 'rent' ? !!fFurn.checked : false,
+          parking:       !!document.getElementById('rfFieldParking')?.checked,
+          generator:     !!document.getElementById('rfFieldGenerator')?.checked,
+          pool:          !!document.getElementById('rfFieldPool')?.checked,
+          titre_foncier: document.getElementById('rfFieldTitreFoncier')?.checked ? 'oui' : null,
+          premium:       false,
           status:      'active',
           images:      [pUrl.publicUrl],
           video_url:   hlsUrl,
