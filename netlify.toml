@@ -143,7 +143,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com www.googletagmanager.com www.google-analytics.com api.emailjs.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' *.supabase.co api.emailjs.com www.google-analytics.com www.googletagmanager.com videodelivery.net *.videodelivery.net imagedelivery.net; frame-src https://www.google.com https://maps.google.com https://www.youtube.com https://iframe.videodelivery.net; worker-src blob:;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com www.googletagmanager.com www.google-analytics.com api.emailjs.com embed.cloudflarestream.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' *.supabase.co api.emailjs.com www.google-analytics.com www.googletagmanager.com videodelivery.net *.videodelivery.net imagedelivery.net cdn.jsdelivr.net embed.cloudflarestream.com; frame-src https://www.google.com https://maps.google.com https://www.youtube.com https://iframe.videodelivery.net; worker-src blob:;"
 
 [[headers]]
   for = "/.netlify/functions/homepage-listings"
