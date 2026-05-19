@@ -41,9 +41,9 @@ exports.handler = async function (event) {
 
     const data = await res.json();
 
-    /* Filtrer par meta.section = tag (key=section, value=homepage-section-1|2) */
+    /* Filtrer par meta.section + prête à lire (state=ready OU readyToStream=true) */
     const videos = (data.result || [])
-      .filter(v => v.status?.state === 'ready' && v.meta?.section === tag)
+      .filter(v => (v.status?.state === 'ready' || v.readyToStream === true) && v.meta?.section === tag)
       .slice(0, limit)
       .map(v => ({
         id:           v.uid,
