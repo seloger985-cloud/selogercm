@@ -21,9 +21,10 @@ exports.handler = async function (event) {
 
   const tag   = event.queryStringParameters?.tag || 'homepage-section-1';
   const limit = parseInt(event.queryStringParameters?.limit || '6', 10);
+  const debug = event.queryStringParameters?.debug === '1'; /* ?debug=1 retourne les meta brutes */
 
-  /* Sécurité : n'autoriser que les tags homepage */
-  if (!['homepage-section-1', 'homepage-section-2'].includes(tag)) {
+  /* Sécurité : n'autoriser que les tags homepage (sauf debug) */
+  if (!debug && !['homepage-section-1', 'homepage-section-2'].includes(tag)) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Tag non autorisé' }) };
   }
 
@@ -40,6 +41,19 @@ exports.handler = async function (event) {
     }
 
     const data = await res.json();
+
+    /* Mode debug : retourner les meta brutes pour diagnostic */
+    if (debug) {
+      const raw = (data.result || []).map(v => ({
+        uid:           v.uid,
+        name:          v.meta?.name,
+        meta:          v.meta,
+        status:        v.status,
+        readyToStream: v.readyToStream,
+      }));
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ total: raw.length, videos: raw }) };
+    }
 
     /* Filtrer par meta.section + prête à lire (state=ready OU readyToStream=true) */
     const videos = (data.result || [])
