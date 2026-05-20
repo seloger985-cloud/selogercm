@@ -53,8 +53,16 @@ const SLCM_reels = (() => {
         videoEl.src = src;
         if (autoplay) videoEl.play().catch(() => {});
       } else if (window.Hls && Hls.isSupported()) {
-        /* Chrome / Firefox via hls.js (cdn.jsdelivr.net autorisé dans CSP) */
-        const hls = new Hls({ enableWorker: false, startLevel: -1 });
+        /* Chrome / Firefox via hls.js — config optimisée démarrage rapide mobile */
+        const hls = new Hls({
+          enableWorker:       false,
+          startLevel:         0,      /* démarre à la qualité la plus basse (rapide) */
+          maxBufferLength:    8,      /* ne bufferiser que 8s (vs 30s par défaut) */
+          maxMaxBufferLength: 15,
+          autoStartLoad:      true,
+          manifestLoadingMaxRetry: 3,
+          fragLoadingMaxRetry:     3,
+        });
         hls.loadSource(src);
         hls.attachMedia(videoEl);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -499,6 +507,20 @@ const SLCM_reels = (() => {
         transition: opacity .2s; margin-top: .4rem;
       }
       .viewer-wa-btn:hover { opacity: .88; }
+
+      /* Spinner chargement video */
+      .viewer-loader {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,.3); transition: opacity .3s; pointer-events: none;
+      }
+      .viewer-loader.is-hidden { opacity: 0; }
+      .viewer-spinner {
+        width: 44px; height: 44px; border-radius: 50%;
+        border: 3px solid rgba(255,255,255,.25); border-top-color: #fff;
+        animation: spinnerRotate .7s linear infinite;
+      }
+      @keyframes spinnerRotate { to { transform: rotate(360deg); } }
     `;
     document.head.appendChild(style);
   }
@@ -720,7 +742,10 @@ const SLCM_reels = (() => {
     return `
       <div class="viewer-slide" data-index="${index}">
         <video class="viewer-video" data-src="${escapeHtml(r.video_url)}"
-               playsinline muted preload="none" poster="${poster}"></video>
+               playsinline muted preload="metadata" poster="${poster}"></video>
+        <div class="viewer-loader" aria-hidden="true">
+          <div class="viewer-spinner"></div>
+        </div>
         <div class="viewer-counter">${index + 1} / ${reels.length}</div>
         <button class="viewer-close" aria-label="Fermer" type="button">×</button>
         ${premiumBadge}
@@ -821,9 +846,16 @@ const SLCM_reels = (() => {
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
             /* Reset du compteur quand on arrive sur un slide */
             playCountByIndex.set(idx, 0);
+            const loader = entry.target.querySelector('.viewer-loader');
             if (!video.src && !video._hls && video.dataset.src) loadVideo(video, video.dataset.src, false);
             video.currentTime = 0;
             video.play().catch(() => {});
+            /* Masquer le spinner dès que la vidéo joue */
+            if (loader) {
+              loader.classList.remove('is-hidden');
+              video.addEventListener('playing', () => loader.classList.add('is-hidden'), { once: true });
+              video.addEventListener('canplay',  () => loader.classList.add('is-hidden'), { once: true });
+            }
             viewerIndex = idx;
             /* Pre-warm le slide suivant */
             const nextSlide = slides[idx + 1];
