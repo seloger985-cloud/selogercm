@@ -698,6 +698,27 @@ const SLCM_reels = (() => {
       </button>`;
 
     bindMobileInteractions(anchor, data);
+
+    /* Pré-charger les manifests HLS des 3 premières vidéos dès que le strip est visible
+       → quand l'user tape, le manifest est déjà fetché → lecture quasi-instantanée */
+    if ('IntersectionObserver' in window) {
+      const stripObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          stripObserver.disconnect();
+          /* Construire le viewer silencieusement en arrière-plan */
+          setTimeout(() => {
+            _viewerReels = data;
+            buildViewer(); /* crée le DOM viewer invisible */
+            const vwr = document.getElementById('slcmReelViewer');
+            if (vwr) {
+              preloadAround(vwr, 0, 2); /* pré-charge vidéos 0, 1, 2 */
+              vwr.classList.remove('is-open'); /* garde invisible */
+            }
+          }, 800); /* délai pour ne pas bloquer le rendu initial */
+        }
+      }, { threshold: 0.5 });
+      stripObserver.observe(anchor);
+    }
   }
 
   function bindMobileInteractions(anchor, reelsData) {
@@ -877,6 +898,18 @@ const SLCM_reels = (() => {
     document.addEventListener('keydown', viewer._escHandler);
   }
 
+  /* Pré-charge les vidéos autour de l'index actif (logique TikTok) */
+  function preloadAround(viewer, centerIdx, radius) {
+    const activeReels = _viewerReels || reels;
+    for (let i = Math.max(0, centerIdx - 1); i <= Math.min(activeReels.length - 1, centerIdx + radius); i++) {
+      const slide = viewer.querySelector(`.viewer-slide[data-index="${i}"]`);
+      const v = slide?.querySelector('.viewer-video');
+      if (v && !v.src && !v._hls && v.dataset.src) {
+        loadVideo(v, v.dataset.src, false); /* charge sans lire */
+      }
+    }
+  }
+
   function openViewer(startIndex) {
     if (!reels.length) return;
     buildViewer();
@@ -889,13 +922,23 @@ const SLCM_reels = (() => {
     viewer.setAttribute('aria-hidden', 'false');
     document.body.classList.add('slcm-reel-viewer-open');
 
+    /* Pré-charger la vidéo tapée + les 2 suivantes AVANT d'afficher */
+    preloadAround(viewer, viewerIndex, 2);
+
     requestAnimationFrame(() => {
       const target = viewer.querySelector(`.viewer-slide[data-index="${viewerIndex}"]`);
       if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
       const video = target?.querySelector('.viewer-video');
       if (video) {
-        if (!video.src && !video._hls && video.dataset.src) loadVideo(video, video.dataset.src, true);
-        else video.play().catch(() => {});
+        /* Déjà pré-chargée → juste play(), sinon charger et jouer */
+        if (video.src || video._hls) {
+          video.play().catch(() => {});
+        } else if (video.dataset.src) {
+          loadVideo(video, video.dataset.src, true);
+        }
+        /* Masquer spinner dès que ça joue */
+        const loader = target.querySelector('.viewer-loader');
+        if (loader) video.addEventListener('playing', () => loader.classList.add('is-hidden'), { once: true });
       }
     });
   }
