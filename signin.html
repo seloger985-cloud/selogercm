@@ -164,6 +164,23 @@
       <div class="error-msg"   id="registerError"></div>
       <div class="success-msg" id="registerSuccess"></div>
     </div>
+
+    <!-- VÉRIFICATION WHATSAPP OTP -->
+    <div class="panel" id="panelOTP">
+      <div class="otp-wrap">
+        <div class="otp-icon">💬</div>
+        <div class="otp-title">Vérifiez votre WhatsApp</div>
+        <p class="otp-sub" id="otpSub">Un code à 6 chiffres a été envoyé sur WhatsApp au<br><strong id="otpPhoneDisplay"></strong></p>
+        <div class="field">
+          <input id="otpCode" class="otp-input" type="number" placeholder="000000" maxlength="6" autocomplete="one-time-code">
+        </div>
+        <button class="btn-submit" id="otpVerifyBtn"><i class="fas fa-check-circle"></i> Confirmer</button>
+        <div class="error-msg"   id="otpError"></div>
+        <div class="success-msg" id="otpSuccess"></div>
+        <br>
+        <button class="otp-resend" id="otpResendBtn">Renvoyer le code sur WhatsApp</button>
+      </div>
+    </div>
   </div>
 </main>
 <footer></footer>
@@ -283,21 +300,28 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       kyc_status: role === 'agent_externe' ? 'pending' : 'none'
     });
 
-    /* 3. Envoyer SMS OTP — phone est déjà en E.164 */
+    /* 3. Envoyer OTP via WhatsApp (Meta Cloud API) */
     _pendingPhone = phone;
     _pendingEmail = email;
-    const { error: otpErr } = await client.auth.updateUser({ phone });
 
-    if (otpErr) {
-      /* SMS non disponible (Twilio trial) — compte actif, redirection directe.
-         Retirer ce bloc quand Twilio est en production. */
-      console.warn('OTP unavailable:', otpErr.message);
+    const waRes = await fetch('/.netlify/functions/wa-otp', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'send', phone }),
+    });
+    const waData = await waRes.json();
+
+    if (!waRes.ok || !waData.ok) {
+      /* WhatsApp indisponible — redirection directe */
+      console.warn('WhatsApp OTP unavailable:', waData.error);
       ok.textContent = '✅ Compte créé ! Connexion en cours…';
       setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
       return;
     }
 
     /* 4. Afficher le step de vérification */
+    document.getElementById('otpPhoneDisplay').textContent = phone;
+    document.getElementById('otpSub').textContent = `Un code a été envoyé sur WhatsApp au ${phone}`;
     showOtpPanel(phone);
 
   } catch(e) {
@@ -313,18 +337,19 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   const err  = document.getElementById('otpError');
   const ok   = document.getElementById('otpSuccess');
   err.textContent = ''; ok.textContent = '';
-  if (!code || code.length < 6) { err.textContent = 'Entrez le code à 6 chiffres reçu par SMS.'; return; }
+  if (!code || code.length < 6) { err.textContent = 'Entrez le code à 6 chiffres reçu sur WhatsApp.'; return; }
 
   const btn = document.getElementById('otpVerifyBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
   try {
-    const { error } = await window.SLCM_DB.client.auth.verifyOtp({
-      phone: _pendingPhone,
-      token: code,
-      type: 'phone_change'
+    const res  = await fetch('/.netlify/functions/wa-otp', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'verify', phone: _pendingPhone, code }),
     });
-    if (error) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
-    ok.textContent = '✅ Téléphone vérifié ! Bienvenue sur SE LOGER CM.';
+    const data = await res.json();
+    if (!data.ok) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
+    ok.textContent = '✅ Numéro vérifié ! Bienvenue sur SE LOGER CM.';
     setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
@@ -333,13 +358,16 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   }
 });
 
-/* ── Renvoyer OTP ── */
+/* ── Renvoyer OTP WhatsApp ── */
 document.getElementById('otpResendBtn').addEventListener('click', async () => {
   const btn = document.getElementById('otpResendBtn');
   btn.disabled = true; btn.textContent = 'Envoi en cours…';
   try {
-    await window.SLCM_DB.client.auth.updateUser({ phone: _pendingPhone });
-    document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé.';
+    await fetch('/.netlify/functions/wa-otp', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'send', phone: _pendingPhone }),
+    });
+    document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé sur WhatsApp.';
     setTimeout(() => { document.getElementById('otpSuccess').textContent = ''; }, 3000);
   } finally {
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le code'; }, 30000);
