@@ -66,25 +66,46 @@ exports.handler = async function (event) {
       })
       .slice(0, limit);
 
-    /* Enrichir avec les données Supabase si listing_id présent */
-    const listingIds = filtered.map(v => v.meta?.listing_id).filter(Boolean);
-    let listingsMap = {};
+    /* Enrichir depuis Supabase — 2 stratégies */
+    let listingsMap  = {}; /* listing_id → listing */
+    let reverseMap   = {}; /* video UID  → listing (pour vidéos sans listing_id) */
 
-    if (listingIds.length && SB_ANON_KEY) {
+    if (SB_ANON_KEY) {
       try {
-        const sbRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&select=id,title,price,district,city,rent_sale,slug,premium,owner_phone`,
-          { headers: { 'apikey': SB_ANON_KEY, 'Authorization': `Bearer ${SB_ANON_KEY}` } }
-        );
-        if (sbRes.ok) {
-          const rows = await sbRes.json();
-          rows.forEach(l => { listingsMap[l.id] = l; });
+        /* Stratégie 1 : listing_id direct */
+        const listingIds = filtered.map(v => v.meta?.listing_id).filter(Boolean);
+        if (listingIds.length) {
+          const r1 = await fetch(
+            `${SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&select=id,title,price,district,city,rent_sale,slug,premium,owner_phone`,
+            { headers: { 'apikey': SB_ANON_KEY, 'Authorization': `Bearer ${SB_ANON_KEY}` } }
+          );
+          if (r1.ok) (await r1.json()).forEach(l => { listingsMap[l.id] = l; });
         }
-      } catch(e) { /* Supabase indisponible — on continue avec meta CF */ }
+
+        /* Stratégie 2 : reverse lookup via video_url pour vidéos sans listing_id */
+        const uidsToLookup = filtered
+          .filter(v => !v.meta?.listing_id)
+          .map(v => v.uid);
+
+        if (uidsToLookup.length) {
+          /* Récupérer tous les listings avec une URL CF Stream */
+          const r2 = await fetch(
+            `${SUPABASE_URL}/rest/v1/listings?video_url=ilike.*videodelivery.net*&select=id,title,price,district,city,rent_sale,slug,premium,owner_phone,video_url&limit=200`,
+            { headers: { 'apikey': SB_ANON_KEY, 'Authorization': `Bearer ${SB_ANON_KEY}` } }
+          );
+          if (r2.ok) {
+            (await r2.json()).forEach(l => {
+              /* Extraire l'UID depuis l'URL HLS : videodelivery.net/{uid}/manifest... */
+              const m = (l.video_url || '').match(/videodelivery\.net\/([a-f0-9]+)\//);
+              if (m) reverseMap[m[1]] = l;
+            });
+          }
+        }
+      } catch(e) { /* Supabase indisponible */ }
     }
 
     const videos = filtered.map(v => {
-      const l = listingsMap[v.meta?.listing_id] || {};
+      const l = listingsMap[v.meta?.listing_id] || reverseMap[v.uid] || {};
       const district = l.district || v.meta?.location?.split(',')[0]?.trim() || '';
       const city     = l.city     || v.meta?.location?.split(',')[1]?.trim() || '';
       return {
