@@ -56,8 +56,8 @@ const SLCM_reels = (() => {
         /* Chrome / Firefox via hls.js — config optimisée démarrage rapide mobile */
         const hls = new Hls({
           enableWorker:       false,
-          startLevel:         0,      /* démarre à la qualité la plus basse (rapide) */
-          maxBufferLength:    8,      /* ne bufferiser que 8s (vs 30s par défaut) */
+          startLevel:         2,      /* qualité moyenne d'entrée (pas la plus basse) */
+          maxBufferLength:    8,
           maxMaxBufferLength: 15,
           autoStartLoad:      true,
           manifestLoadingMaxRetry: 3,
@@ -663,14 +663,20 @@ const SLCM_reels = (() => {
 
   /* ════════════════════ MOBILE bande vignettes ════════════════════ */
   function renderMobileThumb(r, index) {
-    const title = escapeHtml(r.title || 'Visite');
-    const poster = escapeHtml((r.images && r.images[0]) || '');
+    const title    = escapeHtml(r.title || 'Visite');
+    const poster   = escapeHtml((r.images && r.images[0]) || '');
+    const videoSrc = escapeHtml(r.video_url || '');
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.6rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="reel-thumb-premium">PREMIUM</div>' : '';
 
     return `
-      <button class="reel-thumb" type="button" data-index="${index}" aria-label="Ouvrir la visite ${title}">
-        <img src="${poster}" alt="${title}" loading="lazy">
+      <button class="reel-thumb" type="button" data-index="${index}"
+              data-video-src="${videoSrc}" aria-label="Ouvrir la visite ${title}">
+        <!-- Niveau 3 : poster CF immédiat, pas d'écran blanc -->
+        <img class="reel-thumb-img" src="${poster}" alt="${title}" loading="lazy">
+        <!-- Niveau 2 : vidéo muted qui remplace l'img au scroll -->
+        <video class="reel-thumb-vid" muted playsinline loop preload="none"
+               poster="${poster}" style="display:none;width:100%;height:100%;object-fit:cover"></video>
         ${premiumBadge}
         <div class="reel-thumb-play"><i class="fas fa-play"></i></div>
         <div class="reel-thumb-overlay">
@@ -678,6 +684,39 @@ const SLCM_reels = (() => {
           <p class="reel-thumb-price">${fmtPrice(r.price)}${rentMode}</p>
         </div>
       </button>`;
+  }
+
+  /* Autoplay muted dans le strip — libère les ressources hors viewport */
+  function bindStripVideoObserver(strip, data) {
+    if (!('IntersectionObserver' in window)) return;
+    const thumbs = strip.querySelectorAll('.reel-thumb');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const thumb = entry.target;
+        const vid   = thumb.querySelector('.reel-thumb-vid');
+        const img   = thumb.querySelector('.reel-thumb-img');
+        if (!vid) return;
+        if (entry.isIntersecting) {
+          /* Entrée dans le viewport : charger et jouer silencieusement */
+          const src = thumb.dataset.videoSrc;
+          if (src && !vid._hlsLoaded) {
+            loadVideo(vid, src, true);
+            vid._hlsLoaded = true;
+          } else if (vid.paused) {
+            vid.play().catch(() => {});
+          }
+          vid.style.display = 'block';
+          if (img) img.style.display = 'none';
+        } else {
+          /* Sortie du viewport : pause + libérer bande passante */
+          vid.pause();
+          if (vid._hls) vid._hls.stopLoad();
+          vid.style.display = 'none';
+          if (img) img.style.display = 'block';
+        }
+      });
+    }, { root: strip, threshold: 0.6 });
+    thumbs.forEach(t => observer.observe(t));
   }
 
   function buildMobileSection(anchor, reelsData, title, sub) {
@@ -698,6 +737,10 @@ const SLCM_reels = (() => {
       </button>`;
 
     bindMobileInteractions(anchor, data);
+
+    /* Niveau 2 : autoplay muted au scroll dans le strip */
+    const strip = anchor.querySelector('.reels-strip');
+    if (strip) bindStripVideoObserver(strip, data);
 
     /* Pré-charger les manifests HLS des 3 premières vidéos dès que le strip est visible
        → quand l'user tape, le manifest est déjà fetché → lecture quasi-instantanée */
