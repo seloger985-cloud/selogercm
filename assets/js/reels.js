@@ -1054,9 +1054,10 @@ const SLCM_reels = (() => {
   };
 
   /* ── Charger via Cloudflare Stream (si disponible) ── */
-  async function loadFromCF(tag) {
+  async function loadFromCF(tag, limit) {
+    const l = limit || (isMobile ? MOBILE_LIMIT : DESKTOP_LIMIT);
     try {
-      const res = await fetch(`/.netlify/functions/cf-stream-videos?tag=${encodeURIComponent(tag)}&limit=6`);
+      const res = await fetch(`/.netlify/functions/cf-stream-videos?tag=${encodeURIComponent(tag)}&limit=${l}`);
       if (!res.ok) return null;
       const data = await res.json();
       if (!data.videos?.length) return null;
