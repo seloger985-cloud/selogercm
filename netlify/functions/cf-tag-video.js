@@ -16,8 +16,23 @@ exports.handler = async function (event) {
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch {}
 
-  const { uid, section } = body;
+  const { uid, section, _delete } = body;
   if (!uid) return { statusCode: 400, body: JSON.stringify({ error: 'uid manquant' }) };
+
+  /* Suppression de la vidéo CF Stream */
+  if (_delete) {
+    try {
+      const delRes = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream/${uid}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` } }
+      );
+      if (!delRes.ok) throw new Error(`DELETE error ${delRes.status}`);
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ ok: true, uid, deleted: true }) };
+    } catch (err) {
+      return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    }
+  }
 
   const allowed = ['homepage-section-1', 'homepage-section-2', ''];
   if (!allowed.includes(section)) return { statusCode: 400, body: JSON.stringify({ error: 'section invalide' }) };
