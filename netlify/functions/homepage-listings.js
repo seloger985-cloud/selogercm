@@ -26,10 +26,10 @@ exports.handler = async function () {
 
     /* Toutes les requêtes en parallèle */
     const [unfurnished, furnished, commercialRent, villas, terrains, commercialSale] = await Promise.all([
-      /* Location non meublé — premium */
-      sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.false&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=6`),
+      /* Location non meublé — premium (pool large pour rotation 30min côté client) */
+      sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.false&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=50`),
       /* Location meublé — premium */
-      sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.true&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=6`),
+      sbFetch(`${base}&rent_sale=eq.rent&furnished=eq.true&premium=eq.true&order=boost_expires_at.desc.nullslast,created_at.desc&limit=30`),
       /* Locaux commerciaux à louer — inclut bureaux et espaces de travail */
       sbFetch(`${base}&rent_sale=eq.rent&type=in.(commercial,warehouse,shop,bureau,office)&order=created_at.desc&limit=6`),
       /* Villas & maisons à vendre */

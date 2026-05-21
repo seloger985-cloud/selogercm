@@ -25,8 +25,8 @@ exports.handler = async function (event) {
   const limit = parseInt(event.queryStringParameters?.limit || '6', 10);
   const debug = event.queryStringParameters?.debug === '1'; /* ?debug=1 retourne les meta brutes */
 
-  /* Sécurité : n'autoriser que les tags homepage (sauf debug) */
-  if (!debug && !['homepage-section-1', 'homepage-section-2'].includes(tag)) {
+  /* Sécurité : tags autorisés */
+  if (!debug && !['homepage-section-1', 'homepage-section-2', 'all'].includes(tag)) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Tag non autorisé' }) };
   }
 
@@ -57,9 +57,13 @@ exports.handler = async function (event) {
         body: JSON.stringify({ total: raw.length, videos: raw }) };
     }
 
-    /* Filtrer par meta.section + prête à lire */
+    /* Filtrer par meta.section (tag=all → toutes les vidéos prêtes) */
     const filtered = (data.result || [])
-      .filter(v => (v.status?.state === 'ready' || v.readyToStream === true) && v.meta?.section === tag)
+      .filter(v => {
+        if (!(v.status?.state === 'ready' || v.readyToStream === true)) return false;
+        if (tag === 'all') return true;
+        return v.meta?.section === tag;
+      })
       .slice(0, limit);
 
     /* Enrichir avec les données Supabase si listing_id présent */

@@ -129,30 +129,28 @@ const SLCM_reels = (() => {
   }
 
   async function loadReels() {
+    /* Section 1 : toutes les vidéos CF Stream, rotation 3h — pas de filtre catégorie */
+    const cfVideos = await loadFromCF('all');
+    if (cfVideos && cfVideos.length) {
+      const rotated = rotatePool(cfVideos);
+      if (isMobile) return applyMobileQuota(rotated);
+      return rotated.slice(0, DESKTOP_LIMIT);
+    }
+
+    /* Fallback Supabase si CF indisponible */
     const client = await sb();
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
-
-    /* Desktop : pool élargi (12 vidéos — toutes catégories fusionnées)
-       Mobile  : pool réduit (6 vidéos — Section 1 seulement, non meublé)  */
-    const limit = isMobile ? 15 : 30;
     const { data, error } = await client
       .from('listings')
       .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(limit);
-
+      .limit(50);
     if (error) { console.error('[reels] loadReels:', error); return []; }
-    const pool = (data || []).filter(r => r.video_url && r.video_url.trim());
+    const pool = (data || []).filter(r => r.video_url?.trim());
     const rotated = rotatePool(pool);
-
-    /* Mobile Section 1 : non meublé prioritaire (Section 2 prend les meublés) */
-    if (isMobile) {
-      const s1 = rotated.filter(r => !r.furnished);
-      return applyMobileQuota(s1.length >= 3 ? s1 : rotated);
-    }
-    /* Desktop : tout le pool fusionné jusqu'à 12 */
+    if (isMobile) return applyMobileQuota(rotated);
     return rotated.slice(0, DESKTOP_LIMIT);
   }
 
@@ -1105,18 +1103,8 @@ const SLCM_reels = (() => {
         anchor2.classList.add('is-empty');
       } else {
         const cfg2 = SECTION_CONFIGS.reelsSection2;
-        let reels2 = await loadFromCF(cfg2.cfTag);
-        if (!reels2) {
-          const client = await sb();
-          if (client) {
-            let q = client.from('listings').select(
-              'id,title,city,district,price,rent_sale,type,furnished,video_url,images,premium,created_at,owner_phone'
-            ).eq('status','active');
-            q = cfg2.sbFilter(q);
-            const { data } = await q.order('created_at',{ascending:false}).limit(20);
-            reels2 = (data||[]).filter(r => r.video_url?.trim()).slice(0, MOBILE_LIMIT);
-          }
-        }
+        /* Section 2 : CF Stream homepage-section-2 uniquement — pas de fallback */
+        const reels2 = await loadFromCF(cfg2.cfTag);
 
         if (reels2?.length) {
           const savedReels = reels;
