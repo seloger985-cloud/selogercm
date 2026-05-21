@@ -247,6 +247,7 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
 /* ── Inscription ── */
 let _pendingPhone = '';
 let _pendingEmail = '';
+let _otpMethod   = 'whatsapp'; /* 'whatsapp' | 'email' */
 
 function showOtpPanel(phone) {
   document.getElementById('otpPhoneDisplay').textContent = phone;
@@ -312,14 +313,25 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     const waData = await waRes.json();
 
     if (!waRes.ok || !waData.ok) {
-      /* WhatsApp indisponible — redirection directe */
-      console.warn('WhatsApp OTP unavailable:', waData.error);
-      ok.textContent = '✅ Compte créé ! Connexion en cours…';
-      setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
+      /* WhatsApp indisponible → fallback Email OTP (Supabase) */
+      console.warn('WhatsApp OTP unavailable, falling back to email:', waData.error);
+      const { error: emailErr } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+      if (emailErr) {
+        /* Email OTP aussi indisponible → connexion directe */
+        ok.textContent = '✅ Compte créé ! Connexion en cours…';
+        setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
+        return;
+      }
+      _otpMethod = 'email';
+      document.getElementById('otpPhoneDisplay').textContent = email;
+      document.getElementById('otpSub').textContent = `Un code à 6 chiffres a été envoyé à ${email}`;
+      document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par email';
+      showOtpPanel(phone);
       return;
     }
 
-    /* 4. Afficher le step de vérification */
+    /* 4. WhatsApp OK — afficher le step de vérification */
+    _otpMethod = 'whatsapp';
     document.getElementById('otpPhoneDisplay').textContent = phone;
     document.getElementById('otpSub').textContent = `Un code a été envoyé sur WhatsApp au ${phone}`;
     showOtpPanel(phone);
@@ -337,19 +349,30 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   const err  = document.getElementById('otpError');
   const ok   = document.getElementById('otpSuccess');
   err.textContent = ''; ok.textContent = '';
-  if (!code || code.length < 6) { err.textContent = 'Entrez le code à 6 chiffres reçu sur WhatsApp.'; return; }
+  const hint = _otpMethod === 'email' ? 'par email' : 'sur WhatsApp';
+  if (!code || code.length < 6) { err.textContent = `Entrez le code à 6 chiffres reçu ${hint}.`; return; }
 
   const btn = document.getElementById('otpVerifyBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
   try {
-    const res  = await fetch('/.netlify/functions/wa-otp', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ action: 'verify', phone: _pendingPhone, code }),
-    });
-    const data = await res.json();
-    if (!data.ok) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
-    ok.textContent = '✅ Numéro vérifié ! Bienvenue sur SE LOGER CM.';
+    if (_otpMethod === 'email') {
+      /* Vérification Email OTP via Supabase */
+      const client = window.SLCM_DB?.client;
+      const { error: verifyErr } = await client.auth.verifyOtp({
+        email: _pendingEmail, token: code, type: 'email'
+      });
+      if (verifyErr) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
+    } else {
+      /* Vérification WhatsApp OTP via notre fonction */
+      const res  = await fetch('/.netlify/functions/wa-otp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action: 'verify', phone: _pendingPhone, code }),
+      });
+      const data = await res.json();
+      if (!data.ok) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
+    }
+    ok.textContent = '✅ Compte vérifié ! Bienvenue sur SE LOGER CM.';
     setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
@@ -358,16 +381,22 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   }
 });
 
-/* ── Renvoyer OTP WhatsApp ── */
+/* ── Renvoyer OTP (WhatsApp ou Email selon la méthode active) ── */
 document.getElementById('otpResendBtn').addEventListener('click', async () => {
   const btn = document.getElementById('otpResendBtn');
   btn.disabled = true; btn.textContent = 'Envoi en cours…';
   try {
-    await fetch('/.netlify/functions/wa-otp', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'send', phone: _pendingPhone }),
-    });
-    document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé sur WhatsApp.';
+    if (_otpMethod === 'email') {
+      const client = window.SLCM_DB?.client;
+      await client.auth.signInWithOtp({ email: _pendingEmail, options: { shouldCreateUser: false } });
+      document.getElementById('otpSuccess').textContent = `✅ Nouveau code envoyé à ${_pendingEmail}.`;
+    } else {
+      await fetch('/.netlify/functions/wa-otp', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'send', phone: _pendingPhone }),
+      });
+      document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé sur WhatsApp.';
+    }
     setTimeout(() => { document.getElementById('otpSuccess').textContent = ''; }, 3000);
   } finally {
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le code'; }, 30000);
