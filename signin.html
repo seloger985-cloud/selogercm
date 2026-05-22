@@ -165,12 +165,12 @@
       <div class="success-msg" id="registerSuccess"></div>
     </div>
 
-    <!-- VÉRIFICATION WHATSAPP OTP -->
+    <!-- Vérification compte (email Supabase ; WhatsApp OTP quand Meta Business validé) -->
     <div class="panel" id="panelOTP">
       <div class="otp-wrap">
-        <div class="otp-icon">💬</div>
-        <div class="otp-title">Vérifiez votre WhatsApp</div>
-        <p class="otp-sub" id="otpSub">Un code à 6 chiffres a été envoyé sur WhatsApp au<br><strong id="otpPhoneDisplay"></strong></p>
+        <div class="otp-icon" id="otpIcon">📧</div>
+        <div class="otp-title" id="otpTitle">Confirmez votre email</div>
+        <p class="otp-sub" id="otpSub">Un email de confirmation a été envoyé à<br><strong id="otpPhoneDisplay"></strong></p>
         <div class="field">
           <input id="otpCode" class="otp-input" type="number" placeholder="000000" maxlength="6" autocomplete="one-time-code">
         </div>
@@ -178,7 +178,8 @@
         <div class="error-msg"   id="otpError"></div>
         <div class="success-msg" id="otpSuccess"></div>
         <br>
-        <button class="otp-resend" id="otpResendBtn">Renvoyer le code sur WhatsApp</button>
+        <button class="otp-resend" id="otpResendBtn">Renvoyer l'email de confirmation</button>
+        <p style="font-size:.78rem;color:#888;margin-top:1rem">Après avoir cliqué le lien dans l'email, <a href="/connexion" style="color:#ff7a00;font-weight:700">connectez-vous</a>.</p>
       </div>
     </div>
   </div>
@@ -245,9 +246,12 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
 });
 
 /* ── Inscription ── */
+/* Passer à true quand le compte WhatsApp Business Meta est validé */
+const WA_OTP_ENABLED = false;
+
 let _pendingPhone = '';
 let _pendingEmail = '';
-let _otpMethod   = 'whatsapp'; /* 'whatsapp' | 'email' */
+let _otpMethod   = 'email'; /* 'whatsapp' | 'email' */
 
 function showOtpPanel(phone) {
   document.getElementById('otpPhoneDisplay').textContent = phone;
@@ -301,40 +305,46 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       kyc_status: role === 'agent_externe' ? 'pending' : 'none'
     });
 
-    /* 3. Envoyer OTP via WhatsApp (Meta Cloud API) */
     _pendingPhone = phone;
     _pendingEmail = email;
 
-    const waRes = await fetch('/.netlify/functions/wa-otp', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ action: 'send', phone }),
-    });
-    const waData = await waRes.json();
-
-    if (!waRes.ok || !waData.ok) {
-      /* WhatsApp indisponible → fallback Email OTP (Supabase) */
-      console.warn('WhatsApp OTP unavailable, falling back to email:', waData.error);
-      const { error: emailErr } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-      if (emailErr) {
-        /* Email OTP aussi indisponible → connexion directe */
-        ok.textContent = '✅ Compte créé ! Connexion en cours…';
-        setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
-        return;
-      }
-      _otpMethod = 'email';
-      document.getElementById('otpPhoneDisplay').textContent = email;
-      document.getElementById('otpSub').textContent = `Un code à 6 chiffres a été envoyé à ${email}`;
-      document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par email';
-      showOtpPanel(phone);
+    /* Session immédiate si la confirmation email est désactivée dans Supabase */
+    if (data.session) {
+      ok.textContent = '✅ Compte créé ! Redirection…';
+      setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
       return;
     }
 
-    /* 4. WhatsApp OK — afficher le step de vérification */
-    _otpMethod = 'whatsapp';
-    document.getElementById('otpPhoneDisplay').textContent = phone;
-    document.getElementById('otpSub').textContent = `Un code a été envoyé sur WhatsApp au ${phone}`;
-    showOtpPanel(phone);
+    /* Confirmation par email Supabase (mode par défaut) */
+    _otpMethod = 'email';
+    const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
+    if (resendErr) console.warn('resend signup:', resendErr.message);
+
+    document.getElementById('otpIcon').textContent = '📧';
+    document.getElementById('otpTitle').textContent = 'Confirmez votre email';
+    document.getElementById('otpPhoneDisplay').textContent = email;
+    document.getElementById('otpSub').innerHTML =
+      `Consultez votre boîte mail (<strong>${email}</strong>).<br>Ouvrez le lien de confirmation, ou saisissez le code à 6 chiffres si Supabase vous en envoie un.`;
+    document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
+    showOtpPanel(email);
+
+    /* WhatsApp OTP — uniquement si Meta Business validé (WA_OTP_ENABLED) */
+    if (WA_OTP_ENABLED) {
+      const waRes = await fetch('/.netlify/functions/wa-otp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action: 'send', phone }),
+      });
+      const waData = await waRes.json();
+      if (waRes.ok && waData.ok) {
+        _otpMethod = 'whatsapp';
+        document.getElementById('otpIcon').textContent = '💬';
+        document.getElementById('otpTitle').textContent = 'Vérifiez votre WhatsApp';
+        document.getElementById('otpPhoneDisplay').textContent = phone;
+        document.getElementById('otpSub').textContent = `Un code a été envoyé sur WhatsApp au ${phone}`;
+        document.getElementById('otpResendBtn').textContent = 'Renvoyer le code sur WhatsApp';
+      }
+    }
 
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
@@ -359,7 +369,7 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
       /* Vérification Email OTP via Supabase */
       const client = window.SLCM_DB?.client;
       const { error: verifyErr } = await client.auth.verifyOtp({
-        email: _pendingEmail, token: code, type: 'email'
+        email: _pendingEmail, token: code, type: 'signup'
       });
       if (verifyErr) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
     } else {
@@ -388,8 +398,8 @@ document.getElementById('otpResendBtn').addEventListener('click', async () => {
   try {
     if (_otpMethod === 'email') {
       const client = window.SLCM_DB?.client;
-      await client.auth.signInWithOtp({ email: _pendingEmail, options: { shouldCreateUser: false } });
-      document.getElementById('otpSuccess').textContent = `✅ Nouveau code envoyé à ${_pendingEmail}.`;
+      await client.auth.resend({ type: 'signup', email: _pendingEmail });
+      document.getElementById('otpSuccess').textContent = `✅ Email de confirmation renvoyé à ${_pendingEmail}.`;
     } else {
       await fetch('/.netlify/functions/wa-otp', {
         method: 'POST', headers: {'Content-Type':'application/json'},

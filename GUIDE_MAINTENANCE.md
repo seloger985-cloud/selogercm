@@ -423,6 +423,18 @@ Le front charge la clé anon via `/.netlify/functions/public-config` (plus de JW
 
 ⚠️ **Ne jamais committer** `SB_SERVICE_KEY` ni `service_role` dans le dépôt.
 
+### G. Connexion / inscription — Email vs WhatsApp OTP
+
+**Actuellement** : confirmation **par email Supabase** à l'inscription (`signin.html`, `WA_OTP_ENABLED = false`).
+
+- Pas besoin de `WHATSAPP_PHONE_ID` / `WHATSAPP_TOKEN` tant que Meta Business n'est pas validé.
+- `wa-otp` et `SB_SERVICE_KEY` ne sont **pas** requis pour l'inscription email.
+- Dans Supabase → Authentication → Providers → Email : activer **Confirm email** si vous voulez le lien de confirmation.
+
+**Quand WhatsApp Business sera validé** :
+1. Définir `WHATSAPP_*` et `SB_SERVICE_KEY` dans Netlify.
+2. Dans `signin.html`, passer `WA_OTP_ENABLED` à `true` pour réactiver l'OTP WhatsApp en plus de l'email.
+
 ### F. Bug récurrent à connaître — Le piège du fichier obsolète
 
 **Symptôme** : après un commit modifiant `listing_detail.html`, l'aperçu WhatsApp s'affiche soudainement en texte brut (sans image ni titre), alors que ça marchait avant.
