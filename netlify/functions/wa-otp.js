@@ -17,7 +17,7 @@
 const PHONE_ID     = process.env.WHATSAPP_PHONE_ID;
 const WA_TOKEN     = process.env.WHATSAPP_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL   || 'https://hozlyddiqodvjguqywty.supabase.co';
-const SB_KEY       = process.env.SB_SERVICE_KEY || process.env.SB_ANON_KEY || '';
+const SB_KEY       = process.env.SB_SERVICE_KEY || '';
 
 const OTP_EXPIRY_MIN = 10;
 
@@ -109,6 +109,10 @@ async function verifyCode(phone, code) {
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  if (!SB_KEY) {
+    console.error('[wa-otp] SB_SERVICE_KEY manquant');
+    return { statusCode: 503, body: JSON.stringify({ error: 'Service OTP non configuré' }) };
+  }
   if (!PHONE_ID || !WA_TOKEN) return { statusCode: 400, body: JSON.stringify({ error: 'WhatsApp credentials manquants' }) };
 
   let body = {};

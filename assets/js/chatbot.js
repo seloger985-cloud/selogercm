@@ -520,13 +520,30 @@ Ne réponds JAMAIS en dehors du format JSON.`;
     return str ? '?' + str : '';
   }
 
-  /* ─── Appel API Claude via Netlify Function ─── */
+  /* ─── Clé anon (même source que supabase.js) ─── */
+  async function getSupabaseAnonKey() {
+    let tries = 0;
+    while ((!window.SLCM_DB || !window.SLCM_DB.anonKey) && tries < 50) {
+      if (window.SLCM_DB?.init) {
+        try { await window.SLCM_DB.init(); } catch (_) { /* retry */ }
+      }
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+    const key = window.SLCM_DB?.anonKey;
+    if (!key) throw new Error('Supabase non configuré');
+    return key;
+  }
+
+  /* ─── Appel API Claude via Supabase Edge Function ─── */
   async function callClaude(userMessage) {
     conversationHistory.push({ role: 'user', content: userMessage });
 
-    const response = await fetch('https://hozlyddiqodvjguqywty.supabase.co/functions/v1/smooth-task', {
+    const anonKey = await getSupabaseAnonKey();
+    const baseUrl = window.SLCM_DB?.url || 'https://hozlyddiqodvjguqywty.supabase.co';
+    const response = await fetch(`${baseUrl}/functions/v1/smooth-task`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvemx5ZGRpcW9kdmpndXF5d3R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzQ5NzgsImV4cCI6MjA1OTI1MDk3OH0.nRbbqF9SpwxztK0LI2BWWZwk39phGdCnO9MgIbmcG68' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
       body: JSON.stringify({
         system: SYSTEM_PROMPT,
         messages: conversationHistory,

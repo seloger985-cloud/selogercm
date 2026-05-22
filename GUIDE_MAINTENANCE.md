@@ -409,12 +409,19 @@ og.js détecte le User-Agent :
 Variables requises dans Netlify → Site settings → Environment variables :
 
 ```
-SB_ANON_KEY = <ta clé anon Supabase>
+SB_ANON_KEY      = <clé anon Supabase>     → public-config + fonctions sitemap/og/listing-seo
+SB_SERVICE_KEY   = <service_role Supabase> → wa-otp, unsubscribe, crons, send-alerts (obligatoire)
+SUPABASE_URL     = https://hozlyddiqodvjguqywty.supabase.co
+ADMIN_MIGRATE_SECRET = <secret long>      → migrations CF one-shot (?secret= ou header X-Admin-Secret)
 ```
 
-(Le code accepte aussi `SUPABASE_ANON_KEY` en fallback.)
+Le front charge la clé anon via `/.netlify/functions/public-config` (plus de JWT dans `assets/js/supabase.js`).
+
+(Le code accepte aussi `SUPABASE_ANON_KEY` en fallback pour `SB_ANON_KEY`.)
 
 ⚠️ **Ne PAS nommer la variable `SUPABASE_ANON_KEY`** : Netlify Secrets Scanning peut la détecter et bloquer le build. Le nom court `SB_ANON_KEY` est volontaire.
+
+⚠️ **Ne jamais committer** `SB_SERVICE_KEY` ni `service_role` dans le dépôt.
 
 ### F. Bug récurrent à connaître — Le piège du fichier obsolète
 

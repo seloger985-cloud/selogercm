@@ -21,7 +21,14 @@ const CF_API_TOKEN  = process.env.CF_API_TOKEN;
 const SUPABASE_URL  = process.env.SUPABASE_URL   || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SERVICE_KEY   = process.env.SB_SERVICE_KEY || '';
 
+const ADMIN_SECRET  = process.env.ADMIN_MIGRATE_SECRET || '';
 const BATCH_SIZE = 5; /* vidéos par batch — Stream processing est async */
+
+function checkAdminSecret(event) {
+  const got = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret']
+    || event.queryStringParameters?.secret;
+  return ADMIN_SECRET && got === ADMIN_SECRET;
+}
 
 function cfHeaders()  { return { 'Authorization': `Bearer ${CF_API_TOKEN}`, 'Content-Type': 'application/json' }; }
 function sbHeaders()  { return { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' }; }
@@ -75,6 +82,9 @@ async function updateListingVideo(listingId, hlsUrl) {
 }
 
 exports.handler = async function (event) {
+  if (!checkAdminSecret(event)) {
+    return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized — ADMIN_MIGRATE_SECRET requis' }) };
+  }
   if (!CF_ACCOUNT_ID || !CF_API_TOKEN || !SERVICE_KEY) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Variables d\'environnement manquantes' }) };
   }

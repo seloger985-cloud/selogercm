@@ -1,6 +1,16 @@
+/**
+ * Netlify Function — ai-chat.js
+ * Proxy Anthropic (optionnel). Non utilisé par le chatbot public (Edge Function smooth-task).
+ * POST /.netlify/functions/ai-chat — nécessite ANTHROPIC_API_KEY
+ */
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { statusCode: 503, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY manquante' }) };
   }
 
   try {

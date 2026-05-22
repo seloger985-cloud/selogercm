@@ -1,34 +1,62 @@
 /**
  * SE LOGER CM — Configuration Supabase
- * Script classique (sans type="module").
- * Le CDN UMD doit être chargé AVANT ce fichier.
+ * Clé anon chargée via /.netlify/functions/public-config (variable Netlify SB_ANON_KEY).
+ * Le CDN UMD @supabase/supabase-js doit être chargé AVANT ce fichier.
  */
 (function () {
-  const SUPABASE_URL  = 'https://hozlyddiqodvjguqywty.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvemx5ZGRpcW9kdmpndXF5d3R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzA1NzcsImV4cCI6MjA4OTc0NjU3N30.nRbbqF9SpwxztK0LI2BWWZwk39phGdCnO9MgIbmcG68';
+  const DEFAULT_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
+  const CONFIG_URL  = '/.netlify/functions/public-config';
 
   if (window.SLCM_DB && window.SLCM_DB.client) return;
 
-  function initClient() {
+  let configPromise = null;
+
+  function loadConfig() {
+    if (!configPromise) {
+      configPromise = fetch(CONFIG_URL)
+        .then(res => {
+          if (!res.ok) throw new Error('public-config ' + res.status);
+          return res.json();
+        });
+    }
+    return configPromise;
+  }
+
+  async function initClient() {
     if (typeof window.supabase === 'undefined') {
       setTimeout(initClient, 100);
       return;
     }
 
-    /* Forcer la persistance de session */
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-      auth: {
-        persistSession:    true,
-        autoRefreshToken:  true,
-        detectSessionInUrl: true,
-        storage:           window.localStorage
-      }
-    });
+    try {
+      const cfg = await loadConfig();
+      const url = cfg.url || DEFAULT_URL;
+      const key = cfg.anonKey;
+      if (!key) throw new Error('anonKey manquante');
 
-    window.SLCM_DB = {
-      client: client,
-      init: function() { return Promise.resolve(client); }
-    };
+      const client = window.supabase.createClient(url, key, {
+        auth: {
+          persistSession:     true,
+          autoRefreshToken:   true,
+          detectSessionInUrl: true,
+          storage:            window.localStorage,
+        },
+      });
+
+      window.SLCM_DB = {
+        client:   client,
+        url:      url,
+        anonKey:  key,
+        init:     function () { return Promise.resolve(client); },
+      };
+    } catch (err) {
+      console.error('[SLCM] Supabase init failed:', err.message);
+      window.SLCM_DB = {
+        client:  null,
+        anonKey: null,
+        init:    function () { return Promise.reject(err); },
+      };
+    }
   }
 
   if (document.readyState === 'loading') {

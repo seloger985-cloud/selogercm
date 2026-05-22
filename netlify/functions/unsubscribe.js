@@ -5,10 +5,19 @@
  */
 
 const SUPABASE_URL = process.env.SUPABASE_URL   || 'https://hozlyddiqodvjguqywty.supabase.co';
-const SERVICE_KEY  = process.env.SB_SERVICE_KEY || process.env.SB_ANON_KEY || '';
+const SERVICE_KEY  = process.env.SB_SERVICE_KEY || '';
 
 exports.handler = async function (event) {
   const token = event.queryStringParameters?.token;
+
+  if (!SERVICE_KEY) {
+    console.error('[unsubscribe] SB_SERVICE_KEY manquant');
+    return {
+      statusCode: 503,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      body: '<p>Service temporairement indisponible. Réessayez plus tard.</p>',
+    };
+  }
 
   if (!token) {
     return { statusCode: 400, headers: { 'Content-Type': 'text/html' },

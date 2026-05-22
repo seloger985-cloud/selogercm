@@ -19,7 +19,14 @@ const CF_ACCOUNT_HASH = process.env.CF_ACCOUNT_HASH;
 const SUPABASE_URL    = process.env.SUPABASE_URL    || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SERVICE_KEY     = process.env.SB_SERVICE_KEY  || '';
 
+const ADMIN_SECRET  = process.env.ADMIN_MIGRATE_SECRET || '';
 const BATCH_SIZE = 3; /* listings par batch — réduit pour éviter timeout 26s Netlify */
+
+function checkAdminSecret(event) {
+  const got = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret']
+    || event.queryStringParameters?.secret;
+  return ADMIN_SECRET && got === ADMIN_SECRET;
+}
 const CF_IMAGES_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`;
 
 function cfHeaders() {
@@ -73,7 +80,9 @@ async function updateListingImages(listingId, newImages) {
 }
 
 exports.handler = async function (event) {
-  /* Sécurité basique */
+  if (!checkAdminSecret(event)) {
+    return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized — ADMIN_MIGRATE_SECRET requis' }) };
+  }
   if (!CF_ACCOUNT_ID || !CF_API_TOKEN || !CF_ACCOUNT_HASH || !SERVICE_KEY) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Variables d\'environnement manquantes' }) };
   }
