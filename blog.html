@@ -239,7 +239,7 @@
 
         const card = document.createElement('a');
         card.className = `article-card ${featured}`;
-        card.href = `article.html?id=${art.id}`;
+        card.href = `/article/${art.id}`;
 
         const coverHtml = art.cover
           ? `<img src="${art.cover}" alt="${art.title}" loading="lazy">`

@@ -33,18 +33,26 @@ exports.handler = async function () {
 
     const listings = await res.json();
 
-    /* Générer les URLs — utiliser slug si disponible, sinon ID */
-    const urls = (listings || []).map(l => {
-      const lastmod = (l.updated_at || l.created_at || '').split('T')[0];
-      /* Préférer /annonce/slug plutôt que /annonce?id= pour SEO */
-      const path = l.slug ? `/annonce/${encodeURIComponent(l.slug)}` : `/annonce?id=${encodeURIComponent(l.id)}`;
-      return `  <url>
+    /* URLs canoniques : slug non vide uniquement, sans doublons */
+    const seen = new Set();
+    const urls = (listings || [])
+      .filter(l => {
+        const s = (l.slug || '').trim();
+        if (!s || seen.has(s)) return false;
+        seen.add(s);
+        return true;
+      })
+      .map(l => {
+        const lastmod = (l.updated_at || l.created_at || '').split('T')[0];
+        const path = `/annonce/${encodeURIComponent(l.slug.trim())}`;
+        return `  <url>
     <loc>${SITE_URL}${path}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
-    }).join('\n');
+      })
+      .join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

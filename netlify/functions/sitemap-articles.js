@@ -33,7 +33,7 @@ exports.handler = async function () {
     const urls = (articles || []).map(a => {
       const lastmod = (a.updated_at || a.created_at || '').split('T')[0];
       return `  <url>
-    <loc>${SITE_URL}/article?id=${encodeURIComponent(a.id)}</loc>
+    <loc>${SITE_URL}/article/${encodeURIComponent(a.id)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

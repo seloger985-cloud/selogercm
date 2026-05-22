@@ -8,12 +8,14 @@
   <meta name="description" content="Conseils, actualités et tendances du marché immobilier à Douala et au Cameroun par SE LOGER CM.">
   <link rel="canonical" href="https://selogercm.com/blog">
   <script>
-  /* Canonical immédiat — Google le voit avant tout chargement JS */
+  /* Canonical immédiat — /article/:id ou ?id= */
   (function(){
-    var id = new URLSearchParams(window.location.search).get('id');
+    var parts = location.pathname.split('/').filter(Boolean);
+    var id = (parts[0] === 'article' && parts[1]) ? decodeURIComponent(parts[1]) : new URLSearchParams(window.location.search).get('id');
     if (id) {
+      var href = 'https://selogercm.com/article/' + encodeURIComponent(id);
       var c = document.querySelector('link[rel="canonical"]');
-      if (c) c.setAttribute('href', 'https://selogercm.com/article?id=' + encodeURIComponent(id));
+      if (c) c.setAttribute('href', href);
     }
   })();
   </script>
@@ -204,8 +206,11 @@
   <script src="assets/js/nav.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    const params = new URLSearchParams(window.location.search);
-    const id     = params.get('id');
+    const params     = new URLSearchParams(window.location.search);
+    const pathParts  = window.location.pathname.split('/').filter(Boolean);
+    const id         = (pathParts[0] === 'article' && pathParts[1])
+      ? decodeURIComponent(pathParts[1])
+      : params.get('id');
     const area   = document.getElementById('articleContent');
 
     if (!id) {
@@ -224,7 +229,10 @@
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) metaDesc.setAttribute('content', art.excerpt || art.title + ' — Conseils immobiliers par SE LOGER CM.');
     const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) canonical.setAttribute('href', 'https://selogercm.com/article?id=' + encodeURIComponent(id));
+    if (canonical) canonical.setAttribute('href', 'https://selogercm.com/article/' + encodeURIComponent(id));
+    if (params.get('id') && pathParts[0] !== 'article') {
+      window.history.replaceState({}, '', '/article/' + encodeURIComponent(id));
+    }
 
     const cat    = SLCM_blog.getCategoryInfo(art.category);
     const cover  = art.cover
@@ -242,7 +250,7 @@
         <h3>Articles similaires</h3>
         <div class="related-grid">
           ${related.map(r => `
-            <a href="article.html?id=${r.id}" class="related-card">
+            <a href="/article/${r.id}" class="related-card">
               <div class="rc-cover">${SLCM_blog.getCategoryInfo(r.category).icon}</div>
               <div class="rc-body">
                 <div class="rc-title">${escapeHtml(r.title)}</div>
