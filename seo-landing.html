@@ -8,12 +8,12 @@
   <!-- ── SEO : meta tags statiques remplis immédiatement depuis le slug ── -->
   <title>Immobilier à Douala | SE LOGER CM</title>
   <meta name="description" content="Annonces immobilières vérifiées à Douala sur SE LOGER CM.">
-  <link rel="canonical" href="https://www.selogercm.com/">
+  <link rel="canonical" href="https://selogercm.com/">
   <script>
   /* Canonical immédiat — corrige avant tout rendu, Google voit la bonne URL */
   (function(){
     var c = document.querySelector('link[rel="canonical"]');
-    if(c) c.setAttribute('href', 'https://www.selogercm.com' + window.location.pathname);
+    if(c) c.setAttribute('href', 'https://selogercm.com' + window.location.pathname);
   })();
   </script>
 
@@ -187,7 +187,7 @@
   const page = SEO_PAGES[slug] || null;
 
   if (page) {
-    const fullUrl = 'https://www.selogercm.com/' + slug;
+    const fullUrl = 'https://selogercm.com/' + slug;
     document.title = page.title;
     document.querySelector('meta[name="description"]')?.setAttribute('content', page.desc);
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', fullUrl);
@@ -203,7 +203,7 @@
   <!-- Open Graph -->
   <meta property="og:type"      content="website">
   <meta property="og:site_name" content="SE LOGER CM">
-  <meta property="og:image"     content="https://www.selogercm.com/assets/img/og-cover.png">
+  <meta property="og:image"     content="https://selogercm.com/assets/img/og-cover.png">
   <meta property="og:locale"    content="fr_CM">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -320,7 +320,7 @@
       "@type": "CollectionPage",
       "name": page.title,
       "description": page.desc,
-      "url": "https://www.selogercm.com/" + slug,
+      "url": "https://selogercm.com/" + slug,
       "provider": { "@type": "RealEstateAgent", "name": "SE LOGER CM" }
     });
 

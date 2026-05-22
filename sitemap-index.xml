@@ -3,18 +3,18 @@
 
   <!-- Pages statiques -->
   <sitemap>
-    <loc>https://www.selogercm.com/sitemap.xml</loc>
+    <loc>https://selogercm.com/sitemap.xml</loc>
     <lastmod>2026-05-14</lastmod>
   </sitemap>
 
   <!-- Annonces dynamiques -->
   <sitemap>
-    <loc>https://www.selogercm.com/sitemap-listings.xml</loc>
+    <loc>https://selogercm.com/sitemap-listings.xml</loc>
   </sitemap>
 
   <!-- Articles de blog -->
   <sitemap>
-    <loc>https://www.selogercm.com/sitemap-articles.xml</loc>
+    <loc>https://selogercm.com/sitemap-articles.xml</loc>
   </sitemap>
 
 </sitemapindex>

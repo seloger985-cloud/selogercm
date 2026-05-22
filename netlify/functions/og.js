@@ -18,7 +18,7 @@
 
 const SUPABASE_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
 const SB_KEY = process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const SITE = 'https://www.selogercm.com';
+const SITE = 'https://selogercm.com';
 const DEFAULT_IMG = `${SITE}/assets/img/og-cover.png`;
 
 /* User-Agents des crawlers sociaux qu'on doit servir SANS redirection.

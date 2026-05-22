@@ -18,7 +18,7 @@ const SERVICE_KEY   = process.env.SB_SERVICE_KEY       || '';
 const EMAILJS_SVC   = 'service_udg2825';
 const EMAILJS_TPL   = process.env.EMAILJS_RELANCE_TPL  || '';
 const EMAILJS_KEY   = '-7BBiUvdS0GiAoTSZ';
-const SITE_URL      = 'https://www.selogercm.com';
+const SITE_URL      = 'https://selogercm.com';
 const DAYS_BEFORE   = 7;
 
 function sbHeaders() {

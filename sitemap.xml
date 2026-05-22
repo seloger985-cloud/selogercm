@@ -6,116 +6,116 @@
 
   <!-- Pages principales -->
   <url>
-    <loc>https://www.selogercm.com/</loc>
+    <loc>https://selogercm.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/annonces</loc>
+    <loc>https://selogercm.com/annonces</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/publier</loc>
+    <loc>https://selogercm.com/publier</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/tarifs</loc>
+    <loc>https://selogercm.com/tarifs</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/blog</loc>
+    <loc>https://selogercm.com/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/services</loc>
+    <loc>https://selogercm.com/services</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/a-propos</loc>
+    <loc>https://selogercm.com/a-propos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/rendez-vous</loc>
+    <loc>https://selogercm.com/rendez-vous</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/connexion</loc>
+    <loc>https://selogercm.com/connexion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- Pages utilitaires -->
   <url>
-    <loc>https://www.selogercm.com/pricing</loc>
+    <loc>https://selogercm.com/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/favorites</loc>
+    <loc>https://selogercm.com/favorites</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/douala</loc>
+    <loc>https://selogercm.com/douala</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Pages SEO par quartier / type -->
   <url>
-    <loc>https://www.selogercm.com/appartements-bonapriso</loc>
+    <loc>https://selogercm.com/appartements-bonapriso</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/appartements-bali</loc>
+    <loc>https://selogercm.com/appartements-bali</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/appartements-bonanjo</loc>
+    <loc>https://selogercm.com/appartements-bonanjo</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/studios-bali</loc>
+    <loc>https://selogercm.com/studios-bali</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/studios-bonapriso</loc>
+    <loc>https://selogercm.com/studios-bonapriso</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/villas-a-louer-douala</loc>
+    <loc>https://selogercm.com/villas-a-louer-douala</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/maisons-a-louer-douala</loc>
+    <loc>https://selogercm.com/maisons-a-louer-douala</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/appartements-meubles-douala</loc>
+    <loc>https://selogercm.com/appartements-meubles-douala</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/terrains-a-vendre-bonapriso</loc>
+    <loc>https://selogercm.com/terrains-a-vendre-bonapriso</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.selogercm.com/appartements-bonamoussadi</loc>
+    <loc>https://selogercm.com/appartements-bonamoussadi</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>

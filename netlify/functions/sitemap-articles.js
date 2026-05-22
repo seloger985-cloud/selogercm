@@ -5,7 +5,7 @@
 
 const SUPABASE_URL  = process.env.SUPABASE_URL       || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SUPABASE_ANON = process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-const SITE_URL      = 'https://www.selogercm.com';
+const SITE_URL      = 'https://selogercm.com';
 const CACHE_TIME    = 3600; /* Cache 1h */
 
 exports.handler = async function () {

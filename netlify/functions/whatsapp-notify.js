@@ -32,7 +32,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 204,
       headers: {
-        'Access-Control-Allow-Origin': 'https://www.selogercm.com',
+        'Access-Control-Allow-Origin': 'https://selogercm.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
@@ -93,21 +93,21 @@ exports.handler = async (event) => {
       console.error('[whatsapp-notify] Twilio error:', result);
       return {
         statusCode: 502,
-        headers: { 'Access-Control-Allow-Origin': 'https://www.selogercm.com' },
+        headers: { 'Access-Control-Allow-Origin': 'https://selogercm.com' },
         body: JSON.stringify({ error: result.message || 'Erreur Twilio' }),
       };
     }
 
     return {
       statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': 'https://www.selogercm.com' },
+      headers: { 'Access-Control-Allow-Origin': 'https://selogercm.com' },
       body: JSON.stringify({ success: true, sid: result.sid }),
     };
   } catch (err) {
     console.error('[whatsapp-notify] Fetch error:', err);
     return {
       statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': 'https://www.selogercm.com' },
+      headers: { 'Access-Control-Allow-Origin': 'https://selogercm.com' },
       body: JSON.stringify({ error: 'Erreur réseau' }),
     };
   }

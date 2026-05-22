@@ -14,4 +14,4 @@ Disallow: /.netlify/
 Allow: /sitemap-listings.xml
 Allow: /sitemap-articles.xml
 
-Sitemap: https://www.selogercm.com/sitemap-index.xml
+Sitemap: https://selogercm.com/sitemap-index.xml

@@ -6,14 +6,14 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>Article — SE LOGER CM</title>
   <meta name="description" content="Conseils, actualités et tendances du marché immobilier à Douala et au Cameroun par SE LOGER CM.">
-  <link rel="canonical" href="https://www.selogercm.com/blog">
+  <link rel="canonical" href="https://selogercm.com/blog">
   <script>
   /* Canonical immédiat — Google le voit avant tout chargement JS */
   (function(){
     var id = new URLSearchParams(window.location.search).get('id');
     if (id) {
       var c = document.querySelector('link[rel="canonical"]');
-      if (c) c.setAttribute('href', 'https://www.selogercm.com/article?id=' + encodeURIComponent(id));
+      if (c) c.setAttribute('href', 'https://selogercm.com/article?id=' + encodeURIComponent(id));
     }
   })();
   </script>
@@ -224,7 +224,7 @@
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) metaDesc.setAttribute('content', art.excerpt || art.title + ' — Conseils immobiliers par SE LOGER CM.');
     const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) canonical.setAttribute('href', 'https://www.selogercm.com/article?id=' + encodeURIComponent(id));
+    if (canonical) canonical.setAttribute('href', 'https://selogercm.com/article?id=' + encodeURIComponent(id));
 
     const cat    = SLCM_blog.getCategoryInfo(art.category);
     const cover  = art.cover

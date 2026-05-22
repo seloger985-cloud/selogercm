@@ -219,7 +219,7 @@ function renderProfile(profile, listings) {
   const isPro      = !!profile.is_pro;
   const since      = profile.created_at ? new Date(profile.created_at).getFullYear() : '';
   const totalViews = listings.reduce((s, l) => s + (l.views || 0), 0);
-  const agentUrl   = `https://www.selogercm.com/profil-agent?id=${profile.id}`;
+  const agentUrl   = `https://selogercm.com/profil-agent?id=${profile.id}`;
 
   /* Initiales avatar */
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
