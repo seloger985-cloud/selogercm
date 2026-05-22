@@ -54,12 +54,13 @@ exports.handler = async function (event) {
   const articleId  = qs.id || path.replace(/.*\/share\/article\//, '').split('?')[0];
   const slug   = decodeURIComponent(path.replace('/share/', '').replace('article/', '').split('?')[0]);
 
-  const targetUrl = isArticle
-    ? `${SITE}/article?id=${encodeURIComponent(articleId)}`
-    : `${SITE}/annonce/${slug}`;
+  let targetUrl = isArticle
+    ? `${SITE}/article/${encodeURIComponent(articleId)}`
+    : `${SITE}/annonce/${encodeURIComponent(slug)}`;
   const shareUrl = isArticle
     ? `${SITE}/share/article/${articleId}`
-    : `${SITE}/share/${slug}`;
+    : `${SITE}/share/${encodeURIComponent(slug)}`;
+  let canonicalUrl = targetUrl;
 
   /* Détection crawler vs humain via User-Agent */
   const userAgent = (event.headers && (event.headers['user-agent'] || event.headers['User-Agent'])) || '';
@@ -89,7 +90,7 @@ exports.handler = async function (event) {
         /* ── Partage annonce : cherche par slug d'abord, puis par id (UUID) ── */
         const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const filter  = UUID_RE.test(slug) ? `id=eq.${encodeURIComponent(slug)}` : `slug=eq.${encodeURIComponent(slug)}`;
-        const apiUrl  = `${SUPABASE_URL}/rest/v1/listings?${filter}&select=title,description,price,city,district,images&limit=1`;
+        const apiUrl  = `${SUPABASE_URL}/rest/v1/listings?${filter}&status=eq.active&select=title,description,price,city,district,images,slug&limit=1`;
         const res  = await fetch(apiUrl, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' } });
         const data = await res.json();
         const ad   = data && data[0];
@@ -99,6 +100,9 @@ exports.handler = async function (event) {
           title = `${ad.title || 'Annonce immobilière'} | SE LOGER CM`;
           desc  = `${price}${location ? ' · ' + location : ''}. Contact rapide WhatsApp.`;
           img   = firstImage(ad);
+          const canonicalSlug = (ad.slug || '').trim() || slug;
+          targetUrl    = `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
+          canonicalUrl = targetUrl;
         }
       }
     }
@@ -133,7 +137,8 @@ exports.handler = async function (event) {
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="twitter:image" content="${esc(img)}">
 
-<link rel="canonical" href="${esc(shareUrl)}">
+<link rel="canonical" href="${esc(canonicalUrl)}">
+<meta name="robots" content="noindex, follow">
 ${refreshTag}
 
 <style>
