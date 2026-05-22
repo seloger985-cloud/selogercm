@@ -7,6 +7,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  included_files = ["listing_detail.html"]
 
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
@@ -20,8 +21,122 @@
 [functions."cron-cleanup"]
   schedule = "0 3 * * 0"
 
+# ── Canonique : apex selogercm.com (sans www) ──
+[[redirects]]
+  from = "https://www.selogercm.com/*"
+  to = "https://selogercm.com/:splat"
+  status = 301
+  force = true
 
-# Pages principales
+[[redirects]]
+  from = "http://www.selogercm.com/*"
+  to = "https://selogercm.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://selogercm.com/*"
+  to = "https://selogercm.com/:splat"
+  status = 301
+  force = true
+
+# ── URLs propres → fichiers HTML ──
+[[redirects]]
+  from = "/annonces"
+  to = "/listings_v2.html"
+  status = 200
+
+[[redirects]]
+  from = "/annonce/*"
+  to = "/.netlify/functions/listing-seo"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/annonce"
+  to = "/listing_detail.html"
+  status = 200
+
+[[redirects]]
+  from = "/publier"
+  to = "/publish.html"
+  status = 200
+
+[[redirects]]
+  from = "/blog"
+  to = "/blog.html"
+  status = 200
+
+[[redirects]]
+  from = "/tarifs"
+  to = "/pricing.html"
+  status = 200
+
+[[redirects]]
+  from = "/article/:id"
+  to = "/article.html"
+  status = 200
+
+[[redirects]]
+  from = "/services"
+  to = "/services.html"
+  status = 200
+
+[[redirects]]
+  from = "/a-propos"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/rendez-vous"
+  to = "/rdv.html"
+  status = 200
+
+[[redirects]]
+  from = "/connexion"
+  to = "/signin.html"
+  status = 200
+
+[[redirects]]
+  from = "/mon-espace"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/agent"
+  to = "/agent.html"
+  status = 200
+
+[[redirects]]
+  from = "/agent-profile"
+  to = "/agent-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/agent-dashboard"
+  to = "/agent-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/favoris"
+  to = "/favorites.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/reset-password.html"
+  status = 200
+
+[[redirects]]
+  from = "/profil-agent"
+  to = "/profil-agent.html"
+  status = 200
+
 [[redirects]]
   from = "/pricing"
   to = "/pricing.html"
@@ -37,10 +152,25 @@
   to = "/douala.html"
   status = 200
 
-# Routing annonces
+# Pages légales
 [[redirects]]
-  from = "/annonce"
-  to = "/listing_detail.html"
+  from = "/mentions-legales"
+  to = "/mentions-legales.html"
+  status = 200
+
+[[redirects]]
+  from = "/confidentialite"
+  to = "/confidentialite.html"
+  status = 200
+
+[[redirects]]
+  from = "/cgu"
+  to = "/cgu.html"
+  status = 200
+
+[[redirects]]
+  from = "/cookies"
+  to = "/cookies.html"
   status = 200
 
 # Pages SEO par quartier / type
@@ -94,9 +224,22 @@
   to = "/seo-landing.html"
   status = 200
 
-# Partage reseaux sociaux
+# Partage réseaux sociaux
+[[redirects]]
+  from = "/share/article/:id"
+  to = "/.netlify/functions/og"
+  status = 200
+  force = true
+  query = {type = "article", id = ":id"}
+
 [[redirects]]
   from = "/share/*"
+  to = "/.netlify/functions/og"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/share"
   to = "/.netlify/functions/og"
   status = 200
   force = true
@@ -112,26 +255,56 @@
   to = "/.netlify/functions/sitemap-articles"
   status = 200
 
-# Headers sitemap
+# Redirection index
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+
+# Fallback 404
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# ── Headers ──
+
 [[headers]]
   for = "/sitemap-listings.xml"
   [headers.values]
     Cache-Control = "public, max-age=7200, stale-while-revalidate=86400"
     Content-Type = "application/xml; charset=utf-8"
 
-# Cache statique assets
 [[headers]]
-  for = "/assets/*"
+  for = "/assets/img/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Cache HTML
+[[headers]]
+  for = "/assets/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/favicon.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=300, stale-while-revalidate=86400"
 
-# Pas de cache routes dynamiques
 [[headers]]
   for = "/share/*"
   [headers.values]
@@ -140,15 +313,28 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com www.googletagmanager.com www.google-analytics.com api.emailjs.com embed.cloudflarestream.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' *.supabase.co api.emailjs.com www.google-analytics.com www.googletagmanager.com videodelivery.net *.videodelivery.net imagedelivery.net cdn.jsdelivr.net embed.cloudflarestream.com upload.cloudflarestream.com *.cloudflarestream.com; frame-src https://www.google.com https://maps.google.com https://www.youtube.com https://iframe.videodelivery.net; worker-src blob:;"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com www.googletagmanager.com www.google-analytics.com api.emailjs.com embed.cloudflarestream.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' *.supabase.co api.emailjs.com www.google-analytics.com www.googletagmanager.com videodelivery.net *.videodelivery.net imagedelivery.net cdn.jsdelivr.net embed.cloudflarestream.com upload.cloudflarestream.com *.cloudflarestream.com; frame-src https://www.google.com https://maps.google.com https://maps.googleapis.com https://www.youtube.com https://iframe.videodelivery.net; worker-src blob:; object-src 'none'; base-uri 'self';"
 
 [[headers]]
   for = "/.netlify/functions/homepage-listings"
   [headers.values]
     Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
+
+[[headers]]
+  for = "/.netlify/functions/listing-seo"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
+
+[[headers]]
+  for = "/.netlify/functions/og"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
   for = "/.netlify/functions/*"
