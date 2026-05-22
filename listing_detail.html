@@ -34,7 +34,7 @@
     "@context": "https://schema.org/",
     "@type": "Residence",
     "name": "Bien immobilier",
-    "url": "https://selogercm.com/listing_detail.html",
+    "url": "https://selogercm.com/annonce",
     "image": ["https://selogercm.com/assets/img/og-cover.png"],
     "address": {
       "@type": "PostalAddress",
@@ -51,9 +51,14 @@
       var parts = location.pathname.split('/').filter(Boolean);
       var slug = (parts[0] === 'annonce' && parts[1]) ? decodeURIComponent(parts[1]) : (p.get('slug') || p.get('id') || '');
 
-      /* Canonical immédiat — Google le voit dès le premier octet */
+      /* Canonical immédiat — URL propre /annonce/slug si disponible */
       var canonical = document.querySelector('link[rel="canonical"]');
-      if(canonical) canonical.setAttribute('href', window.location.href.split('?')[0] + (window.location.search || ''));
+      var canonicalHref = (parts[0] === 'annonce' && parts[1])
+        ? 'https://selogercm.com/annonce/' + encodeURIComponent(parts[1])
+        : (window.location.origin + window.location.pathname + (window.location.search || ''));
+      if (canonical) canonical.setAttribute('href', canonicalHref);
+      var ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl && parts[0] === 'annonce' && parts[1]) ogUrl.setAttribute('content', canonicalHref);
 
       if(slug && slug.length > 2){
         var t = slug.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
