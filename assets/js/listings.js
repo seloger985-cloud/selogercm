@@ -273,7 +273,7 @@ const SLCM_listings = (() => {
 
     return `
       <div class="listing-card${hasVideo ? ' has-video' : ''}">
-        <a href="/annonce?id=${listing.id}" style="text-decoration:none;color:inherit">
+        <a href="/annonce?/${listing.id}" style="text-decoration:none;color:inherit">
          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" width="400" height="200" style="width:100%;height:100%;object-fit:cover">
             ${badge}
