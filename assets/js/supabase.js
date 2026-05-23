@@ -2,6 +2,11 @@
  * SE LOGER CM — Configuration Supabase
  * Clé anon chargée via /.netlify/functions/public-config (variable Netlify SB_ANON_KEY).
  * Le CDN UMD @supabase/supabase-js doit être chargé AVANT ce fichier.
+ *
+ * Architecture : window.SLCM_DB est exposé IMMÉDIATEMENT avec un init()
+ * qui retourne une Promise se résolvant quand le client est prêt.
+ * Permet aux consommateurs (listings.js, favorites.js, etc.) d'await init()
+ * sans race condition.
  */
 (function () {
   const DEFAULT_URL = 'https://hozlyddiqodvjguqywty.supabase.co';
@@ -9,12 +14,27 @@
 
   if (window.SLCM_DB && window.SLCM_DB.client) return;
 
-  let configPromise = null;
+  let _client     = null;
+  let _resolveReady;
+  let _rejectReady;
+  const _readyPromise = new Promise(function (resolve, reject) {
+    _resolveReady = resolve;
+    _rejectReady  = reject;
+  });
 
+  /* Exposer SLCM_DB IMMÉDIATEMENT — les consommateurs peuvent await init() */
+  window.SLCM_DB = {
+    client:  null,
+    url:     null,
+    anonKey: null,
+    init:    function () { return _readyPromise; },
+  };
+
+  let configPromise = null;
   function loadConfig() {
     if (!configPromise) {
       configPromise = fetch(CONFIG_URL)
-        .then(res => {
+        .then(function (res) {
           if (!res.ok) throw new Error('public-config ' + res.status);
           return res.json();
         });
@@ -22,9 +42,18 @@
     return configPromise;
   }
 
-  async function initClient() {
+  async function initClient(attempt) {
+    attempt = attempt || 0;
+
+    /* Attente du CDN UMD Supabase — max 50 tentatives (5 secondes) */
     if (typeof window.supabase === 'undefined') {
-      setTimeout(initClient, 100);
+      if (attempt > 50) {
+        const err = new Error('Supabase UMD CDN non chargé après 5s');
+        console.error('[SLCM]', err.message);
+        _rejectReady(err);
+        return;
+      }
+      setTimeout(function () { initClient(attempt + 1); }, 100);
       return;
     }
 
@@ -34,7 +63,7 @@
       const key = cfg.anonKey;
       if (!key) throw new Error('anonKey manquante');
 
-      const client = window.supabase.createClient(url, key, {
+      _client = window.supabase.createClient(url, key, {
         auth: {
           persistSession:     true,
           autoRefreshToken:   true,
@@ -43,25 +72,21 @@
         },
       });
 
-      window.SLCM_DB = {
-        client:   client,
-        url:      url,
-        anonKey:  key,
-        init:     function () { return Promise.resolve(client); },
-      };
+      /* Mettre à jour SLCM_DB avec le client prêt */
+      window.SLCM_DB.client  = _client;
+      window.SLCM_DB.url     = url;
+      window.SLCM_DB.anonKey = key;
+
+      _resolveReady(_client);
     } catch (err) {
       console.error('[SLCM] Supabase init failed:', err.message);
-      window.SLCM_DB = {
-        client:  null,
-        anonKey: null,
-        init:    function () { return Promise.reject(err); },
-      };
+      _rejectReady(err);
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initClient);
+    document.addEventListener('DOMContentLoaded', function () { initClient(0); });
   } else {
-    initClient();
+    initClient(0);
   }
 })();

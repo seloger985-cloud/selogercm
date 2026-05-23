@@ -5,7 +5,23 @@
 
 const SLCM_listings = (() => {
 
-  async function sb() { return window.SLCM_DB ? window.SLCM_DB.init() : null; }
+  /* Attend que SLCM_DB soit initialisé (race condition avec supabase.js async).
+     Réessaie pendant max 5 secondes — au-delà on retourne null pour éviter de freeze. */
+  async function sb() {
+    let tries = 0;
+    while (tries < 50) {
+      if (window.SLCM_DB && typeof window.SLCM_DB.init === 'function') {
+        try {
+          const client = await window.SLCM_DB.init();
+          if (client) return client;
+        } catch (_) { /* retry */ }
+      }
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+    console.error('[SLCM] Supabase client unavailable after 5s');
+    return null;
+  }
 
   /* Champs nécessaires pour l'affichage en card — évite de fetcher
      description, superficies, charges, etc. inutiles pour les grilles */
@@ -25,6 +41,10 @@ const SLCM_listings = (() => {
   /* ── Lire toutes les annonces (avec filtres optionnels) ─────────── */
   async function getListings(filters = {}) {
     const client = await sb();
+    if (!client) {
+      console.error('[SLCM_listings] Supabase indisponible');
+      return [];
+    }
     let query = client
       .from('listings')
       .select(CARD_FIELDS)
@@ -273,7 +293,7 @@ const SLCM_listings = (() => {
 
     return `
       <div class="listing-card${hasVideo ? ' has-video' : ''}">
-        <a href="/annonce?/${listing.id}" style="text-decoration:none;color:inherit">
+        <a href="/annonce/${listing.slug || listing.id}" style="text-decoration:none;color:inherit">
          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" width="400" height="200" style="width:100%;height:100%;object-fit:cover">
             ${badge}
