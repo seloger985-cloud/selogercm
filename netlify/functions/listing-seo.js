@@ -2,6 +2,9 @@
  * Netlify Function — listing-seo.js
  * Sert /annonce/:slug avec HTML complet (meta, JSON-LD, contenu visible)
  * puis hydratation client via listing_detail.html (scripts inchangés).
+ *
+ * ⚠️ VERSION DEBUG — contient des console.log temporaires pour diagnostiquer
+ *    pourquoi fetchListing retourne null. À retirer une fois le bug identifié.
  */
 
 const fs = require('fs');
@@ -33,11 +36,23 @@ function parseSlug(event) {
 }
 
 async function fetchListing(slug) {
-  if (!slug || !SB_KEY) return null;
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] fetchListing called with slug =', JSON.stringify(slug));
+  console.log('[listing-seo] SB_KEY present =', !!SB_KEY, 'length =', SB_KEY ? SB_KEY.length : 0);
+  console.log('[listing-seo] SUPABASE_URL =', SUPABASE_URL);
+
+  if (!slug || !SB_KEY) {
+    console.log('[listing-seo] fetchListing abort early — empty slug or missing key');
+    return null;
+  }
   const filter = UUID_RE.test(slug)
     ? `id=eq.${encodeURIComponent(slug)}`
     : `slug=eq.${encodeURIComponent(slug)}`;
   const url = `${SUPABASE_URL}/rest/v1/listings?${filter}&status=eq.active&select=*&limit=1`;
+
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] fetch URL =', url);
+
   const res = await fetch(url, {
     headers: {
       apikey: SB_KEY,
@@ -45,8 +60,23 @@ async function fetchListing(slug) {
       Accept: 'application/json',
     },
   });
-  if (!res.ok) return null;
+
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] response status =', res.status, res.statusText);
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.log('[listing-seo] response error body =', errText);
+    return null;
+  }
   const rows = await res.json();
+
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] rows count =', Array.isArray(rows) ? rows.length : 'not-array');
+  if (Array.isArray(rows) && rows.length === 0) {
+    console.log('[listing-seo] empty rows — slug exists in DB but filter rejected it (status not active? wrong column?)');
+  }
+
   return rows && rows[0] ? rows[0] : null;
 }
 
@@ -208,20 +238,37 @@ function notFoundHtml(slug) {
 }
 
 exports.handler = async function (event) {
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] === NEW REQUEST ===');
+  console.log('[listing-seo] event.path =', event.path);
+  console.log('[listing-seo] event.rawUrl =', event.rawUrl);
+  console.log('[listing-seo] event.httpMethod =', event.httpMethod);
+
   const slug = parseSlug(event);
+
+  /* ⚠️ DEBUG */
+  console.log('[listing-seo] parsed slug =', JSON.stringify(slug));
+
   if (!slug) {
+    console.log('[listing-seo] empty slug → returning 404');
     return { statusCode: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: notFoundHtml('') };
   }
 
   try {
     const ad = await fetchListing(slug);
     if (!ad) {
+      console.log('[listing-seo] no ad found for slug', slug, '→ returning 404');
       return { statusCode: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: notFoundHtml(slug) };
     }
+
+    console.log('[listing-seo] ✅ ad found id=', ad.id, 'slug=', ad.slug);
 
     const seo = buildSeo(ad, slug);
     const prerender = buildPrerender(ad, seo);
     const template = readTemplate();
+
+    /* ⚠️ DEBUG */
+    console.log('[listing-seo] template loaded =', !!template, 'length =', template ? template.length : 0);
 
     const body = template
       ? patchTemplate(template, seo, prerender)
@@ -245,7 +292,7 @@ exports.handler = async function (event) {
       body,
     };
   } catch (err) {
-    console.error('[listing-seo]', err.message);
+    console.error('[listing-seo] EXCEPTION:', err.message, err.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
