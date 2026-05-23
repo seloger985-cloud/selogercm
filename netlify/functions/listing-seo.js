@@ -197,6 +197,7 @@ function notFoundHtml(slug) {
 <html lang="fr"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Annonce introuvable | SE LOGER CM</title>
 <link rel="canonical" href="${SITE}/annonces">
 </head>
@@ -207,16 +208,38 @@ function notFoundHtml(slug) {
 </body></html>`;
 }
 
+/* Valeurs de slug invalides qui ne doivent JAMAIS générer un appel Supabase */
+const INVALID_SLUG_VALUES = new Set(['undefined', 'null', 'NaN', '0', 'false']);
+
 exports.handler = async function (event) {
   const slug = parseSlug(event);
-  if (!slug) {
-    return { statusCode: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: notFoundHtml('') };
+
+  /* Cas 1 : slug vide ou clairement invalide → 404 + noindex
+     - Empêche l'indexation de pages-poubelle par Google
+     - Évite un appel Supabase inutile sur des URLs malformées */
+  if (!slug || INVALID_SLUG_VALUES.has(slug.toLowerCase())) {
+    return {
+      statusCode: 404,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+      body: notFoundHtml(slug || ''),
+    };
   }
 
   try {
     const ad = await fetchListing(slug);
     if (!ad) {
-      return { statusCode: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: notFoundHtml(slug) };
+      /* Annonce vraiment introuvable en base : 404 + noindex */
+      return {
+        statusCode: 404,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'X-Robots-Tag': 'noindex, nofollow',
+        },
+        body: notFoundHtml(slug),
+      };
     }
 
     const seo = buildSeo(ad, slug);

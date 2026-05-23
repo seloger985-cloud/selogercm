@@ -24,14 +24,22 @@ const SLCM_listings = (() => {
   }
 
   /* Champs nécessaires pour l'affichage en card — évite de fetcher
-     description, superficies, charges, etc. inutiles pour les grilles */
+     description, superficies, charges, etc. inutiles pour les grilles.
+     IMPORTANT: 'slug' est requis pour générer les URLs SEO /annonce/{slug}. */
   const CARD_FIELDS = [
-    'id', 'title', 'images', 'video_url',
+    'id', 'slug', 'title', 'images', 'video_url',
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
     'type', 'status', 'statut', 'rental_segment', 'created_at', 'owner_phone',
     'owner_kyc_verified', 'owner_is_pro'
   ].join(',');
+
+  /* Construit une URL d'annonce robuste — préfère le slug, fallback id, garde contre undefined */
+  function getListingUrl(listing) {
+    const ref = (listing && (listing.slug || listing.id)) || '';
+    if (!ref) return '/annonces';  /* garde-fou : redirige vers la liste si pas d'identifiant */
+    return '/annonce/' + encodeURIComponent(ref);
+  }
 
   /* ── Formatage prix ─────────────────────────────────────────────── */
   function fmtPrice(n) {
@@ -293,7 +301,7 @@ const SLCM_listings = (() => {
 
     return `
       <div class="listing-card${hasVideo ? ' has-video' : ''}">
-        <a href="/annonce/${listing.slug || listing.id}" style="text-decoration:none;color:inherit">
+        <a href="${getListingUrl(listing)}" style="text-decoration:none;color:inherit">
          <div class="listing-thumb" style="position:relative;height:200px;background:#eee;overflow:hidden">
             <img src="${img}" alt="${title}" loading="lazy" width="400" height="200" style="width:100%;height:100%;object-fit:cover">
             ${badge}
@@ -329,7 +337,7 @@ const SLCM_listings = (() => {
   return {
     getListings, getPremiumListings, getListingById,
     getMyListings, createListing, updateListing, deleteListing,
-    uploadImages, renderCard, fmtPrice, getTransformUrl
+    uploadImages, renderCard, fmtPrice, getTransformUrl, getListingUrl
   };
 })();
 
