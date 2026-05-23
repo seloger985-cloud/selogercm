@@ -33,11 +33,18 @@ function parseSlug(event) {
 }
 
 async function fetchListing(slug) {
-  if (!slug || !SB_KEY) return null;
-  const filter = UUID_RE.test(slug)
+  console.log('[DBG fetchListing] slug=', JSON.stringify(slug), 'SB_KEY_present=', !!SB_KEY, 'SUPABASE_URL=', SUPABASE_URL);
+  if (!slug || !SB_KEY) {
+    console.log('[DBG fetchListing] abort — no slug or no key');
+    return null;
+  }
+  const isUuid = UUID_RE.test(slug);
+  console.log('[DBG fetchListing] isUuid=', isUuid);
+  const filter = isUuid
     ? `id=eq.${encodeURIComponent(slug)}`
     : `slug=eq.${encodeURIComponent(slug)}`;
   const url = `${SUPABASE_URL}/rest/v1/listings?${filter}&status=eq.active&select=*&limit=1`;
+  console.log('[DBG fetchListing] fetch URL=', url);
   const res = await fetch(url, {
     headers: {
       apikey: SB_KEY,
@@ -45,8 +52,14 @@ async function fetchListing(slug) {
       Accept: 'application/json',
     },
   });
-  if (!res.ok) return null;
+  console.log('[DBG fetchListing] response status=', res.status, res.statusText);
+  if (!res.ok) {
+    const errText = await res.text();
+    console.log('[DBG fetchListing] error body=', errText);
+    return null;
+  }
   const rows = await res.json();
+  console.log('[DBG fetchListing] rows count=', Array.isArray(rows) ? rows.length : 'not-array', 'first id=', rows && rows[0] ? rows[0].id : 'none');
   return rows && rows[0] ? rows[0] : null;
 }
 
@@ -212,12 +225,15 @@ function notFoundHtml(slug) {
 const INVALID_SLUG_VALUES = new Set(['undefined', 'null', 'NaN', '0', 'false']);
 
 exports.handler = async function (event) {
+  console.log('[DBG handler] === NEW REQUEST ===');
+  console.log('[DBG handler] event.path=', event.path);
+  console.log('[DBG handler] event.rawUrl=', event.rawUrl);
   const slug = parseSlug(event);
+  console.log('[DBG handler] parsed slug=', JSON.stringify(slug));
 
-  /* Cas 1 : slug vide ou clairement invalide → 404 + noindex
-     - Empêche l'indexation de pages-poubelle par Google
-     - Évite un appel Supabase inutile sur des URLs malformées */
+  /* Cas 1 : slug vide ou clairement invalide → 404 + noindex */
   if (!slug || INVALID_SLUG_VALUES.has(slug.toLowerCase())) {
+    console.log('[DBG handler] empty or invalid slug → 404');
     return {
       statusCode: 404,
       headers: {
