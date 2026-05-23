@@ -6,7 +6,7 @@
 
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://hozlyddiqodvjguqywty.supabase.co';
 const SUPABASE_ANON = process.env.SB_ANON_KEY   || process.env.SUPABASE_ANON_KEY || '';
-const CARD_FIELDS   = 'id,title,images,video_url,rent_sale,furnished,premium,boost_expires_at,price,price_per_day,bedrooms,district,city,type,status,statut,created_at,owner_phone';
+const CARD_FIELDS   = 'id,slug,title,images,video_url,rent_sale,furnished,premium,boost_expires_at,price,price_per_day,bedrooms,district,city,type,status,statut,created_at,owner_phone';
 
 async function sbFetch(params) {
   const url = `${SUPABASE_URL}/rest/v1/listings?${params}`;
