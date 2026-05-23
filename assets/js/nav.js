@@ -83,8 +83,8 @@
     navbar.innerHTML = `
       <a class="brand" href="/" aria-label="SE LOGER CM">
         <picture>
-          <source srcset="./assets/img/logo.webp" type="image/webp">
-          <img src="./assets/img/logo.png" alt="SE LOGER CM logo" width="36" height="36">
+          <source srcset="/assets/img/logo.webp" type="image/webp">
+          <img src="/assets/img/logo.png" alt="SE LOGER CM logo" width="36" height="36">
         </picture>
         <span>SE LOGER CM</span>
       </a>
