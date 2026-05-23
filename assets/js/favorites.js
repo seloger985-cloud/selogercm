@@ -195,7 +195,7 @@ const SLCM_favorites = (() => {
       const title = ad.title_fr || ad.title || 'Annonce';
       const mode  = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
       const price = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
-      const url   = ad.slug ? `/annonce/${ad.slug}` : `/annonce?id=${ad.id}`;
+      const url   = `/annonce/${ad.slug || ad.id}`;
 
       return `
         <div class="fav-card">

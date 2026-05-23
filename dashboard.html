@@ -421,7 +421,7 @@ function renderGrid() {
           ${expiresAt && !isExpired ? `<div style="font-size:.7rem;color:${isExpiring?'#f59e0b':'#aaa'};margin-top:3px;font-weight:600">📅 Expire le ${expiresAt.toLocaleDateString('fr-FR')}</div>` : ''}
         </div>
         <div class="card-actions">
-          <button class="btn-view"   onclick="viewListing('${ad.id}')"><i class="fas fa-eye"></i> Voir</button>
+          <button class="btn-view"   onclick="viewListing('${ad.slug || ad.id}')"><i class="fas fa-eye"></i> Voir</button>
           <button class="btn-edit"   onclick="openEdit('${ad.id}')"><i class="fas fa-edit"></i> Modifier</button>
           <button class="btn-status" onclick="openStatus('${ad.id}')"><i class="fas fa-toggle-on"></i> Statut</button>
           ${renewBtn}
@@ -432,7 +432,7 @@ function renderGrid() {
   }).join('');
 }
 
-function viewListing(id) { window.location.href = '/annonce?id=' + id; }
+function viewListing(slugOrId) { window.location.href = '/annonce/' + slugOrId; }
 
 async function prolongListing(id) {
   const newExpiry = new Date();

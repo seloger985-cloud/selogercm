@@ -27,7 +27,7 @@ const SLCM_WA = (() => {
   const PREFILL = {
     contact:     (d) => `Bonjour SE LOGER CM, je m'appelle ${d.name || ''}. ${d.message || ''}`,
     rdv:         (d) => `Bonjour, je souhaite prendre RDV pour visiter "${d.listing_title || 'un bien'}" le ${d.date || ''} à ${d.time || ''}.`,
-    listing:     (d) => `Bonjour, je suis intéressé(e) par l'annonce "${d.title}" (${d.price}) à ${d.location}.\nhttps://selogercm.com/annonce?id=${d.id}\nPouvez-vous me donner plus d'informations ?`,
+    listing:     (d) => `Bonjour, je suis intéressé(e) par l'annonce "${d.title}" (${d.price}) à ${d.location}.\nhttps://selogercm.com/annonce/${d.slug || d.id}\nPouvez-vous me donner plus d'informations ?`,
     general:     ()  => `Bonjour SE LOGER CM, j'aimerais avoir des informations sur vos annonces.`,
   };
 

@@ -482,7 +482,7 @@ Ne réponds JAMAIS en dehors du format JSON.`;
       const price = ad.price ? ad.price.toLocaleString('fr-FR') + ' FCFA' : 'Prix sur demande';
       const a = document.createElement('a');
       a.className = 'chat-result-card';
-      a.href = `/annonce?id=${ad.id}`;
+      a.href = `/annonce/${ad.slug || ad.id}`;
       a.innerHTML = `
         <div class="cr-title">${title}</div>
         <div class="cr-meta">

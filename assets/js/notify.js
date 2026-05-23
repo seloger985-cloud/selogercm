@@ -217,7 +217,7 @@
         `Prix      : ${listing.price || '—'} FCFA`,
         `Réf       : ${listing.ref   || '—'}`,
         ``,
-        `🔗 Voir votre annonce : https://selogercm.com/annonce?id=${listing.id || ''}`,
+        `🔗 Voir votre annonce : https://selogercm.com/annonce/${listing.slug || listing.id || ''}`,
         ``,
         `Pour booster la visibilité de votre annonce, visitez : https://selogercm.com/tarifs`,
         ``,

@@ -46,9 +46,7 @@ async function sendRelance(toEmail, listing) {
   if (!EMAILJS_TPL) { console.warn('[cron-relance] EMAILJS_RELANCE_TPL non défini'); return false; }
 
   const location = [listing.district, listing.city].filter(Boolean).join(', ');
-  const url = listing.slug
-    ? `${SITE_URL}/annonce/${listing.slug}`
-    : `${SITE_URL}/annonce?id=${listing.id}`;
+  const url = `${SITE_URL}/annonce/${listing.slug || listing.id}`;
 
   const body = {
     service_id:  EMAILJS_SVC,

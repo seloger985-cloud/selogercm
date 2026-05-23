@@ -528,7 +528,7 @@
       ? `<button class="ca-btn ca-pub" data-action="publish"><i class="fas fa-rocket"></i> Publier</button>`
       : '';
     const viewBtn = c.listing_id
-      ? `<a class="ca-btn ca-view" href="/annonce?id=${esc(c.listing_id)}" target="_blank"><i class="fas fa-external-link-alt"></i> Annonce</a>`
+      ? `<a class="ca-btn ca-view" href="/annonce/${esc(c.listing_id)}" target="_blank"><i class="fas fa-external-link-alt"></i> Annonce</a>`
       : '';
 
     return `<div class="contact-card" data-s="${esc(c.status)}" data-cid="${esc(c.id)}">

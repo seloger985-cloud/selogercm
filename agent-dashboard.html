@@ -546,7 +546,7 @@
           <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
         </div>
         <div class="card-actions">
-          ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
+          ${isActive?`<a href="/annonce/${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
           <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
           ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
           <button class="btn-delete"><i class="fas fa-trash"></i></button>

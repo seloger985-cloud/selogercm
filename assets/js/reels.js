@@ -142,7 +142,7 @@ const SLCM_reels = (() => {
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
+      .select('id, slug, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
@@ -527,7 +527,7 @@ const SLCM_reels = (() => {
   function renderDesktopCard(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
+    const href  = `/annonce/${encodeURIComponent(r.slug || r.id)}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="reel-badge-premium">PREMIUM</div>' : '';
 
@@ -796,7 +796,7 @@ const SLCM_reels = (() => {
   function renderViewerSlide(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
+    const href  = `/annonce/${encodeURIComponent(r.slug || r.id)}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="viewer-premium">PREMIUM</div>' : '';
     const poster = escapeHtml((r.images && r.images[0]) || '');
