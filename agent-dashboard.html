@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Espace Agent Externe — SE LOGER CM</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
   <style>
     :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
     * { box-sizing: border-box; }
@@ -163,7 +163,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
-      <img src="./assets/img/logo.png" alt="SE LOGER CM">
+      <img src="/assets/img/logo.png" alt="SE LOGER CM">
       <p>Espace Agent Externe</p>
     </div>
     <div class="login-title">Connexion à votre espace</div>
@@ -186,7 +186,7 @@
 <div class="dashboard" id="dashboard">
   <div class="dash-header">
     <div class="dash-header-inner">
-      <a class="dash-brand" href="/"><img src="./assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
+      <a class="dash-brand" href="/"><img src="/assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
       <div class="dash-user">
         <span class="dash-user-name" id="dashUserName"></span>
         <button class="dash-signout" onclick="doSignOut()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
@@ -330,7 +330,7 @@
 <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--orange)"></i> <span id="toastMsg"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="assets/js/supabase.js"></script>
+<script src="/assets/js/supabase.js"></script>
 <script>
 
     /* ── Sécurité XSS ── */
@@ -546,7 +546,7 @@
           <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
         </div>
         <div class="card-actions">
-          ${isActive?`<a href="/annonce/${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
+          ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
           <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
           ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
           <button class="btn-delete"><i class="fas fa-trash"></i></button>
