@@ -182,8 +182,7 @@
       #terrainsGrid, #commercialSaleGrid { grid-template-columns: 1fr !important; }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
-  <script src="/assets/js/notify.js" defer></script>
+  <!-- emailjs + notify.js déplacés en idle-load en fin de body (perf) -->
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -789,12 +788,106 @@ form.addEventListener('submit', async (e) => {
   <script src="/assets/js/nav.js" defer></script>
   <script src="/assets/js/homepage-boost.js" defer></script>
   <!-- Homepage-banners.js désactivé — brief refonte mai 2026 -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js" defer></script>
-  <script src="/assets/js/reels.js?v=5" defer></script>
-  <script src="/assets/js/favorites.js" defer></script>
-  <script src="/assets/js/chatbot.js" defer></script>
-  <script src="/assets/js/testimonials.js" defer></script>
-  <script src="/assets/js/whatsapp.js" defer></script>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       Lazy-load des scripts non critiques (perf mobile)
+       - reels.js + hls.js → uniquement quand la section reels devient visible
+       - favorites.js → au premier clic sur ❤️ ou idle après 2s
+       - chatbot.js → idle après 2s (FAB reste visible via CSS dès le départ)
+       - testimonials.js → quand la section "Nous recommandent" devient visible
+       - whatsapp.js → idle après 2s
+       Gain : ~300 KiB de JS différé sur le chemin critique LCP
+  ────────────────────────────────────────────────────────────────── -->
+  <script>
+  (function () {
+    /* Helper : charger un script dynamiquement (mémoïsé pour éviter double-chargement) */
+    var _loaded = {};
+    function loadScript(src) {
+      if (_loaded[src]) return _loaded[src];
+      _loaded[src] = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = false;       /* préserver l'ordre d'exécution */
+        s.defer = false;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      return _loaded[src];
+    }
+
+    /* Helper : observer un élément, charger des scripts quand il devient visible */
+    function loadWhenVisible(selector, scripts, rootMargin) {
+      var el = document.querySelector(selector);
+      if (!el) return;
+      if (!('IntersectionObserver' in window)) {
+        /* Fallback navigateur trop vieux : charger immédiatement */
+        scripts.forEach(function (s) { loadScript(s); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            io.disconnect();
+            scripts.forEach(function (s) { loadScript(s); });
+          }
+        });
+      }, { rootMargin: rootMargin || '400px' });   /* précharge 400px avant entrée */
+      io.observe(el);
+    }
+
+    /* Helper : charger à l'idle (ou fallback timeout) */
+    function loadOnIdle(scripts, delay) {
+      var run = function () { scripts.forEach(function (s) { loadScript(s); }); };
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(run, { timeout: (delay || 2000) + 1000 });
+      } else {
+        setTimeout(run, delay || 2000);
+      }
+    }
+
+    /* ── 1) Reels : hls.js + reels.js quand section visible ────────── */
+    loadWhenVisible('#reelsSection',
+      [
+        'https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js',
+        '/assets/js/reels.js?v=5'
+      ],
+      '600px'  /* anticipe loin pour démarrer le chargement avant que l'user scrolle vraiment */
+    );
+
+    /* ── 2) Testimonials : quand sa section devient visible ────────── */
+    loadWhenVisible('#testimonialsSection, .testimonials-section, [data-testimonials]',
+      ['/assets/js/testimonials.js'],
+      '300px'
+    );
+
+    /* ── 3) Favorites : nécessaire pour le bouton ❤️ sur les cards ─── */
+    /* Chargé à l'idle car il alimente les boutons cœur en mode passif */
+    loadOnIdle(['/assets/js/favorites.js'], 1500);
+
+    /* ── 4) Chatbot : idle 2s ──────────────────────────────────────── */
+    loadOnIdle(['/assets/js/chatbot.js'], 2000);
+
+    /* ── 5) WhatsApp : idle 2s ─────────────────────────────────────── */
+    loadOnIdle(['/assets/js/whatsapp.js'], 2000);
+
+    /* ── 6) EmailJS + notify : idle 2.5s (tracking clics, formulaires) ─
+       Ordre : emailjs DOIT charger avant notify.js (notify.init utilise emailjs) */
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(function () {
+        loadScript('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js')
+          .then(function () { return loadScript('/assets/js/notify.js'); })
+          .catch(function () { /* tracking optionnel, on n'alerte pas l'user */ });
+      }, { timeout: 3500 });
+    } else {
+      setTimeout(function () {
+        loadScript('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js')
+          .then(function () { return loadScript('/assets/js/notify.js'); })
+          .catch(function () {});
+      }, 2500);
+    }
+  })();
+  </script>
 
 <!-- ── Google My Business : Données structurées LocalBusiness ── -->
   <script type="application/ld+json">
