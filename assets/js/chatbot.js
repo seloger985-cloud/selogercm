@@ -353,25 +353,34 @@ Ne réponds JAMAIS en dehors du format JSON.`;
     document.body.appendChild(fabMain);
 
     let fabOpen = false;
-    fabMain.addEventListener('click', () => {
+    fabMain.addEventListener('click', (e) => {
+      /* Stop propagation : empêche le listener "click outside" sur document
+         de refermer immédiatement le menu qu'on vient d'ouvrir.
+         Sans cela, le clic remonte jusqu'au document après que innerHTML
+         soit remplacée — l'ancien target (l'icône <i>) n'existe plus dans
+         le DOM, donc fabMain.contains(e.target) retourne false → menu fermé. */
+      e.stopPropagation();
       fabOpen = !fabOpen;
       fabMenu.classList.toggle('open', fabOpen);
       fabMain.innerHTML = fabOpen
         ? `<i class="fas fa-times"></i>`
         : `<i class="fas fa-comment-dots"></i>`;
     });
-    document.getElementById('fabWaBtn').addEventListener('click', () => {
+    document.getElementById('fabWaBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
       fabMenu.classList.remove('open'); fabOpen = false;
       fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
       if (window.SLCM_whatsapp) SLCM_whatsapp.openChat({ text: '' });
       else window.open('https://wa.me/237650840714', '_blank');
     });
-    document.getElementById('fabAiBtn').addEventListener('click', () => {
+    document.getElementById('fabAiBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
       fabMenu.classList.remove('open'); fabOpen = false;
       fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
       toggleChat();
     });
-    document.getElementById('fabTgBtn').addEventListener('click', () => {
+    document.getElementById('fabTgBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
       fabMenu.classList.remove('open'); fabOpen = false;
       fabMain.innerHTML = `<i class="fas fa-comment-dots"></i>`;
       window.open('https://t.me/seloger237', '_blank');
