@@ -235,7 +235,7 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
     const redirect = new URLSearchParams(window.location.search).get('redirect')
       || (SLCM.isAdmin(user)                              ? '/admin'
         : SLCM.isAgent(user)                              ? '/agent'
-        : user.user_metadata?.role === 'agent_externe'    ? '/agent-profile'
+        : user.user_metadata?.role === 'agent_externe'    ? '/agent-dashboard'
         :                                                   '/mon-espace');
     window.location.href = redirect;
   } catch(e) {

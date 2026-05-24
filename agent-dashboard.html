@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>Espace Agent Externe — SE LOGER CM</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css">
   <style>
     :root { --orange: #ff7a00; --dark: #111; --gray: #f6f7f9; }
     * { box-sizing: border-box; }
@@ -163,7 +163,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
-      <img src="/assets/img/logo.png" alt="SE LOGER CM">
+      <img src="./assets/img/logo.png" alt="SE LOGER CM">
       <p>Espace Agent Externe</p>
     </div>
     <div class="login-title">Connexion à votre espace</div>
@@ -186,7 +186,7 @@
 <div class="dashboard" id="dashboard">
   <div class="dash-header">
     <div class="dash-header-inner">
-      <a class="dash-brand" href="/"><img src="/assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
+      <a class="dash-brand" href="/"><img src="./assets/img/logo.png" alt="SE LOGER CM"><span>SE LOGER CM</span></a>
       <div class="dash-user">
         <span class="dash-user-name" id="dashUserName"></span>
         <button class="dash-signout" onclick="doSignOut()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
@@ -330,7 +330,7 @@
 <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--orange)"></i> <span id="toastMsg"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="/assets/js/supabase.js"></script>
+<script src="assets/js/supabase.js"></script>
 <script>
 
     /* ── Sécurité XSS ── */
@@ -368,6 +368,16 @@
   async function doSignOut(){if(_client)await _client.auth.signOut();_user=null;_profile=null;_listings=[];document.getElementById('dashboard').style.display='none';document.getElementById('loginScreen').style.display='flex';}
 
   async function initDashboard(){
+    /* ── Contrôle de rôle ─────────────────────────────────────────────
+       Cette page est réservée aux agents externes et aux admins.
+       Un utilisateur particulier (role: 'user') ne doit pas y accéder :
+       on le redirige vers son vrai dashboard /mon-espace. */
+    const role = _user.user_metadata?.role;
+    if (role !== 'agent_externe' && role !== 'admin') {
+      window.location.href = '/mon-espace';
+      return;
+    }
+
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('dashboard').style.display='block';
     const{data:profile}=await _client.from('profiles').select('*').eq('id',_user.id).single();
