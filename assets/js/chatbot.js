@@ -260,25 +260,134 @@ Ne réponds JAMAIS en dehors du format JSON.`;
         .select('id,title,price,district,city,type,rent_sale,furnished,bedrooms,images,slug,statut,rental_segment')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       return data || [];
     } catch(e) { return []; }
   }
 
-  /* ─── Filtrer les annonces selon les critères ─── */
+  /* ─── Carte de proximité des quartiers de Douala ─────────────────
+     Si l'user cherche dans un quartier d'un lot et qu'il n'y a rien,
+     on élargit aux autres quartiers du même lot. Si le quartier n'est
+     dans AUCUN lot, on tombe dans LOT3 (le reste). */
+  const DISTRICT_GROUPS = [
+    /* LOT 1 — Centre-ville chic */
+    ['bali', 'bonanjo', 'akwa', 'bonapriso', 'bonadiwoto'],
+    /* LOT 2 — Ouest résidentiel */
+    ['makepe', 'kotto', 'bonamoussadi', 'logpom', 'logbessou'],
+    /* LOT 3 — Tout le reste sera traité comme un seul groupe en fallback */
+  ];
+
+  function norm(s) { return (s || '').toString().trim().toLowerCase(); }
+
+  /* Retourne la liste des quartiers proches d'un quartier donné (incluant lui-même).
+     - Si le quartier est dans un lot connu : retourne le lot complet
+     - Sinon : retourne null (= "tout le reste") */
+  function getNearbyDistricts(district) {
+    const n = norm(district);
+    for (const group of DISTRICT_GROUPS) {
+      if (group.includes(n)) return group;
+    }
+    return null; /* LOT 3 = pas de filtre quartier (élargissement total) */
+  }
+
+  /* ─── Filtrage des annonces selon les critères ─────────────────── */
+  /* Options pour assouplir le filtre :
+     - priceTolerance : 0 (exact) | 0.2 (±20%) | 1 (ignoré)
+     - ignoreDistrict : false (strict) | true (ignoré complètement)
+     - districtList : liste de quartiers acceptés (au lieu de filters.district)
+  */
+  function matchListing(ad, filters, opts = {}) {
+    const { priceTolerance = 0, ignoreDistrict = false, districtList = null } = opts;
+
+    /* Mode location/vente — BUG fix: la colonne Supabase est rent_sale, pas rentSale */
+    if (filters.mode && ad.rent_sale !== filters.mode) return false;
+
+    /* Type de bien */
+    if (filters.type && ad.type !== filters.type) return false;
+
+    /* Ville (souple : insensible casse + trim) */
+    if (filters.city && norm(ad.city) !== norm(filters.city)) return false;
+
+    /* Quartier */
+    if (!ignoreDistrict) {
+      if (districtList && districtList.length) {
+        /* Mode "élargi à un lot de quartiers proches" */
+        if (!districtList.includes(norm(ad.district))) return false;
+      } else if (filters.district) {
+        /* Mode strict : quartier exact (insensible casse) */
+        if (norm(ad.district) !== norm(filters.district)) return false;
+      }
+    }
+
+    /* Chambres — BUG fix: cast en nombre pour éviter "2" !== 2 */
+    if (filters.bedrooms !== null && filters.bedrooms !== undefined && filters.bedrooms !== '') {
+      const wanted = Number(filters.bedrooms);
+      const got = Number(ad.bedrooms);
+      if (!isNaN(wanted) && got !== wanted) return false;
+    }
+
+    /* Prix : avec tolérance optionnelle */
+    if (filters.maxPrice) {
+      const limit = filters.maxPrice * (1 + priceTolerance);
+      if (ad.price > limit) return false;
+    }
+    if (filters.minPrice) {
+      const limit = filters.minPrice * (1 - priceTolerance);
+      if (ad.price < limit) return false;
+    }
+
+    /* Meublé */
+    if (filters.furnished !== null && filters.furnished !== undefined && ad.furnished !== filters.furnished) return false;
+
+    return true;
+  }
+
+  /* ─── Cascade de fallback : exact → ±20% prix → quartier élargi ─── */
   async function filterListings(filters) {
     const listings = await getListings();
-    return listings.filter(ad => {
-      if (filters.mode && ad.rentSale !== filters.mode) return false;
-      if (filters.type && ad.type !== filters.type) return false;
-      if (filters.city && ad.city !== filters.city) return false;
-      if (filters.district && ad.district !== filters.district) return false;
-      if (filters.bedrooms && ad.bedrooms !== filters.bedrooms) return false;
-      if (filters.maxPrice && ad.price > filters.maxPrice) return false;
-      if (filters.minPrice && ad.price < filters.minPrice) return false;
-      if (filters.furnished !== null && filters.furnished !== undefined && ad.furnished !== filters.furnished) return false;
-      return true;
-    }).slice(0, 3); // max 3 résultats dans le chat
+
+    /* Étape 1 : recherche exacte */
+    let matches = listings.filter(ad => matchListing(ad, filters));
+    if (matches.length > 0) {
+      return { results: matches.slice(0, 3), level: 'exact' };
+    }
+
+    /* Étape 2 : élargir le prix ±20% (si l'user a mis un prix) */
+    if (filters.maxPrice || filters.minPrice) {
+      matches = listings.filter(ad => matchListing(ad, filters, { priceTolerance: 0.2 }));
+      if (matches.length > 0) {
+        return { results: matches.slice(0, 3), level: 'price' };
+      }
+    }
+
+    /* Étape 3 : élargir le quartier (proches selon DISTRICT_GROUPS) */
+    if (filters.district) {
+      const nearby = getNearbyDistricts(filters.district);
+      if (nearby) {
+        /* Quartier connu d'un lot : on cherche dans tout le lot
+           + on garde la tolérance prix ±20% au cas où */
+        matches = listings.filter(ad => matchListing(ad, filters, {
+          priceTolerance: 0.2,
+          districtList: nearby,
+        }));
+        if (matches.length > 0) {
+          return { results: matches.slice(0, 3), level: 'district', nearbyDistricts: nearby };
+        }
+      } else {
+        /* LOT 3 : quartier non répertorié → on ignore le quartier
+           + tolérance prix ±20% */
+        matches = listings.filter(ad => matchListing(ad, filters, {
+          priceTolerance: 0.2,
+          ignoreDistrict: true,
+        }));
+        if (matches.length > 0) {
+          return { results: matches.slice(0, 3), level: 'city' };
+        }
+      }
+    }
+
+    /* Rien trouvé même en élargissant */
+    return { results: [], level: 'none' };
   }
 
   /* ─── Construire le DOM ─── */
@@ -464,31 +573,50 @@ Ne réponds JAMAIS en dehors du format JSON.`;
   }
 
   /* ─── Afficher les résultats ─── */
-  function addResults(results, filters) {
+  function addResults(search, filters) {
     const body = document.getElementById('chatBody');
 
+    /* Nouvelle structure : { results, level, nearbyDistricts? } */
+    const results = search.results || [];
+    const level = search.level || 'none';
+
     if (results.length === 0) {
-      addMessage('bot', `😔 Aucune annonce ne correspond exactement à vos critères pour le moment. Essayez d'élargir votre recherche ou <a href="/rendez-vous" style="color:var(--orange);font-weight:700;">prenez rendez-vous</a> avec notre équipe !`);
+      addMessage('bot', `😔 Aucune annonce ne correspond pour le moment, même en élargissant la recherche. <a href="/rendez-vous" style="color:var(--orange);font-weight:700;">Prenez rendez-vous</a> avec notre équipe — on vous trouvera ce qu'il vous faut !`);
       return;
     }
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'msg bot';
-    wrapper.style.maxWidth = '100%';
-    wrapper.style.padding = '0';
-    wrapper.style.background = 'transparent';
+    /* Message d'intro contextuel selon le niveau de la cascade */
+    let introText;
+    switch (level) {
+      case 'exact':
+        introText = `🎯 J'ai trouvé ${results.length} annonce${results.length > 1 ? 's' : ''} pour vous :`;
+        break;
+      case 'price':
+        introText = `🔍 Aucune annonce à ce budget exact, mais voici ${results.length} bien${results.length > 1 ? 's' : ''} à un budget proche (±20%) :`;
+        break;
+      case 'district':
+        introText = `🔍 Aucune annonce dans ce quartier exact, mais voici ${results.length} bien${results.length > 1 ? 's' : ''} dans des quartiers proches :`;
+        break;
+      case 'city':
+        introText = `🔍 Aucune annonce dans ce quartier précis, mais voici ${results.length} bien${results.length > 1 ? 's' : ''} ailleurs dans la ville :`;
+        break;
+      default:
+        introText = `🎯 ${results.length} annonce${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''} :`;
+    }
 
     const intro = document.createElement('div');
     intro.className = 'msg bot';
-    intro.textContent = `🎯 J'ai trouvé ${results.length} annonce${results.length > 1 ? 's' : ''} pour vous :`;
+    intro.textContent = introText;
     body.appendChild(intro);
 
     const cards = document.createElement('div');
     cards.className = 'chat-results';
 
     results.forEach(ad => {
-      const title = ad.title_fr || ad.title_en || 'Annonce';
+      const title = ad.title_fr || ad.title || ad.title_en || 'Annonce';
       const price = ad.price ? ad.price.toLocaleString('fr-FR') + ' FCFA' : 'Prix sur demande';
+      /* BUG fix : la colonne Supabase est rent_sale, pas rentSale */
+      const isRent = ad.rent_sale === 'rent';
       const a = document.createElement('a');
       a.className = 'chat-result-card';
       a.href = `/annonce/${ad.slug || ad.id}`;
@@ -499,7 +627,7 @@ Ne réponds JAMAIS en dehors du format JSON.`;
           <span>🛏 ${ad.bedrooms || '?'} ch.</span>
           ${ad.furnished ? '<span>✅ Meublé</span>' : ''}
         </div>
-        <div class="cr-price">${price}${ad.rentSale === 'rent' ? '/mois' : ''}</div>
+        <div class="cr-price">${price}${isRent ? '/mois' : ''}</div>
       `;
       cards.appendChild(a);
     });
@@ -510,7 +638,7 @@ Ne réponds JAMAIS en dehors du format JSON.`;
     const queryStr = buildQueryString(filters);
     const seeAll = document.createElement('div');
     seeAll.className = 'msg bot';
-    seeAll.innerHTML = `<a href="listings_v2.html${queryStr}" style="color:var(--orange);font-weight:700;">→ Voir toutes les annonces correspondantes</a>`;
+    seeAll.innerHTML = `<a href="/annonces${queryStr}" style="color:var(--orange);font-weight:700;">→ Voir toutes les annonces correspondantes</a>`;
     body.appendChild(seeAll);
 
     body.scrollTop = body.scrollHeight;
@@ -611,8 +739,8 @@ Ne réponds JAMAIS en dehors du format JSON.`;
 
       // Si suffisamment d'infos, chercher les annonces
       if (!result.needsMoreInfo && Object.keys(currentFilters).length > 0) {
-        const matches = await filterListings(currentFilters);
-        addResults(matches, currentFilters);
+        const search = await filterListings(currentFilters);
+        addResults(search, currentFilters);
       }
 
     } catch (err) {
