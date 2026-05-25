@@ -131,24 +131,26 @@ const SLCM_reels = (() => {
   }
 
   async function loadReels() {
-    /* Section 1 : toutes les vidéos CF Stream, rotation 3h — pas de filtre catégorie */
-    const cfVideos = await loadFromCF('all');
+    /* Section 1 : pool complet CF Stream tag 'homepage-section-1', rotation 1h.
+       Limit 100 = on charge TOUT le pool, puis rotation côté JS.
+       Sinon, sans limit, fallback à MOBILE_LIMIT (6) → toujours les mêmes 6 vidéos. */
+    const cfVideos = await loadFromCF('homepage-section-1', 100);
     if (cfVideos && cfVideos.length) {
       const rotated = rotatePool(cfVideos);
       if (isMobile) return applyMobileQuota(rotated);
       return rotated.slice(0, DESKTOP_LIMIT);
     }
 
-    /* Fallback Supabase si CF indisponible */
+    /* Fallback Supabase si CF indisponible — limit 100 pour cohérence */
     const client = await sb();
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, slug')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(100);
     if (error) { console.error('[reels] loadReels:', error); return []; }
     const pool = (data || []).filter(r => r.video_url?.trim());
     const rotated = rotatePool(pool);
@@ -1106,10 +1108,15 @@ const SLCM_reels = (() => {
         anchor2.classList.add('is-empty');
       } else {
         const cfg2 = SECTION_CONFIGS.reelsSection2;
-        /* Section 2 : CF Stream homepage-section-2 uniquement — pas de fallback */
-        const reels2 = await loadFromCF(cfg2.cfTag);
+        /* Section 2 : CF Stream homepage-section-2 uniquement — pas de fallback.
+           Limit 50 pour charger le pool complet, puis rotation + slice côté JS
+           pour exposer toutes les vidéos équitablement (et non plus toujours
+           les 6 premières que CF renvoie). */
+        const reels2Pool = await loadFromCF(cfg2.cfTag, 50);
 
-        if (reels2?.length) {
+        if (reels2Pool?.length) {
+          const rotated2 = rotatePool(reels2Pool);
+          const reels2 = rotated2.slice(0, MOBILE_LIMIT);
           const savedReels = reels;
           reels = reels2;
           anchor2.classList.remove('is-empty');
