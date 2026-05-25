@@ -131,17 +131,29 @@ const SLCM_reels = (() => {
   }
 
   async function loadReels() {
-    /* Section 1 : pool complet CF Stream tag 'homepage-section-1', rotation 1h.
-       Limit 100 = on charge TOUT le pool, puis rotation côté JS.
-       Sinon, sans limit, fallback à MOBILE_LIMIT (6) → toujours les mêmes 6 vidéos. */
-    const cfVideos = await loadFromCF('homepage-section-1', 100);
-    if (cfVideos && cfVideos.length) {
-      const rotated = rotatePool(cfVideos);
-      if (isMobile) return applyMobileQuota(rotated);
-      return rotated.slice(0, DESKTOP_LIMIT);
-    }
+    /* Pool unique Supabase (source de vérité unique).
+       Plus de tag CF nécessaire : la catégorisation section-1/section-2 se fait
+       en JS via getSection() en utilisant furnished + type de la base.
 
-    /* Fallback Supabase si CF indisponible — limit 100 pour cohérence */
+       Pourquoi ce changement :
+       - Les vidéos uploadées en direct sur le dashboard CF n'ont pas de tag
+         meta.section (le système Tags du dashboard n'est pas exposé dans meta).
+       - En lisant directement Supabase, toute annonce active avec video_url
+         devient automatiquement visible, peu importe d'où vient la vidéo.
+       - La règle métier reste : section-2 = meublé OU studio/commercial/office. */
+    const all = await loadAllReelsFromSupabase();
+    if (!all.length) return [];
+
+    /* Filtrer pour la section 1 : non meublé ET pas studio/commercial/office */
+    const section1 = all.filter(r => getSection(r) === 'section-1');
+    const rotated = rotatePool(section1);
+    if (isMobile) return applyMobileQuota(rotated);
+    return rotated.slice(0, DESKTOP_LIMIT);
+  }
+
+  /* Lecture unique du pool Supabase — source de vérité unique pour les 2 sections.
+     Renvoie toutes les annonces actives ayant une video_url, sans filtre catégorie. */
+  async function loadAllReelsFromSupabase() {
     const client = await sb();
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
@@ -151,11 +163,17 @@ const SLCM_reels = (() => {
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
       .limit(100);
-    if (error) { console.error('[reels] loadReels:', error); return []; }
-    const pool = (data || []).filter(r => r.video_url?.trim());
-    const rotated = rotatePool(pool);
-    if (isMobile) return applyMobileQuota(rotated);
-    return rotated.slice(0, DESKTOP_LIMIT);
+    if (error) { console.error('[reels] loadAllReelsFromSupabase:', error); return []; }
+    return (data || []).filter(r => r.video_url?.trim());
+  }
+
+  /* Catégorisation dynamique d'un reel.
+     - section-2 si meublé (furnished=true) OU type IN (studio, commercial, office)
+     - section-1 sinon (location non meublée, apartment/villa/house/duplex) */
+  function getSection(r) {
+    if (r.furnished === true) return 'section-2';
+    if (r.type === 'studio' || r.type === 'commercial' || r.type === 'office') return 'section-2';
+    return 'section-1';
   }
 
   /* Rotation déterministe basée sur l'heure (tranches de 1h).
@@ -1108,14 +1126,14 @@ const SLCM_reels = (() => {
         anchor2.classList.add('is-empty');
       } else {
         const cfg2 = SECTION_CONFIGS.reelsSection2;
-        /* Section 2 : CF Stream homepage-section-2 uniquement — pas de fallback.
-           Limit 50 pour charger le pool complet, puis rotation + slice côté JS
-           pour exposer toutes les vidéos équitablement (et non plus toujours
-           les 6 premières que CF renvoie). */
-        const reels2Pool = await loadFromCF(cfg2.cfTag, 50);
+        /* Section 2 mobile : meublés + studios + commerciaux + offices.
+           Source : Supabase (même pool que la section 1), filtré via getSection().
+           Plus besoin de CF tag meta.section. */
+        const all = await loadAllReelsFromSupabase();
+        const section2Pool = all.filter(r => getSection(r) === 'section-2');
 
-        if (reels2Pool?.length) {
-          const rotated2 = rotatePool(reels2Pool);
+        if (section2Pool.length) {
+          const rotated2 = rotatePool(section2Pool);
           const reels2 = rotated2.slice(0, MOBILE_LIMIT);
           const savedReels = reels;
           reels = reels2;
