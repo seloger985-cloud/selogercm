@@ -529,7 +529,7 @@ const SLCM_reels = (() => {
   function renderDesktopCard(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
+    const href  = `/annonce/${r.slug || r.id}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="reel-badge-premium">PREMIUM</div>' : '';
 
@@ -798,7 +798,7 @@ const SLCM_reels = (() => {
   function renderViewerSlide(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
+    const href  = `/annonce/${r.slug || r.id}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="viewer-premium">PREMIUM</div>' : '';
     const poster = escapeHtml((r.images && r.images[0]) || '');
