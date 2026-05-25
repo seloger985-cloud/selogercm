@@ -21,11 +21,13 @@ const SLCM_reels = (() => {
   const DESKTOP_LIMIT = 12; /* Carrousel Netflix fusionné sur desktop */
   const MOBILE_LIMIT  = 6;  /* 6 vidéos par section sur mobile */
 
+  /* Quota mobile pour la section 1 (homepage)
+     La section 2 mobile est dédiée aux meublés + commerciaux + studios,
+     donc inutile de doublonner ici. Section 1 = location non meublée + vente. */
   const MOBILE_QUOTA = {
-    rentUnfurnished: 3,
-    rentFurnishedOrCommercial: 2,
+    rentUnfurnished: 5,
     sale: 1
-    /* 6e slot : wildcard → total = MOBILE_LIMIT = 6 */
+    /* Total = MOBILE_LIMIT = 6 */
   };
 
   let reels = [];
@@ -142,7 +144,7 @@ const SLCM_reels = (() => {
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, slug, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
@@ -154,13 +156,13 @@ const SLCM_reels = (() => {
     return rotated.slice(0, DESKTOP_LIMIT);
   }
 
-  /* Rotation déterministe basée sur l'heure (tranches de 3h).
-     Pool trié du plus récent au plus ancien. Décalage circulaire toutes les 3h
+  /* Rotation déterministe basée sur l'heure (tranches de 1h).
+     Pool trié du plus récent au plus ancien. Décalage circulaire chaque heure
      pour exposer tous les reels équitablement. */
   function rotatePool(arr) {
     if (arr.length <= 1) return arr;
-    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
-    const seed = Math.floor(Date.now() / THREE_HOURS_MS);
+    const ONE_HOUR_MS = 60 * 60 * 1000;
+    const seed = Math.floor(Date.now() / ONE_HOUR_MS);
     const offset = seed % arr.length;
     return [...arr.slice(offset), ...arr.slice(0, offset)];
   }
@@ -527,7 +529,7 @@ const SLCM_reels = (() => {
   function renderDesktopCard(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce/${encodeURIComponent(r.slug || r.id)}`;
+    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="reel-badge-premium">PREMIUM</div>' : '';
 
@@ -796,7 +798,7 @@ const SLCM_reels = (() => {
   function renderViewerSlide(r, index) {
     const title = escapeHtml(r.title || 'Visite');
     const loc   = escapeHtml([r.district, r.city].filter(Boolean).join(' · '));
-    const href  = `/annonce/${encodeURIComponent(r.slug || r.id)}`;
+    const href  = `/annonce?id=${encodeURIComponent(r.id)}`;
     const rentMode = r.rent_sale === 'sale' ? '' : '<span style="font-size:.75rem;font-weight:400;opacity:.8">/mois</span>';
     const premiumBadge = r.premium ? '<div class="viewer-premium">PREMIUM</div>' : '';
     const poster = escapeHtml((r.images && r.images[0]) || '');
