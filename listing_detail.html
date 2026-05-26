@@ -1103,7 +1103,7 @@
         if (ad.owner_id && window.SLCM_DB?.client) {
           try {
             const { data: ownerProfile } = await window.SLCM_DB.client
-              .from('profiles')
+              .from('public_agents')
               .select('agent_phone, phone')
               .eq('id', ad.owner_id)
               .single();
@@ -1181,7 +1181,7 @@
           const agentClient = window.SLCM_DB?.client;
           if (agentClient) {
             agentClient
-              .from('profiles')
+              .from('public_agents')
               .select('id, name, agent_bio, agent_phone, phone, agent_photo, kyc_status, is_pro, verified_at')
               .eq('id', ad.owner_id)
               .single()
@@ -1414,8 +1414,10 @@
       const client = window.SLCM_DB?.client;
       if (!client) { closeAgentModal(); return; }
 
+      /* Sécurité : on lit via la vue public_agents qui n'expose que les
+         colonnes safe (pas de kyc_doc_url, admin_note, etc.) */
       const { data: profile } = await client
-        .from('profiles')
+        .from('public_agents')
         .select('*')
         .eq('id', ownerId)
         .single();
