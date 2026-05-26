@@ -188,9 +188,11 @@ async function init() {
 
   if (!agentId) { showError('Identifiant agent manquant.'); return; }
 
-  /* Charger le profil */
+  /* Charger le profil agent — via la vue public_agents (sécurisée).
+     Cette vue n'expose QUE les colonnes safe (pas de kyc_doc_url,
+     admin_note, etc.) et filtre automatiquement les agents suspendus. */
   const { data: profile, error } = await client
-    .from('profiles')
+    .from('public_agents')
     .select('*')
     .eq('id', agentId)
     
