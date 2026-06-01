@@ -11,7 +11,8 @@ const SLCM_CONFIG = {
       'Akwa', 'Akwa-Nord', 'Bali', 'Béedi', 'Bepanda', 'Bessengue', 'Bonabéri', 'Bonadiwoto (Grand Mall)', 'Bonamoussadi',
       'Bonanjo', 'Bonapriso', 'Cité des Palmiers', 'Deïdo', 'Kotto',
       'Logbessou', 'Logpom', 'Makepe', 'Ndogbong', 'Ndogpassi', 'Ndokoti',
-      'PK8', 'PK9', 'PK10', 'PK11', 'PK12', 'PK13', 'PK14', 'Yassa'
+      'PK8', 'PK9', 'PK10', 'PK11', 'PK12', 'PK13', 'PK14', 'Yassa',
+      'Zone portuaire-Bonabéri', 'Zone portuaire-Bonanjo', 'Zone portuaire-Sandaga'
     ],
     'Yaoundé': [
       'Bastos', 'Centre Ville', 'Elig-Edzoa', 'Etoudi', 'Melen',
@@ -136,6 +137,10 @@ const SLCM_CONFIG = {
     'Bonabéri':               ['Bonadiwoto (Grand Mall)', 'Akwa'],
     'Bonadiwoto (Grand Mall)':['Bonabéri', 'Deïdo', 'Akwa'],
     'Béedi':                  ['Bonanjo', 'Akwa', 'Bessengue'],
+    /* ── Zones portuaires (entrepôts / logistique) ── */
+    'Zone portuaire-Bonabéri': ['Bonabéri', 'Yassa', 'Ndokoti'],
+    'Zone portuaire-Bonanjo':  ['Yassa', 'Ndokoti', 'Bonabéri'],
+    'Zone portuaire-Sandaga':  ['Yassa', 'Ndokoti', 'Bonabéri'],
   },
 
   /**
