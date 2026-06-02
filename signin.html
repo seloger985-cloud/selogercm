@@ -294,16 +294,29 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       email, password: pass,
       options: { data: { name, role } }
     });
-    if (error) { err.textContent = error.message; return; }
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('security purposes') || msg.includes('after') || error.status === 429) {
+        const seconds = msg.match(/after (\d+) second/)?.[1];
+        err.textContent = seconds
+          ? `Trop de tentatives. Veuillez patienter ${seconds} secondes avant de réessayer.`
+          : 'Trop de tentatives. Veuillez patienter quelques secondes.';
+      } else {
+        err.textContent = msg;
+      }
+      return;
+    }
     if (!data.user || data.user.identities?.length === 0) {
       err.textContent = 'Cette adresse email est déjà utilisée.'; return;
     }
 
-    /* 2. Créer le profil en base */
-    await client.from('profiles').upsert({
-      id: data.user.id, name, phone, role,
-      kyc_status: role === 'agent_externe' ? 'pending' : 'none'
-    });
+    /* 2. Créer le profil en base (géré par trigger DB — fallback client si session dispo) */
+    if (data.session) {
+      await client.from('profiles').upsert({
+        id: data.user.id, name, phone, role,
+        kyc_status: role === 'agent_externe' ? 'pending' : 'none'
+      }).catch(e => console.warn('[profiles upsert]', e.message));
+    }
 
     _pendingPhone = phone;
     _pendingEmail = email;
