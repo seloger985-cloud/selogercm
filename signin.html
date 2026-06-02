@@ -63,6 +63,24 @@
     .otp-resend { background: none; border: none; color: var(--orange); font-family: inherit;
       font-size: .82rem; font-weight: 700; cursor: pointer; margin-top: .75rem; display: inline-block; }
     .otp-resend:disabled { color: #aaa; cursor: not-allowed; }
+
+    /* Champ téléphone : ajustements responsive pour éviter la troncature de la saisie. */
+    .phone-input-row { box-sizing: border-box; }
+    .phone-input-row input[type="tel"] {
+      padding: .75rem 1rem; border: 1.5px solid #e5e5e5; border-radius: 10px;
+      font-family: inherit; background: #fafafa; transition: border-color .2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .phone-input-row input[type="tel"]:focus { outline: none; border-color: var(--orange); background: #fff; }
+
+    /* Sur viewports étroits, le select indicatif rétrécit pour laisser plus de place
+       à l'input numéro. La police reste 16px pour éviter le zoom auto iOS. */
+    @media (max-width: 420px) {
+      .phone-code-select { width: 92px !important; font-size: .8rem !important; padding-left: .3rem !important; padding-right: .3rem !important; }
+    }
+    @media (max-width: 360px) {
+      .phone-code-select { width: 84px !important; font-size: .75rem !important; }
+    }
   </style>
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
   <!-- Pre-definir --nav-h pour eviter le saut de body quand nav.js charge -->
@@ -90,7 +108,7 @@
       <div class="field"><label>Adresse email</label><input id="signinEmail" type="email" placeholder="votre@email.com" required></div>
       <div class="field"><label>Mot de passe</label>
         <div style="position:relative">
-          <input id="signinPass" type="password" placeholder="••••••••" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <input id="signinPass" type="password" placeholder="••••••••" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:16px;transition:border-color .2s;background:#fafafa;">
           <button type="button" onclick="togglePwd('signinPass',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
         </div>
       </div>
@@ -131,8 +149,8 @@
       <div class="field"><label>Nom complet <span style="color:var(--orange)">*</span></label><input id="regName" type="text" placeholder="Frantz Fanon" required></div>
             <div class="field">
         <label>Téléphone <span style="color:var(--orange)">*</span></label>
-        <div style="display:flex;gap:6px">
-          <select id="regPhoneCode" style="width:110px;padding:.75rem .5rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.88rem;background:#fafafa;flex-shrink:0">
+        <div class="phone-input-row" style="display:flex;gap:6px;width:100%">
+          <select id="regPhoneCode" class="phone-code-select" style="width:110px;padding:.75rem .4rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.88rem;background:#fafafa;flex-shrink:0;min-width:0">
             <option value="+237">🇨🇲 +237</option>
             <option value="+33">🇫🇷 +33</option>
             <option value="+1">🇺🇸 +1</option>
@@ -144,19 +162,19 @@
             <option value="+225">🇨🇮 +225</option>
             <option value="+221">🇸🇳 +221</option>
           </select>
-          <input id="regPhone" type="tel" placeholder="6XX XXX XXX" required style="flex:1">
+          <input id="regPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="6XX XXX XXX" required style="flex:1 1 0;min-width:0;font-size:16px">
         </div>
       </div>
       <div class="field"><label>Adresse email <span style="color:var(--orange)">*</span></label><input id="regEmail" type="email" placeholder="votre@email.com" required></div>
       <div class="field"><label>Mot de passe <span style="color:var(--orange)">*</span></label>
         <div style="position:relative">
-          <input id="regPass" type="password" placeholder="8 caractères minimum" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <input id="regPass" type="password" placeholder="8 caractères minimum" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:16px;transition:border-color .2s;background:#fafafa;">
           <button type="button" onclick="togglePwd('regPass',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
         </div>
       </div>
       <div class="field"><label>Confirmer le mot de passe <span style="color:var(--orange)">*</span></label>
         <div style="position:relative">
-          <input id="regPassConfirm" type="password" placeholder="Répétez votre mot de passe" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:.95rem;transition:border-color .2s;background:#fafafa;">
+          <input id="regPassConfirm" type="password" placeholder="Répétez votre mot de passe" required style="width:100%;padding:.75rem 2.8rem .75rem 1rem;border:1.5px solid #e5e5e5;border-radius:10px;font-family:inherit;font-size:16px;transition:border-color .2s;background:#fafafa;">
           <button type="button" onclick="togglePwd('regPassConfirm',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:.95rem;padding:0"><i class="fas fa-eye"></i></button>
         </div>
       </div>
@@ -165,7 +183,7 @@
       <div class="success-msg" id="registerSuccess"></div>
     </div>
 
-    <!-- Vérification compte (email Supabase ; WhatsApp OTP quand Meta Business validé) -->
+    <!-- Vérification compte par email Supabase -->
     <div class="panel" id="panelOTP">
       <div class="otp-wrap">
         <div class="otp-icon" id="otpIcon">📧</div>
@@ -246,12 +264,10 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
 });
 
 /* ── Inscription ── */
-const WA_OTP_ENABLED  = false; /* WhatsApp Meta — en attente validation Business */
-const SMS_OTP_ENABLED = true;  /* SMS Africa's Talking — actif */
+/* Auth : email Supabase uniquement.
+   SMS (Africa's Talking) et WhatsApp seront ré-activés plus tard via une nouvelle implémentation. */
 
-let _pendingPhone = '';
 let _pendingEmail = '';
-let _otpMethod   = 'email'; /* 'sms' | 'email' */
 
 function showOtpPanel() {
   panelReg.classList.remove('active');
@@ -317,7 +333,6 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       }).catch(e => console.warn('[profiles upsert]', e.message));
     }
 
-    _pendingPhone = phone;
     _pendingEmail = email;
 
     /* Session immédiate si la confirmation email est désactivée dans Supabase */
@@ -327,41 +342,13 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       return;
     }
 
-    /* Tenter SMS en priorité, fallback email si échec */
-    _otpMethod = 'email';
-    if (SMS_OTP_ENABLED) {
-      try {
-        const smsRes = await fetch('/.netlify/functions/sms-otp', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ action: 'send', phone }),
-        });
-        const smsData = await smsRes.json();
-        if (smsRes.ok && smsData.ok) _otpMethod = 'sms';
-      } catch(smsErr) {
-        console.warn('[sms-otp] fallback email:', smsErr.message);
-      }
-    }
-
-    if (_otpMethod === 'sms') {
-      document.getElementById('otpIcon').textContent = '📱';
-      document.getElementById('otpTitle').textContent = 'Vérifiez votre téléphone';
-      document.getElementById('otpSub').innerHTML =
-        `Un code SMS a été envoyé au <strong>${phone}</strong>.<br>Entrez-le ci-dessous.`;
-      document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par SMS';
-    } else {
-      try {
-        const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
-        if (resendErr) console.warn('resend signup:', resendErr.message);
-      } catch(resendEx) {
-        console.warn('resend signup threw:', resendEx.message);
-      }
-      document.getElementById('otpIcon').textContent = '📧';
-      document.getElementById('otpTitle').textContent = 'Confirmez votre email';
-      document.getElementById('otpSub').innerHTML =
-        `Un email a été envoyé à <strong>${email}</strong>.<br>Ouvrez le lien de confirmation ou saisissez le code à 6 chiffres.`;
-      document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
-    }
+    /* Confirmation par email : Supabase a déjà envoyé l'email à signUp.
+       Affiche le panel OTP pour la saisie du code à 6 chiffres présent dans le mail. */
+    document.getElementById('otpIcon').textContent = '📧';
+    document.getElementById('otpTitle').textContent = 'Confirmez votre email';
+    document.getElementById('otpSub').innerHTML =
+      `Un email a été envoyé à <strong>${email}</strong>.<br>Ouvrez le lien de confirmation ou saisissez le code à 6 chiffres.`;
+    document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
     showOtpPanel();
 
   } catch(e) {
@@ -377,27 +364,16 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   const err  = document.getElementById('otpError');
   const ok   = document.getElementById('otpSuccess');
   err.textContent = ''; ok.textContent = '';
-  const hint = _otpMethod === 'email' ? 'par email' : 'sur WhatsApp';
-  if (!code || code.length < 6) { err.textContent = `Entrez le code à 6 chiffres reçu ${hint}.`; return; }
+  if (!code || code.length < 6) { err.textContent = 'Entrez le code à 6 chiffres reçu par email.'; return; }
 
   const btn = document.getElementById('otpVerifyBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
   try {
-    if (_otpMethod === 'email') {
-      const client = window.SLCM_DB?.client;
-      const { error: verifyErr } = await client.auth.verifyOtp({
-        email: _pendingEmail, token: code, type: 'signup'
-      });
-      if (verifyErr) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
-    } else if (_otpMethod === 'sms') {
-      const res  = await fetch('/.netlify/functions/sms-otp', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action: 'verify', phone: _pendingPhone, code }),
-      });
-      const data = await res.json();
-      if (!data.ok) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
-    }
+    const client = window.SLCM_DB?.client;
+    const { error: verifyErr } = await client.auth.verifyOtp({
+      email: _pendingEmail, token: code, type: 'signup'
+    });
+    if (verifyErr) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
     ok.textContent = '✅ Compte vérifié ! Bienvenue sur SE LOGER CM.';
     setTimeout(() => { window.location.href = '/mon-espace'; }, 1500);
   } catch(e) {
@@ -407,25 +383,17 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   }
 });
 
-/* ── Renvoyer OTP (WhatsApp ou Email selon la méthode active) ── */
+/* ── Renvoyer l'email de confirmation ── */
 document.getElementById('otpResendBtn').addEventListener('click', async () => {
   const btn = document.getElementById('otpResendBtn');
   btn.disabled = true; btn.textContent = 'Envoi en cours…';
   try {
-    if (_otpMethod === 'email') {
-      const client = window.SLCM_DB?.client;
-      await client.auth.resend({ type: 'signup', email: _pendingEmail });
-      document.getElementById('otpSuccess').textContent = `✅ Email de confirmation renvoyé à ${_pendingEmail}.`;
-    } else if (_otpMethod === 'sms') {
-      await fetch('/.netlify/functions/sms-otp', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ action: 'send', phone: _pendingPhone }),
-      });
-      document.getElementById('otpSuccess').textContent = `✅ Nouveau code SMS envoyé au ${_pendingPhone}.`;
-    }
+    const client = window.SLCM_DB?.client;
+    await client.auth.resend({ type: 'signup', email: _pendingEmail });
+    document.getElementById('otpSuccess').textContent = `✅ Email de confirmation renvoyé à ${_pendingEmail}.`;
     setTimeout(() => { document.getElementById('otpSuccess').textContent = ''; }, 3000);
   } finally {
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le code'; }, 30000);
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer l\'email de confirmation'; }, 30000);
   }
 });
 
