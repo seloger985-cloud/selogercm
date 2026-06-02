@@ -330,8 +330,12 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
 
     /* Confirmation par email Supabase (mode par défaut) */
     _otpMethod = 'email';
-    const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
-    if (resendErr) console.warn('resend signup:', resendErr.message);
+    try {
+      const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
+      if (resendErr) console.warn('resend signup:', resendErr.message);
+    } catch(resendEx) {
+      console.warn('resend signup threw:', resendEx.message);
+    }
 
     document.getElementById('otpIcon').textContent = '📧';
     document.getElementById('otpTitle').textContent = 'Confirmez votre email';
