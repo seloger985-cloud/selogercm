@@ -327,23 +327,8 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
       return;
     }
 
-    /* Confirmation par email Supabase (mode par défaut) */
+    /* Tenter SMS en priorité, fallback email si échec */
     _otpMethod = 'email';
-    try {
-      const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
-      if (resendErr) console.warn('resend signup:', resendErr.message);
-    } catch(resendEx) {
-      console.warn('resend signup threw:', resendEx.message);
-    }
-
-    document.getElementById('otpIcon').textContent = '📧';
-    document.getElementById('otpTitle').textContent = 'Confirmez votre email';
-    document.getElementById('otpSub').innerHTML =
-      `Consultez votre boîte mail (<strong>${email}</strong>).<br>Ouvrez le lien de confirmation, ou saisissez le code à 6 chiffres si Supabase vous en envoie un.`;
-    document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
-    showOtpPanel();
-
-    /* SMS OTP via Africa's Talking (priorité sur email) */
     if (SMS_OTP_ENABLED) {
       try {
         const smsRes = await fetch('/.netlify/functions/sms-otp', {
@@ -352,19 +337,32 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
           body:    JSON.stringify({ action: 'send', phone }),
         });
         const smsData = await smsRes.json();
-        if (smsRes.ok && smsData.ok) {
-          _otpMethod = 'sms';
-          document.getElementById('otpIcon').textContent = '📱';
-          document.getElementById('otpTitle').textContent = 'Vérifiez votre téléphone';
-          document.getElementById('otpSub').innerHTML =
-            `Un code SMS a été envoyé au <strong>${phone}</strong>.<br>Entrez-le ci-dessous.`;
-          document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par SMS';
-        }
+        if (smsRes.ok && smsData.ok) _otpMethod = 'sms';
       } catch(smsErr) {
         console.warn('[sms-otp] fallback email:', smsErr.message);
-        /* Fallback email déjà affiché */
       }
     }
+
+    if (_otpMethod === 'sms') {
+      document.getElementById('otpIcon').textContent = '📱';
+      document.getElementById('otpTitle').textContent = 'Vérifiez votre téléphone';
+      document.getElementById('otpSub').innerHTML =
+        `Un code SMS a été envoyé au <strong>${phone}</strong>.<br>Entrez-le ci-dessous.`;
+      document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par SMS';
+    } else {
+      try {
+        const { error: resendErr } = await client.auth.resend({ type: 'signup', email });
+        if (resendErr) console.warn('resend signup:', resendErr.message);
+      } catch(resendEx) {
+        console.warn('resend signup threw:', resendEx.message);
+      }
+      document.getElementById('otpIcon').textContent = '📧';
+      document.getElementById('otpTitle').textContent = 'Confirmez votre email';
+      document.getElementById('otpSub').innerHTML =
+        `Un email a été envoyé à <strong>${email}</strong>.<br>Ouvrez le lien de confirmation ou saisissez le code à 6 chiffres.`;
+      document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
+    }
+    showOtpPanel();
 
   } catch(e) {
     err.textContent = 'Une erreur est survenue. Réessayez.';
