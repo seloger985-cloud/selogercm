@@ -170,7 +170,7 @@
       <div class="otp-wrap">
         <div class="otp-icon" id="otpIcon">📧</div>
         <div class="otp-title" id="otpTitle">Confirmez votre email</div>
-        <p class="otp-sub" id="otpSub">Un email de confirmation a été envoyé à<br><strong id="otpPhoneDisplay"></strong></p>
+        <div class="otp-sub" id="otpSub">Un email de confirmation a été envoyé à<br><strong id="otpPhoneDisplay"></strong></div>
         <div class="field">
           <input id="otpCode" class="otp-input" type="number" placeholder="000000" maxlength="6" autocomplete="one-time-code">
         </div>
@@ -253,8 +253,7 @@ let _pendingPhone = '';
 let _pendingEmail = '';
 let _otpMethod   = 'email'; /* 'sms' | 'email' */
 
-function showOtpPanel(phone) {
-  document.getElementById('otpPhoneDisplay').textContent = phone;
+function showOtpPanel() {
   panelReg.classList.remove('active');
   document.getElementById('panelOTP').classList.add('active');
   tabRegister.classList.remove('active');
@@ -339,11 +338,10 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
 
     document.getElementById('otpIcon').textContent = '📧';
     document.getElementById('otpTitle').textContent = 'Confirmez votre email';
-    document.getElementById('otpPhoneDisplay').textContent = email;
     document.getElementById('otpSub').innerHTML =
       `Consultez votre boîte mail (<strong>${email}</strong>).<br>Ouvrez le lien de confirmation, ou saisissez le code à 6 chiffres si Supabase vous en envoie un.`;
     document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
-    showOtpPanel(email);
+    showOtpPanel();
 
     /* SMS OTP via Africa's Talking (priorité sur email) */
     if (SMS_OTP_ENABLED) {
@@ -358,7 +356,6 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
           _otpMethod = 'sms';
           document.getElementById('otpIcon').textContent = '📱';
           document.getElementById('otpTitle').textContent = 'Vérifiez votre téléphone';
-          document.getElementById('otpPhoneDisplay').textContent = phone;
           document.getElementById('otpSub').innerHTML =
             `Un code SMS a été envoyé au <strong>${phone}</strong>.<br>Entrez-le ci-dessous.`;
           document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par SMS';
