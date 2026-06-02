@@ -246,12 +246,12 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
 });
 
 /* ── Inscription ── */
-/* Passer à true quand le compte WhatsApp Business Meta est validé */
-const WA_OTP_ENABLED = false;
+const WA_OTP_ENABLED  = false; /* WhatsApp Meta — en attente validation Business */
+const SMS_OTP_ENABLED = true;  /* SMS Africa's Talking — actif */
 
 let _pendingPhone = '';
 let _pendingEmail = '';
-let _otpMethod   = 'email'; /* 'whatsapp' | 'email' */
+let _otpMethod   = 'email'; /* 'sms' | 'email' */
 
 function showOtpPanel(phone) {
   document.getElementById('otpPhoneDisplay').textContent = phone;
@@ -328,21 +328,27 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     document.getElementById('otpResendBtn').textContent = 'Renvoyer l\'email de confirmation';
     showOtpPanel(email);
 
-    /* WhatsApp OTP — uniquement si Meta Business validé (WA_OTP_ENABLED) */
-    if (WA_OTP_ENABLED) {
-      const waRes = await fetch('/.netlify/functions/wa-otp', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action: 'send', phone }),
-      });
-      const waData = await waRes.json();
-      if (waRes.ok && waData.ok) {
-        _otpMethod = 'whatsapp';
-        document.getElementById('otpIcon').textContent = '💬';
-        document.getElementById('otpTitle').textContent = 'Vérifiez votre WhatsApp';
-        document.getElementById('otpPhoneDisplay').textContent = phone;
-        document.getElementById('otpSub').textContent = `Un code a été envoyé sur WhatsApp au ${phone}`;
-        document.getElementById('otpResendBtn').textContent = 'Renvoyer le code sur WhatsApp';
+    /* SMS OTP via Africa's Talking (priorité sur email) */
+    if (SMS_OTP_ENABLED) {
+      try {
+        const smsRes = await fetch('/.netlify/functions/sms-otp', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ action: 'send', phone }),
+        });
+        const smsData = await smsRes.json();
+        if (smsRes.ok && smsData.ok) {
+          _otpMethod = 'sms';
+          document.getElementById('otpIcon').textContent = '📱';
+          document.getElementById('otpTitle').textContent = 'Vérifiez votre téléphone';
+          document.getElementById('otpPhoneDisplay').textContent = phone;
+          document.getElementById('otpSub').innerHTML =
+            `Un code SMS a été envoyé au <strong>${phone}</strong>.<br>Entrez-le ci-dessous.`;
+          document.getElementById('otpResendBtn').textContent = 'Renvoyer le code par SMS';
+        }
+      } catch(smsErr) {
+        console.warn('[sms-otp] fallback email:', smsErr.message);
+        /* Fallback email déjà affiché */
       }
     }
 
@@ -366,15 +372,13 @@ document.getElementById('otpVerifyBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
   try {
     if (_otpMethod === 'email') {
-      /* Vérification Email OTP via Supabase */
       const client = window.SLCM_DB?.client;
       const { error: verifyErr } = await client.auth.verifyOtp({
         email: _pendingEmail, token: code, type: 'signup'
       });
       if (verifyErr) { err.textContent = 'Code incorrect ou expiré. Réessayez.'; return; }
-    } else {
-      /* Vérification WhatsApp OTP via notre fonction */
-      const res  = await fetch('/.netlify/functions/wa-otp', {
+    } else if (_otpMethod === 'sms') {
+      const res  = await fetch('/.netlify/functions/sms-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ action: 'verify', phone: _pendingPhone, code }),
@@ -400,12 +404,12 @@ document.getElementById('otpResendBtn').addEventListener('click', async () => {
       const client = window.SLCM_DB?.client;
       await client.auth.resend({ type: 'signup', email: _pendingEmail });
       document.getElementById('otpSuccess').textContent = `✅ Email de confirmation renvoyé à ${_pendingEmail}.`;
-    } else {
-      await fetch('/.netlify/functions/wa-otp', {
+    } else if (_otpMethod === 'sms') {
+      await fetch('/.netlify/functions/sms-otp', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ action: 'send', phone: _pendingPhone }),
       });
-      document.getElementById('otpSuccess').textContent = '✅ Nouveau code envoyé sur WhatsApp.';
+      document.getElementById('otpSuccess').textContent = `✅ Nouveau code SMS envoyé au ${_pendingPhone}.`;
     }
     setTimeout(() => { document.getElementById('otpSuccess').textContent = ''; }, 3000);
   } finally {
