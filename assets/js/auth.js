@@ -54,8 +54,8 @@ const SLCM = (() => {
 
   function isAdmin(user) {
     if (!user) return false;
-    /* Vérification via role=admin dans Supabase metadata uniquement */
-    return user.user_metadata?.role === 'admin';
+    /* Vérification via role=admin dans Supabase app_metadata uniquement */
+    return user.app_metadata?.role === 'admin';
   }
 
   function isAgent(user) {
