@@ -55,14 +55,14 @@ function buildSeo(ad, slug) {
   const adCity = [ad.district, ad.city].filter(Boolean).join(', ') || 'Douala';
   const adPrice = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
   const adMode = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
+  const cleanDescription = ad.description ? String(ad.description).replace(/\s+/g, ' ').trim() : '';
   const adImg = (ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`;
   const canonicalSlug = ad.slug || slug;
   const adUrl = `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
   const pageTitle = `${adTitle} — ${adCity} | SE LOGER CM`;
   const adDesc = ad.type === 'fonds-commerce'
-    ? `${adTitle} — ${adCity} — Prix du fonds : ${adPrice}.${ad.business_rent ? ' Loyer : ' + (Number(ad.business_rent) || 0).toLocaleString('fr-FR') + ' FCFA/mois.' : ''} ${ad.description ? String(ad.description).slice(0, 120) + '…' : 'Annonce vérifiée par SE LOGER CM.'}`
-    : `${adTitle} — ${adCity} — ${adPrice} ${adMode}. ${ad.description ? String(ad.description).slice(0, 160) + '…' : 'Annonce immobilière vérifiée par SE LOGER CM.'}`;
-
+    ? `${adTitle} — ${adCity} — Prix du fonds : ${adPrice}.${ad.business_rent ? ' Loyer : ' + (Number(ad.business_rent) || 0).toLocaleString('fr-FR') + ' FCFA/mois.' : ''} ${cleanDescription ? cleanDescription.slice(0, 120) + '…' : 'Annonce vérifiée par SE LOGER CM.'}`
+    : `${adTitle} — ${adCity} — ${adPrice} ${adMode}. ${cleanDescription ? cleanDescription.slice(0, 160) + '…' : 'Annonce immobilière vérifiée par SE LOGER CM.'}`;
   const typeMap = {
     apartment: 'Apartment',
     studio: 'Apartment',
