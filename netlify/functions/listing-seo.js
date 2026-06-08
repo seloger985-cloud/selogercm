@@ -20,6 +20,13 @@ function esc(v = '') {
     .replace(/"/g, '&quot;');
 }
 
+/* Dérive une variante Cloudflare Images (.../public → .../<variant>).
+   Fallback : URL non-CF (Supabase) renvoyée telle quelle. */
+function cfVariant(url, variant) {
+  if (!url) return '';
+  return url.includes('imagedelivery.net') ? url.replace(/\/[^/]+$/, '/' + variant) : url;
+}
+
 function parseSlug(event) {
   let path = event.path || '';
   if (!path.includes('/annonce/') && event.rawUrl) {
@@ -56,7 +63,7 @@ function buildSeo(ad, slug) {
   const adPrice = (ad.price || 0).toLocaleString('fr-FR') + ' FCFA';
   const adMode = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
   const cleanDescription = ad.description ? String(ad.description).replace(/\s+/g, ' ').trim() : '';
-  const adImg = (ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`;
+  const adImg = cfVariant((ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`, 'og');
   const canonicalSlug = ad.slug || slug;
   const adUrl = `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
   const pageTitle = `${adTitle} — ${adCity} | SE LOGER CM`;

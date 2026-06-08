@@ -39,6 +39,10 @@ function esc(v = '') {
    Facebook interprète comme l'URL /annonce au lieu de /share. */
 function ogImage(url) {
   if (!url) return DEFAULT_IMG;
+  // Image déjà sur Cloudflare Images : servir la variante "og" native (1200×630),
+  // pas de hop wsrv.nl, et pas de redirection (Facebook scrape directement).
+  if (url.includes('imagedelivery.net')) return url.replace(/\/[^/]+$/, '/og');
+  // Sinon (image Supabase non encore migrée) : transformer via wsrv.nl.
   return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=1200&h=630&fit=cover&output=jpg&q=80`;
 }
 

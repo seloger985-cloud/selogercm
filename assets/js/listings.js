@@ -229,29 +229,45 @@ const SLCM_listings = (() => {
     });
   }
 
-  /* ── URL de transform — désactivé (Supabase Image Transform hors quota)
-     Cloudflare Images prendra le relais après migration.
-     En attendant : URL originale retournée telle quelle. ── */
-  function getTransformUrl(publicUrl) {
-    return publicUrl || '';
+  /* ── Dérive une variante Cloudflare Images depuis l'URL stockée (.../public)
+     Fallback : URL Supabase non encore migrée renvoyée telle quelle (transition). ── */
+  function cfVariant(url, variant) {
+    if (!url) return '';
+    if (url.includes('imagedelivery.net')) {
+      return url.replace(/\/[^/]+$/, '/' + variant);
+    }
+    return url;
   }
 
-  /* ── Upload photos vers Supabase Storage ────────────────────────── */
+  function getTransformUrl(url, opts = {}) {
+    const w = opts.width || 0;
+    let variant = 'public';
+    if (w && w <= 360)       variant = 'thumb';
+    else if (w && w <= 1100) variant = 'gallery';
+    return cfVariant(url, variant);
+  }
+
+  /* ── Upload photos vers Cloudflare Images ───────────────────────── */
   async function uploadImages(files, listingId) {
     const client = await sb();
     if (!client) { console.error('uploadImages: client non disponible'); return []; }
     const urls = [];
+    const token = (await client.auth.getSession()).data.session?.access_token;
     for (const file of files) {
-      /* Resize à 1200×900 max en WebP avant upload */
+      /* Resize à 1200×900 max en WebP avant upload (compression conservée) */
       const resized = await resizeImage(file, 1200, 900, 0.82);
-      const ext  = resized.type === 'image/webp' ? 'webp' : (file.name.split('.').pop() || 'jpg');
-      const path = `listings/${listingId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await client.storage.from('listing-images').upload(path, resized, {
-        cacheControl: '3600', upsert: false, contentType: resized.type
-      });
-      if (!error) {
-        const { data } = client.storage.from('listing-images').getPublicUrl(path);
-        urls.push(data.publicUrl);
+      try {
+        const r = await fetch('/.netlify/functions/cf-image-upload-url', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (!r.ok) throw new Error("URL d'upload indisponible");
+        const { uploadURL, id, accountHash } = await r.json();
+        const fd = new FormData();
+        fd.append('file', new File([resized], 'photo.webp', { type: 'image/webp' }));
+        const up = await fetch(uploadURL, { method: 'POST', body: fd });
+        if (up.ok) urls.push(`https://imagedelivery.net/${accountHash}/${id}/public`);
+      } catch (err) {
+        console.error('uploadImages CF:', err.message);
       }
     }
     return urls;
@@ -261,7 +277,7 @@ const SLCM_listings = (() => {
   function renderCard(listing, { showFav = true } = {}) {
     const rawImg = (listing.images && listing.images[0]) || '';
     const img = rawImg
-      ? getTransformUrl(rawImg, { width: 400, height: 280 })
+      ? getTransformUrl(rawImg, { width: 320, height: 240 })
       : 'assets/img/no-image.png';
     const hasVideo = !!listing.video_url;
     const title = listing.title || listing.title_fr || 'Annonce';
@@ -337,7 +353,7 @@ const SLCM_listings = (() => {
   return {
     getListings, getPremiumListings, getListingById,
     getMyListings, createListing, updateListing, deleteListing,
-    uploadImages, renderCard, fmtPrice, getTransformUrl, getListingUrl
+    uploadImages, renderCard, fmtPrice, getTransformUrl, getListingUrl, cfVariant
   };
 })();
 

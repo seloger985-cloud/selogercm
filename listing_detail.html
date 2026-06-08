@@ -946,7 +946,7 @@
 
       /* ── Galerie thumbnails ── */
       const thumbsHtml = images.map((src, i) => `
-        <img src="${tImg(src, 120, 88)}" alt="photo ${i+1}" class="${i===0?'active':''}" data-idx="${i}">`
+        <img src="${tImg(src, 120, 88)}" alt="photo ${i+1}" class="${i===0?'active':''}" data-idx="${i}" loading="lazy" decoding="async">`
       ).join('');
 
       /* ── Description ── */
@@ -958,7 +958,7 @@
         <!-- GALERIE -->
         <div class="gallery">
           <div class="gallery-main" id="galleryMain">
-            <img id="mainImg" src="${tImg(images[0], 800, 600)}" alt="${escapeHtml(title)}">
+            <img id="mainImg" src="${tImg(images[0], 800, 600)}" alt="${escapeHtml(title)}" loading="eager" fetchpriority="high">
             ${images.length > 1 ? `
               <button class="gallery-nav prev" id="gPrev"><i class="fas fa-chevron-left"></i></button>
               <button class="gallery-nav next" id="gNext"><i class="fas fa-chevron-right"></i></button>
@@ -1307,7 +1307,9 @@
         // Fade out → change src → fade in
         lbImg.classList.add('fade');
         setTimeout(() => {
-          lbImg.src = images[lbIdx];
+          lbImg.src = window.SLCM_listings?.cfVariant
+            ? SLCM_listings.cfVariant(images[lbIdx], 'full')
+            : images[lbIdx];
           lbImg.classList.remove('fade');
         }, 200);
 

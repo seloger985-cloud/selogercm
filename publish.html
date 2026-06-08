@@ -712,22 +712,25 @@
 
         for (let i = 0; i < imagesData.length; i++) {
           try {
-            /* imagesData[i].blob est le Blob WebP — pas besoin de fetch() */
-            const file = new File([imagesData[i].blob], `photo_${i}.webp`, { type: 'image/webp' });
-            const path = `listings/${tempId}/photo_${i}_${Date.now()}.webp`;
+            /* Upload direct vers Cloudflare Images (le fichier ne transite pas par Netlify) */
+            const blob = imagesData[i].blob; // Blob WebP déjà compressé
 
-            const { data: upData, error: upErr } = await client.storage
-              .from('listing-images')
-              .upload(path, file, { cacheControl: '3600', upsert: true });
+            // 1) Obtenir une URL d'upload directe (auth via session Supabase)
+            const token = (await client.auth.getSession()).data.session?.access_token;
+            const r = await fetch('/.netlify/functions/cf-image-upload-url', {
+              headers: { Authorization: 'Bearer ' + token },
+            });
+            if (!r.ok) throw new Error("URL d'upload indisponible");
+            const { uploadURL, id, accountHash } = await r.json();
 
-            if (!upErr && upData) {
-              const { data: urlData } = client.storage
-                .from('listing-images')
-                .getPublicUrl(upData.path);
-              imageUrls.push(urlData.publicUrl);
-            } else if (upErr) {
-              console.error(`Upload photo ${i}:`, upErr.message, upErr.statusCode);
-            }
+            // 2) Uploader la photo directement vers Cloudflare
+            const fd = new FormData();
+            fd.append('file', new File([blob], `photo_${i}.webp`, { type: 'image/webp' }));
+            const up = await fetch(uploadURL, { method: 'POST', body: fd });
+            if (!up.ok) throw new Error('upload Cloudflare échoué');
+
+            // 3) Stocker l'URL de livraison (variante public)
+            imageUrls.push(`https://imagedelivery.net/${accountHash}/${id}/public`);
           } catch (err) {
             console.error(`Erreur photo ${i}:`, err);
           }
