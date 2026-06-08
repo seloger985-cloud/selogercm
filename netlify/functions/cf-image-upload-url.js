@@ -47,12 +47,16 @@ exports.handler = async function (event) {
 
   // ── Demander une URL d'upload directe à Cloudflare Images
   try {
+    const form = new FormData();
+    form.append('requireSignedURLs', 'false');
+
     const res = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v2/direct_upload`,
       {
         method: 'POST',
+        // NE PAS fixer Content-Type : fetch ajoute la boundary multipart automatiquement
         headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` },
-        body: new URLSearchParams({ requireSignedURLs: 'false' }),
+        body: form,
       }
     );
 
