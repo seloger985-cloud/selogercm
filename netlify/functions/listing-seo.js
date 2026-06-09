@@ -64,6 +64,7 @@ function buildSeo(ad, slug) {
   const adMode = ad.rent_sale === 'sale' ? 'à vendre' : 'à louer';
   const cleanDescription = ad.description ? String(ad.description).replace(/\s+/g, ' ').trim() : '';
   const adImg = cfVariant((ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`, 'og');
+  const adImgFull = cfVariant((ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`, 'gallery');
   const canonicalSlug = ad.slug || slug;
   const adUrl = `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
   const pageTitle = `${adTitle} — ${adCity} | SE LOGER CM`;
@@ -108,7 +109,7 @@ function buildSeo(ad, slug) {
     },
   };
 
-  return { adTitle, adCity, adPrice, adMode, adImg, adUrl, pageTitle, adDesc, schema };
+  return { adTitle, adCity, adPrice, adMode, adImg, adImgFull, adUrl, pageTitle, adDesc, schema };
 }
 
 function buildPrerender(ad, seo) {
@@ -118,7 +119,7 @@ function buildPrerender(ad, seo) {
   const modeLabel = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
   return `
     <article class="listing-seo-prerender info-panel" style="background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 6px 20px rgba(0,0,0,.07)">
-      <img src="${esc(seo.adImg)}" alt="${esc(seo.adTitle)}" width="800" height="450" style="width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:1rem" loading="eager" fetchpriority="high">
+      <img src="${esc(seo.adImgFull)}" alt="${esc(seo.adTitle)}" width="800" height="450" style="width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:1rem" loading="eager" fetchpriority="high">
       <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:.5rem">${esc(seo.adTitle)}</h1>
       <p style="font-size:1.35rem;font-weight:800;color:#ff7a00;margin-bottom:.5rem">${esc(seo.adPrice)} <span style="font-size:.9rem;color:#666">${ad.rent_sale === 'sale' ? '' : '/ mois'}</span></p>
       <p style="color:#555;margin-bottom:1rem"><strong>${esc(seo.adCity)}</strong> · ${esc(modeLabel)}</p>
@@ -156,6 +157,12 @@ function patchTemplate(html, seo, prerender) {
   out = out.replace(
     /<link\s+rel="alternate"\s+hreflang="x-default"\s+href="[^"]*"/i,
     `<link rel="alternate" hreflang="x-default" href="${esc(seo.adUrl)}"`,
+  );
+
+  // Précharge l'image LCP (photo principale, variante gallery) pour la peindre au plus tôt
+  out = out.replace(
+    /<\/head>/i,
+    `  <link rel="preload" as="image" fetchpriority="high" href="${esc(seo.adImgFull)}">\n</head>`,
   );
 
   const ogPairs = [
