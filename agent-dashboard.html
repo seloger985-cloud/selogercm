@@ -388,7 +388,7 @@
        Cette page est réservée aux agents externes et aux admins.
        Un utilisateur particulier (role: 'user') ne doit pas y accéder :
        on le redirige vers son vrai dashboard /mon-espace. */
-    const role = _user.user_metadata?.role;
+    const role = _user.app_metadata?.role || _user.user_metadata?.role;
     if (role !== 'agent_externe' && role !== 'admin') {
       window.location.href = '/mon-espace';
       return;
