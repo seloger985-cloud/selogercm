@@ -282,13 +282,13 @@
       <div class="modal-field"><label>Opération</label>
         <select id="editMode"><option value="rent">À louer</option><option value="sale">À vendre</option></select>
       </div>
-      <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
       <div class="modal-field full">
         <label>Photos</label>
         <div id="editThumbs" class="edit-thumbs"></div>
         <label class="edit-add-btn">+ Ajouter des photos<input type="file" id="editPhotoInput" accept="image/*" multiple hidden></label>
         <small style="display:block;color:#888;margin-top:.35rem">Glissez pour réorganiser · × pour retirer · 8 max</small>
       </div>
+      <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeEditModal()">Annuler</button>
@@ -619,7 +619,7 @@
     });
   })();
 
-  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();document.getElementById('editOverlay').classList.add('open');}
+  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();const ov=document.getElementById('editOverlay');ov.classList.add('open');const mb=ov.querySelector('.modal-box');if(mb)mb.scrollTop=0;}
   function closeEditModal(){document.getElementById('editOverlay').classList.remove('open');}
 
   async function saveEdit(){
