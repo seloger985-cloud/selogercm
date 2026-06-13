@@ -284,7 +284,7 @@ function updateStats() {
 function renderGrid() {
   const grid  = document.getElementById('agentGrid');
   const empty = document.getElementById('emptyState');
-  const q = searchQuery.toLowerCase();
+  const q = searchQuery.trim().toLowerCase();
 
   let list = allAgents.filter(a => {
     const matchSearch = !q ||

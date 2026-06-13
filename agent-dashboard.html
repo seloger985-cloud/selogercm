@@ -526,7 +526,8 @@
     if(proCta){
       proCta.style.display = isPro ? 'none' : 'inline-flex';
       if(!isPro){
-        const msg = `Bonjour, je souhaite passer en Agent Pro (10 000 FCFA/mois). Mon compte : ${name} — ${_user.email}`;
+        const phone = _profile.agent_phone || _profile.phone || '';
+        const msg = `Bonjour, je souhaite passer en Agent Pro (10 000 FCFA/mois). Mon compte : ${name}${phone?' · '+phone:''} · ${_user.email}`;
         proCta.href = 'https://wa.me/237650840714?text=' + encodeURIComponent(msg);
         proCta.target = '_blank'; proCta.rel = 'noopener';
       }

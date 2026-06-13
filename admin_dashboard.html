@@ -161,7 +161,7 @@
       <div class="panel">
         <h2>Admin tools</h2>
         <div class="toolbar">
-          <input id="q" class="input" placeholder="Search (title, city, district, type)">
+          <input id="q" class="input" placeholder="Réf, titre, ville, quartier, type…">
           <select id="fMode" class="select">
             <option value="">Mode (any)</option>
             <option value="rent">To Rent</option>
@@ -368,7 +368,7 @@
 
     // ===== Filtering logic =====
     function match(ad){
-      const q = (qEl.value||'').toLowerCase();
+      const q = (qEl.value||'').trim().toLowerCase();
       const m = fModeEl.value; // 'rent'|'sale'|''
       const c = fCityEl.value;
       const f = fFurnEl.value; // 'true'|'false'|''
@@ -376,7 +376,7 @@
 
       if (q) {
         const hay = [
-          ad.title_en, ad.title_fr, ad.city, ad.district, ad.type,
+          ad.ref, ad.title_en, ad.title_fr, ad.city, ad.district, ad.type,
           String(ad.price), ad.rentSale, ad.bedrooms
         ].map(x => (x||'').toString().toLowerCase()).join(' ');
         if (!hay.includes(q)) return false;
@@ -518,6 +518,7 @@
           </div>
           <div class="body">
             <div class="title">${escapeHtml(title)}</div>
+            <div class="meta" style="font-family:monospace;font-size:.72rem;color:#ff7a00;font-weight:700">${escapeHtml(ad.ref||'—')}</div>
             <div class="meta">${escapeHtml(meta)}</div>
             <div class="price">${fmt(ad.price)} FCFA</div>
             <div class="actions">
