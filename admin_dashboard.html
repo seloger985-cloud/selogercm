@@ -204,6 +204,7 @@
         <button class="admin-tab active" data-tab="annonces">📋 Annonces<span class="tab-count" id="tabCountAnn"></span></button>
         <button class="admin-tab" data-tab="blog">📝 Blog</button>
         <button class="admin-tab" data-tab="kyc">🪪 KYC<span class="tab-count" id="tabCountKyc"></span></button>
+        <button class="admin-tab" data-tab="videos">🎬 Vidéos<span class="tab-count" id="tabCountVid"></span></button>
       </div>
 
       <!-- ── Tab : Annonces ── -->
@@ -226,6 +227,16 @@
           </div>
           <div id="kycGrid" class="kyc-grid"></div>
           <div id="kycEmpty" class="empty" style="display:none">Aucune demande dans cette catégorie.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab : Vidéos en attente ── -->
+      <div id="tabVideos" style="display:none">
+        <div class="panel">
+          <h2>Vidéos en attente</h2>
+          <p style="font-size:.85rem;color:#888;margin:0 0 1rem">Vidéos uploadées par les agents Pro (ou boost Réels), en attente de validation avant publication dans les Réels.</p>
+          <div id="vidGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem"></div>
+          <div id="vidEmpty" class="empty" style="display:none">Aucune vidéo en attente.</div>
         </div>
       </div>
 
@@ -398,6 +409,7 @@
         sPremEl.textContent  = fmt(_all.filter(a=>a.premium).length);
         sRentEl.textContent  = fmt(_all.filter(a=>a.rentSale==='rent').length);
         sSaleEl.textContent  = fmt(_all.filter(a=>a.rentSale==='sale').length);
+        refreshVideoBadge();
       }
 
       const arr    = _all.filter(match);
@@ -586,7 +598,85 @@
       document.getElementById('tabAnnonces').style.display = tab === 'annonces' ? 'block' : 'none';
       document.getElementById('tabBlog').style.display     = tab === 'blog'     ? 'block' : 'none';
       document.getElementById('tabKyc').style.display      = tab === 'kyc'      ? 'block' : 'none';
+      document.getElementById('tabVideos').style.display   = tab === 'videos'   ? 'block' : 'none';
       if (tab === 'kyc') loadKyc('pending');
+      if (tab === 'videos') loadPendingVideos();
+    });
+
+    /* ══════════════ Vidéos en attente (sas) ══════════════ */
+    async function refreshVideoBadge(){
+      if (!window.SLCM_DB?.client) return;
+      const { count } = await window.SLCM_DB.client
+        .from('listings').select('id', { count: 'exact', head: true })
+        .not('pending_video_url', 'is', null);
+      const el = document.getElementById('tabCountVid');
+      if (el) el.textContent = count ? `(${count})` : '';
+    }
+
+    async function loadPendingVideos(){
+      const grid  = document.getElementById('vidGrid');
+      const empty = document.getElementById('vidEmpty');
+      grid.innerHTML = '<p style="color:#888">Chargement…</p>'; empty.style.display = 'none';
+      if (!window.SLCM_DB?.client){ grid.innerHTML = '<p style="color:#dc2626">Connexion Supabase indisponible.</p>'; return; }
+      const { data, error } = await window.SLCM_DB.client
+        .from('listings')
+        .select('id, ref, title, title_en, title_fr, city, district, pending_video_url, video_url')
+        .not('pending_video_url', 'is', null)
+        .order('updated_at', { ascending: false });
+      if (error){ grid.innerHTML = '<p style="color:#dc2626">Erreur : ' + esc(error.message) + '</p>'; return; }
+      const list = data || [];
+      const badge = document.getElementById('tabCountVid'); if (badge) badge.textContent = list.length ? `(${list.length})` : '';
+      if (!list.length){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
+      grid.innerHTML = list.map(l => {
+        const uid    = (String(l.pending_video_url).match(/videodelivery\.net\/([^/]+)\//) || [])[1] || '';
+        const thumb  = uid ? `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=1s&height=400` : '';
+        const iframe = uid ? `https://iframe.videodelivery.net/${uid}` : '';
+        const title  = esc(l.title_en || l.title_fr || l.title || 'Annonce');
+        const ref    = esc(l.ref || '—');
+        const loc    = esc([l.district, l.city].filter(Boolean).join(' · '));
+        const hasLive = l.video_url ? '<div style="font-size:.72rem;color:#e65100;font-weight:700;margin-top:.25rem">⚠️ Remplacera la vidéo en ligne actuelle</div>' : '';
+        return `
+          <article data-id="${l.id}" style="border:1.5px solid #eee;border-radius:14px;overflow:hidden;background:#fff">
+            <div style="position:relative;aspect-ratio:9/16;background:#000;max-height:300px">
+              ${thumb ? `<img src="${thumb}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">` : ''}
+              <button class="vid-preview" data-iframe="${iframe}" title="Aperçu" style="position:absolute;inset:0;margin:auto;width:48px;height:48px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:1.2rem;cursor:pointer">▶</button>
+            </div>
+            <div style="padding:.7rem .8rem">
+              <div style="font-family:monospace;font-size:.72rem;color:#ff7a00;font-weight:700">${ref}</div>
+              <div style="font-weight:700;font-size:.9rem;margin:.1rem 0">${title}</div>
+              <div style="font-size:.78rem;color:#666">${loc}</div>
+              ${hasLive}
+              <div style="display:flex;gap:.5rem;margin-top:.7rem">
+                <button class="btn vid-approve" style="flex:1">✅ Approuver</button>
+                <button class="btn btn-ghost vid-reject">❌</button>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    /* Délégation : aperçu / approuver / rejeter */
+    document.getElementById('vidGrid')?.addEventListener('click', async (e) => {
+      const prev = e.target.closest('.vid-preview');
+      if (prev){ const u = prev.dataset.iframe; if (u) window.open(u, '_blank'); return; }
+      const card = e.target.closest('[data-id]'); if (!card) return;
+      const id = card.dataset.id;
+      if (!window.SLCM_DB?.client){ alert('Connexion Supabase indisponible'); return; }
+
+      if (e.target.closest('.vid-approve')){
+        const { data: row } = await window.SLCM_DB.client.from('listings').select('pending_video_url').eq('id', id).single();
+        if (!row?.pending_video_url){ showToast('Aucune vidéo en attente'); loadPendingVideos(); return; }
+        const { error } = await window.SLCM_DB.client.from('listings')
+          .update({ video_url: row.pending_video_url, pending_video_url: null }).eq('id', id);
+        if (error){ showToast('Erreur : ' + error.message); return; }
+        showToast('Vidéo approuvée ✅ — en ligne dans les Réels'); loadPendingVideos();
+      }
+      if (e.target.closest('.vid-reject')){
+        if (!confirm('Rejeter cette vidéo ? Elle ne sera pas publiée.')) return;
+        const { error } = await window.SLCM_DB.client.from('listings').update({ pending_video_url: null }).eq('id', id);
+        if (error){ showToast('Erreur : ' + error.message); return; }
+        showToast('Vidéo rejetée'); loadPendingVideos();
+      }
     });
 
     /* ══════════════ KYC ══════════════ */

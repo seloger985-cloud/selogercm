@@ -371,6 +371,16 @@
         <label class="edit-add-btn">+ Ajouter des photos<input type="file" id="editPhotoInput" accept="image/*" multiple hidden></label>
         <small style="display:block;color:#888;margin-top:.35rem">Glissez pour réorganiser · × pour retirer · 8 max</small>
       </div>
+      <div class="modal-field full" id="editVideoSection" style="display:none">
+        <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s max · vertical 9:16 conseillé · .mp4</span></label>
+        <div id="editVideoState" style="font-size:.83rem;margin:.4rem 0;color:#555"></div>
+        <label class="edit-add-btn" id="editVideoAddBtn">🎬 Choisir une vidéo<input type="file" id="editVideoInput" accept="video/mp4,.mp4" hidden></label>
+        <div id="editVideoProgress" style="display:none;margin-top:.6rem">
+          <div style="background:#f0f0f0;border-radius:999px;height:8px;overflow:hidden"><div id="editVideoBar" style="height:100%;background:var(--orange);width:0%;transition:width .3s"></div></div>
+          <div id="editVideoStatus" style="font-size:.78rem;color:#666;margin-top:.3rem"></div>
+        </div>
+        <small style="display:block;color:#888;margin-top:.35rem">Votre vidéo est validée par l'équipe avant d'apparaître dans les Réels.</small>
+      </div>
       <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
     </div>
     <div class="modal-actions">
@@ -793,7 +803,61 @@
     });
   })();
 
-  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();const ov=document.getElementById('editOverlay');ov.classList.add('open');const mb=ov.querySelector('.modal-box');if(mb)mb.scrollTop=0;}
+  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();setupEditVideo(ad);const ov=document.getElementById('editOverlay');ov.classList.add('open');const mb=ov.querySelector('.modal-box');if(mb)mb.scrollTop=0;}
+
+  /* ── Vidéo Réel : uploader direct → Cloudflare Stream (sas pending) ── */
+  function setupEditVideo(ad){
+    const sec=document.getElementById('editVideoSection'); if(!sec)return;
+    const boostActive = ad.reels_boost_expires_at && new Date(ad.reels_boost_expires_at) > new Date();
+    const allowed = !!_profile.is_pro || boostActive;
+    sec.style.display = allowed ? 'block' : 'none';
+    if(!allowed) return;
+    const st=document.getElementById('editVideoState');
+    if(ad.video_url)            st.innerHTML='✅ Vidéo en ligne dans les Réels.';
+    else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation.';
+    else                        st.innerHTML='Aucune vidéo pour le moment.';
+    document.getElementById('editVideoProgress').style.display='none';
+    document.getElementById('editVideoBar').style.width='0%';
+    document.getElementById('editVideoStatus').textContent='';
+  }
+  function getVideoDuration(file){
+    return new Promise((resolve,reject)=>{
+      const v=document.createElement('video'); v.preload='metadata';
+      v.onloadedmetadata=()=>{URL.revokeObjectURL(v.src);resolve(v.duration);};
+      v.onerror=()=>{URL.revokeObjectURL(v.src);reject(new Error('Vidéo illisible (.mp4 H.264 attendu).'));};
+      v.src=URL.createObjectURL(file);
+    });
+  }
+  async function uploadReel(file){
+    const listingId=document.getElementById('editId').value;
+    const prog=document.getElementById('editVideoProgress'),bar=document.getElementById('editVideoBar'),st=document.getElementById('editVideoStatus'),state=document.getElementById('editVideoState');
+    if(!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')){showToast('Format : .mp4 uniquement');return;}
+    if(file.size>60*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 60 Mo — exporte en 1080p.`);return;}
+    let dur=null; try{dur=await getVideoDuration(file);}catch(e){showToast(e.message);return;}
+    if(dur && dur>61){showToast(`Vidéo trop longue (${Math.round(dur)} s). Max 60 s.`);return;}
+    prog.style.display='block';bar.style.width='0%';st.textContent='Préparation…';
+    try{
+      const r=await fetch('/.netlify/functions/cf-upload-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Reel',listingId,maxDuration:60})});
+      const j=await r.json();
+      if(j.error||!j.uploadURL)throw new Error(j.error||"URL d'upload manquante");
+      st.textContent='Envoi vers Cloudflare Stream…';
+      await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.open('PUT',j.uploadURL);
+        xhr.upload.onprogress=e=>{if(e.lengthComputable)bar.style.width=Math.round(e.loaded/e.total*100)+'%';};
+        xhr.onload=()=>xhr.status<300?resolve():reject(new Error('CF Stream HTTP '+xhr.status));
+        xhr.onerror=()=>reject(new Error('Erreur réseau — vérifiez votre connexion'));
+        xhr.send(file);
+      });
+      const{error}=await _client.from('listings').update({pending_video_url:j.hlsUrl}).eq('id',listingId);
+      if(error)throw new Error(error.message);
+      prog.style.display='none';st.textContent='';
+      state.innerHTML="⏳ Vidéo envoyée — en attente de validation par l'équipe.";
+      const idx=_listings.findIndex(a=>a.id===listingId);if(idx!==-1)_listings[idx].pending_video_url=j.hlsUrl;
+      showToast('Vidéo envoyée ✅ — en attente de validation');
+    }catch(e){prog.style.display='none';st.textContent='';showToast('Erreur upload : '+e.message);}
+  }
+  (function(){const vi=document.getElementById('editVideoInput');if(vi)vi.addEventListener('change',e=>{const f=e.target.files[0];if(f)uploadReel(f);e.target.value='';});})();
   function closeEditModal(){document.getElementById('editOverlay').classList.remove('open');}
 
   async function saveEdit(){
