@@ -56,18 +56,24 @@
     .profile-btn:hover { opacity: .88; }
     .btn-orange { background: var(--orange); color: #fff; }
     .btn-dark   { background: #111; color: #fff; }
+    .btn-pro    { background: linear-gradient(135deg,#ffb800,#ff7a00); color: #fff; }
+    .pro-badge { display:inline-flex; align-items:center; gap:.3rem; border-radius:999px; padding:.18rem .7rem; font-size:.72rem; font-weight:800; margin-top:.4rem; }
+    .pro-badge.free { background:#f0f0f0; color:#999; }
+    .pro-badge.pro  { background:linear-gradient(135deg,#ffb800,#ff7a00); color:#fff; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
     .stat-card { background: #fff; border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 4px 14px rgba(0,0,0,.05); border-left: 4px solid #eee; }
     .stat-card.orange { border-left-color: var(--orange); }
     .stat-card.green  { border-left-color: #22c55e; }
     .stat-card.red    { border-left-color: #ef4444; }
     .stat-card.blue   { border-left-color: #3b82f6; }
+    .stat-card.purple { border-left-color: #8b5cf6; }
     .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--dark); }
     .stat-card.orange .stat-num { color: var(--orange); }
     .stat-card.green  .stat-num { color: #22c55e; }
     .stat-card.red    .stat-num { color: #ef4444; }
     .stat-card.blue   .stat-num { color: #3b82f6; }
+    .stat-card.purple .stat-num { color: #8b5cf6; }
     .stat-lbl { font-size: .75rem; color: #888; font-weight: 600; margin-top: 2px; }
 
     .section-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
@@ -96,6 +102,20 @@
     .btn-edit   { background: var(--orange); color: #fff; }
     .btn-delete { background: #fee2e2; color: #c00; }
     .btn-renew  { background: #e0f2fe; color: #0369a1; }
+    .btn-boost  { background: #fff4e8; color: #ff7a00; }
+    .btn-status { background: #e8f5e9; color: #2e7d32; }
+
+    /* Badge statut (loué / négociation) — bas-gauche du thumb, n'apparaît pas pour "disponible" */
+    .statut-badge { position: absolute; bottom: 10px; left: 10px; border-radius: 999px; padding: .25rem .7rem; font-size: .72rem; font-weight: 800; color: #fff; }
+    .st-negociation { background: #e65100; }
+    .st-loue        { background: #1565c0; }
+
+    /* Options du modal statut */
+    .status-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: .5rem; }
+    .status-opt { flex: 1; padding: .8rem; border-radius: 12px; border: 2px solid #eee; background: #fff; font-family: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; text-align: center; transition: all .15s; min-width: 100px; }
+    .status-opt.sel-disponible  { border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; }
+    .status-opt.sel-negociation { border-color: #e65100; background: #fff3e0; color: #e65100; }
+    .status-opt.sel-loue        { border-color: #1565c0; background: #e3f2fd; color: #1565c0; }
 
     .empty-state { text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
     .empty-state i { font-size: 2.5rem; color: #ddd; margin-bottom: 1rem; display: block; }
@@ -201,8 +221,10 @@
       <div class="profile-info">
         <div class="profile-name" id="dashName">—</div>
         <div class="profile-email" id="dashEmail">—</div>
+        <span class="pro-badge free" id="proStatus">Compte Gratuit</span>
       </div>
       <div class="profile-actions">
+        <a href="/tarifs" class="profile-btn btn-pro" id="proCTA" style="display:none"><i class="fas fa-star"></i> Passer en Agent Pro</a>
         <button class="profile-btn btn-orange" onclick="openProfileEdit()"><i class="fas fa-edit"></i> Mon profil</button>
         <a href="/publier" class="profile-btn btn-dark"><i class="fas fa-plus"></i> Nouvelle annonce</a>
       </div>
@@ -213,6 +235,7 @@
       <div class="stat-card green"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">En ligne</div></div>
       <div class="stat-card red"><div class="stat-num" id="statExpired">0</div><div class="stat-lbl">Expirées</div></div>
       <div class="stat-card blue"><div class="stat-num" id="statDraft">0</div><div class="stat-lbl">Brouillons</div></div>
+      <div class="stat-card purple"><div class="stat-num" id="statViews">0</div><div class="stat-lbl">Vues totales</div></div>
     </div>
 
 
@@ -308,6 +331,23 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeProfileEdit()">Annuler</button>
       <button class="btn-save" onclick="saveProfile()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal statut -->
+<div class="modal-overlay" id="statusOverlay">
+  <div class="modal-box" style="max-width:400px">
+    <h2><i class="fas fa-toggle-on" style="color:var(--orange);margin-right:.4rem"></i> Changer le statut</h2>
+    <p style="font-size:.88rem;color:#666;margin-bottom:1rem">Sélectionnez le nouveau statut de l'annonce :</p>
+    <div class="status-options">
+      <button class="status-opt" data-status="disponible">✅ Disponible</button>
+      <button class="status-opt" data-status="negociation">🤝 En négociation</button>
+      <button class="status-opt" data-status="loue">🔑 Loué / Vendu</button>
+    </div>
+    <input type="hidden" id="statusListingId">
+    <div class="modal-actions" style="margin-top:1.5rem">
+      <button class="btn-cancel" id="statusCancel">Annuler</button>
     </div>
   </div>
 </div>
@@ -416,6 +456,13 @@
     if(_profile.kyc_status === 'verified') {
       document.getElementById('verifiedBadge').style.display = 'inline-flex';
     }
+
+    /* Statut PRO + CTA */
+    const isPro = !!_profile.is_pro;
+    const ps = document.getElementById('proStatus');
+    if(ps){ ps.textContent = isPro ? '⭐ Agent Pro' : 'Compte Gratuit'; ps.className = 'pro-badge ' + (isPro ? 'pro' : 'free'); }
+    const proCta = document.getElementById('proCTA');
+    if(proCta) proCta.style.display = isPro ? 'none' : 'inline-flex';
 
     /* Bannière KYC */
     renderKycBanner(_profile.kyc_status || 'none');
@@ -534,10 +581,12 @@
     const active=_listings.filter(l=>l.status==='active'&&(!l.expires_at||new Date(l.expires_at)>now));
     const expired=_listings.filter(l=>l.status==='active'&&l.expires_at&&new Date(l.expires_at)<=now);
     const drafts=_listings.filter(l=>l.status==='draft');
+    const totalViews=_listings.reduce((s,l)=>s+(l.views||0),0);
     document.getElementById('statTotal').textContent=_listings.length;
     document.getElementById('statActive').textContent=active.length;
     document.getElementById('statExpired').textContent=expired.length;
     document.getElementById('statDraft').textContent=drafts.length;
+    document.getElementById('statViews').textContent=totalViews;
     renderListings(_listings);
   }
 
@@ -563,21 +612,32 @@
         <div class="thumb">
           <img src="${img}" alt="${title}" loading="lazy">
           <span class="status-pill-card ${pillCls}">${pillLabel}</span>
+          ${ad.premium?`<span class="status-pill-card" style="left:auto;right:10px;background:linear-gradient(135deg,#ffb800,#ff7a00)">⭐ Premium</span>`:''}
           ${days!==null&&days>0&&days<=7?`<span class="expire-badge">⏳ ${days}j</span>`:''}
           ${isExpired?`<span class="expire-badge">Expirée</span>`:''}
+          ${ad.statut==='loue'?`<span class="statut-badge st-loue">🔑 Loué / Vendu</span>`:ad.statut==='negociation'?`<span class="statut-badge st-negociation">🤝 En négociation</span>`:''}
         </div>
         <div class="info">
           <h3>${title}</h3>
           <div class="meta"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> ${[ad.district,ad.city].filter(Boolean).join(' · ')} · ${mode}</div>
           <div class="price">${fmtPrice(ad.price)}${ad.rent_sale==='rent'?'<small style="font-size:.76rem;color:#888">/mois</small>':''}</div>
+          <div class="views" style="display:flex;align-items:center;gap:.4rem;margin-top:5px;font-size:.75rem">
+            <i class="fas fa-eye" style="color:#bbb"></i>
+            <span style="font-weight:700;color:#555">${ad.views||0}</span>
+            <span style="color:#aaa">vue${(ad.views||0)>1?'s':''}</span>
+            ${(ad.views||0)>=10?'<span style="background:#fff4e8;color:#ff7a00;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:800">🔥 Populaire</span>':''}
+          </div>
         </div>
         <div class="card-actions">
           ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
           <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
+          <button class="btn-status"><i class="fas fa-toggle-on"></i> Statut</button>
+          ${isActive&&!ad.premium?`<a href="/tarifs" class="btn-boost"><i class="fas fa-bolt"></i> Booster</a>`:''}
           ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
           <button class="btn-delete"><i class="fas fa-trash"></i></button>
         </div>`;
       card.querySelector('.btn-edit').addEventListener('click',()=>openEditModal(ad));
+      card.querySelector('.btn-status').addEventListener('click',()=>openStatus(ad.id));
       card.querySelector('.btn-delete').addEventListener('click',()=>deleteAd(ad.id,title));
       if(isExpired)card.querySelector('.btn-renew').addEventListener('click',()=>renewAd(ad.id));
       grid.appendChild(card);
@@ -663,6 +723,27 @@
     showToast(`Annonce renouvelée pour ${days} jours ✅`);loadListings();
   }
 
+  /* ── Statut de l'annonce (disponible / négociation / loué-vendu) ── */
+  function openStatus(id){
+    document.getElementById('statusListingId').value=id;
+    const ad=_listings.find(a=>a.id===id);
+    document.querySelectorAll('.status-opt').forEach(b=>{b.className='status-opt';if(b.dataset.status===(ad?.statut||'disponible'))b.classList.add('sel-'+b.dataset.status);});
+    document.getElementById('statusOverlay').classList.add('open');
+  }
+  document.getElementById('statusCancel').addEventListener('click',()=>document.getElementById('statusOverlay').classList.remove('open'));
+  document.querySelectorAll('.status-opt').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const id=document.getElementById('statusListingId').value;
+      const statut=btn.dataset.status;
+      const{error}=await _client.from('listings').update({statut}).eq('id',id);
+      if(error){showToast('Erreur : '+error.message);return;}
+      document.getElementById('statusOverlay').classList.remove('open');
+      loadListings();
+      const labels={disponible:'Disponible',negociation:'En négociation',loue:'Loué / Vendu'};
+      showToast('Statut : '+labels[statut]);
+    });
+  });
+
   function openProfileEdit(){document.getElementById('profileName').value=_profile.name||'';document.getElementById('profilePhone').value=_profile.agent_phone||_profile.phone||'';document.getElementById('profileBio').value=_profile.agent_bio||'';document.getElementById('profileEditOverlay').classList.add('open');}
   function closeProfileEdit(){document.getElementById('profileEditOverlay').classList.remove('open');}
 
@@ -681,7 +762,7 @@
     showToast('Profil mis à jour ✅');
   }
 
-  ['editOverlay','kycOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+  ['editOverlay','kycOverlay','statusOverlay'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 
   let _toastTimer;
   function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
