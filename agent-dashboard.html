@@ -121,6 +121,17 @@
     .empty-state i { font-size: 2.5rem; color: #ddd; margin-bottom: 1rem; display: block; }
     .empty-state p { color: #888; margin-bottom: 1.2rem; }
 
+    /* Barre filtre + recherche (Mes annonces) */
+    .listings-toolbar { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .filter-pills { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .filter-pill { padding: .4rem .9rem; border-radius: 999px; border: 2px solid #eee; background: #fff; font-family: inherit; font-size: .8rem; font-weight: 700; color: #666; cursor: pointer; transition: all .15s; }
+    .filter-pill:hover { border-color: #ddd; }
+    .filter-pill.active { border-color: var(--orange); background: #fff4e8; color: var(--orange); }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+    .search-wrap i { position: absolute; left: .8rem; top: 50%; transform: translateY(-50%); color: #bbb; font-size: .85rem; }
+    .search-wrap input { width: 100%; padding: .5rem .8rem .5rem 2.1rem; border: 2px solid #eee; border-radius: 10px; font-family: inherit; font-size: .85rem; transition: border-color .15s; }
+    .search-wrap input:focus { outline: none; border-color: var(--orange); }
+
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: #fff; border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 1.8rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
@@ -271,6 +282,18 @@
     <div class="section-bar">
       <h2>Mes annonces</h2>
       <a href="/publier">+ Publier</a>
+    </div>
+    <div class="listings-toolbar" id="listingsToolbar" style="display:none">
+      <div class="filter-pills">
+        <button class="filter-pill active" data-filter="all">Toutes</button>
+        <button class="filter-pill" data-filter="active">En ligne</button>
+        <button class="filter-pill" data-filter="expired">Expirées</button>
+        <button class="filter-pill" data-filter="draft">Brouillons</button>
+      </div>
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Rechercher (titre, quartier, ville)…" autocomplete="off">
+      </div>
     </div>
     <div id="listingsGrid" class="listing-grid"></div>
     <div id="emptyState" class="empty-state" style="display:none">
@@ -587,8 +610,45 @@
     document.getElementById('statExpired').textContent=expired.length;
     document.getElementById('statDraft').textContent=drafts.length;
     document.getElementById('statViews').textContent=totalViews;
-    renderListings(_listings);
+    document.getElementById('listingsToolbar').style.display=_listings.length?'flex':'none';
+    applyFilters();
   }
+
+  /* ── Filtre + recherche (Mes annonces) ── */
+  let _filter='all', _search='';
+  function applyFilters(){
+    const q=_search.trim().toLowerCase();
+    const filtered=_listings.filter(ad=>{
+      const days=daysLeft(ad.expires_at);
+      const isActive=ad.status==='active'&&(days===null||days>0);
+      const isExpired=ad.status==='active'&&days!==null&&days<=0;
+      const isDraft=ad.status==='draft';
+      if(_filter==='active'&&!isActive)return false;
+      if(_filter==='expired'&&!isExpired)return false;
+      if(_filter==='draft'&&!isDraft)return false;
+      if(q){
+        const hay=[ad.title,ad.district,ad.city].filter(Boolean).join(' ').toLowerCase();
+        if(!hay.includes(q))return false;
+      }
+      return true;
+    });
+    const grid=document.getElementById('listingsGrid'),empty=document.getElementById('emptyState');
+    if(_listings.length&&!filtered.length){
+      empty.style.display='none';grid.style.display='grid';
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#999;font-size:.9rem">Aucune annonce ne correspond.</div>';
+      return;
+    }
+    renderListings(filtered);
+  }
+  document.querySelectorAll('.filter-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      _filter=btn.dataset.filter;
+      applyFilters();
+    });
+  });
+  (function(){const si=document.getElementById('searchInput');if(si)si.addEventListener('input',e=>{_search=e.target.value;applyFilters();});})();
 
   function fmtPrice(n){return(n||0).toLocaleString('fr-FR')+' FCFA';}
   function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/86400000);}
@@ -599,7 +659,7 @@
     if(!list.length){grid.style.display='none';empty.style.display='block';return;}
     grid.style.display='grid';empty.style.display='none';
     list.forEach(ad=>{
-      const img=ad.images?.[0]||'assets/img/no-image.png';
+      const img=ad.images?.[0]?(window.SLCM_listings?.cfVariant?SLCM_listings.cfVariant(ad.images[0],'thumb'):ad.images[0]):'assets/img/no-image.png';
       const title=ad.title||'Annonce';
       const mode=ad.rent_sale==='sale'?'À vendre':'À louer';
       const days=daysLeft(ad.expires_at);
