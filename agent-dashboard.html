@@ -132,6 +132,31 @@
     .search-wrap input { width: 100%; padding: .5rem .8rem .5rem 2.1rem; border: 2px solid #eee; border-radius: 10px; font-family: inherit; font-size: .85rem; transition: border-color .15s; }
     .search-wrap input:focus { outline: none; border-color: var(--orange); }
 
+    /* #6 — Bannière "expire bientôt" */
+    .expire-banner { background: #fff3e0; border: 2px solid #ff9800; border-radius: 16px; padding: 1rem 1.4rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: .8rem; color: #e65100; font-weight: 600; font-size: .9rem; }
+    .expire-banner i { font-size: 1.2rem; }
+
+    /* #8 — Carte complétude profil */
+    .complete-card { background: #fff; border: 2px solid #eee; border-radius: 16px; padding: 1.1rem 1.4rem; margin-bottom: 1.2rem; }
+    .complete-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-weight: 700; font-size: .92rem; color: #333; flex-wrap: wrap; }
+    .complete-head i { color: #ff9800; margin-right: .3rem; }
+    .complete-cta { background: var(--orange); color: #fff; border: none; border-radius: 10px; padding: .45rem 1rem; font-family: inherit; font-weight: 700; font-size: .82rem; cursor: pointer; }
+    .complete-bar { height: 8px; background: #eee; border-radius: 999px; margin: .7rem 0 .6rem; overflow: hidden; }
+    .complete-fill { height: 100%; background: linear-gradient(90deg,#ff9800,#ff7a00); border-radius: 999px; transition: width .4s; }
+    .complete-missing { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .miss-chip { background: #fff3e0; color: #e65100; border-radius: 999px; padding: .2rem .7rem; font-size: .72rem; font-weight: 700; }
+
+    /* #9 — bouton Dupliquer */
+    .btn-dupe { background: #f1f1f1; color: #555; }
+
+    /* #7 — Skeleton de chargement */
+    .skeleton-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .skeleton-card .sk-img { height: 170px; }
+    .sk-line { height: 12px; border-radius: 6px; margin: .6rem 1rem; }
+    .sk-line.short { width: 50%; }
+    .skeleton-card .sk-img, .sk-line { background: linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size: 200% 100%; animation: sk 1.2s infinite; }
+    @keyframes sk { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: #fff; border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 1.8rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
@@ -279,6 +304,18 @@
       <button class="pf-save" onclick="saveProfile()"><i class="fas fa-save"></i> Enregistrer le profil</button>
     </div>
 
+    <div class="expire-banner" id="expireBanner" style="display:none">
+      <i class="fas fa-clock"></i>
+      <span id="expireBannerText"></span>
+    </div>
+    <div class="complete-card" id="completeCard" style="display:none">
+      <div class="complete-head">
+        <span><i class="fas fa-circle-check"></i> Profil complété à <strong id="completePct">0</strong>%</span>
+        <button class="complete-cta" onclick="openProfileEdit()">Compléter mon profil</button>
+      </div>
+      <div class="complete-bar"><div class="complete-fill" id="completeFill" style="width:0%"></div></div>
+      <div class="complete-missing" id="completeMissing"></div>
+    </div>
     <div class="section-bar">
       <h2>Mes annonces</h2>
       <a href="/publier">+ Publier</a>
@@ -468,6 +505,7 @@
     const avatar=document.getElementById('dashAvatar');
     if(_profile.agent_photo)avatar.innerHTML=`<img src="${_profile.agent_photo}" alt="${escapeHtml(name)}">`;
     else avatar.innerHTML=`<span>${escapeHtml(name.charAt(0).toUpperCase())}</span>`;
+    renderCompleteness();
 
     /* Pré-remplir les champs profil */
     document.getElementById('pfName').value  = _profile.name || '';
@@ -485,7 +523,14 @@
     const ps = document.getElementById('proStatus');
     if(ps){ ps.textContent = isPro ? '⭐ Agent Pro' : 'Compte Gratuit'; ps.className = 'pro-badge ' + (isPro ? 'pro' : 'free'); }
     const proCta = document.getElementById('proCTA');
-    if(proCta) proCta.style.display = isPro ? 'none' : 'inline-flex';
+    if(proCta){
+      proCta.style.display = isPro ? 'none' : 'inline-flex';
+      if(!isPro){
+        const msg = `Bonjour, je souhaite passer en Agent Pro (10 000 FCFA/mois). Mon compte : ${name} — ${_user.email}`;
+        proCta.href = 'https://wa.me/237650840714?text=' + encodeURIComponent(msg);
+        proCta.target = '_blank'; proCta.rel = 'noopener';
+      }
+    }
 
     /* Bannière KYC */
     renderKycBanner(_profile.kyc_status || 'none');
@@ -598,6 +643,7 @@
   }
 
   async function loadListings(){
+    renderSkeleton(4);
     const{data}=await _client.from('listings').select('*').eq('owner_id',_user.id).order('created_at',{ascending:false});
     _listings=data||[];
     const now=new Date();
@@ -610,6 +656,11 @@
     document.getElementById('statExpired').textContent=expired.length;
     document.getElementById('statDraft').textContent=drafts.length;
     document.getElementById('statViews').textContent=totalViews;
+    // #6 — alerte proactive "expire bientôt" (annonces actives à 7 jours ou moins)
+    const soon=_listings.filter(l=>{const d=daysLeft(l.expires_at);return l.status==='active'&&d!==null&&d>0&&d<=7;});
+    const eb=document.getElementById('expireBanner');
+    if(soon.length){eb.style.display='flex';document.getElementById('expireBannerText').textContent=`${soon.length} annonce${soon.length>1?'s':''} expire${soon.length>1?'nt':''} dans les 7 prochains jours — pensez à les renouveler.`;}
+    else eb.style.display='none';
     document.getElementById('listingsToolbar').style.display=_listings.length?'flex':'none';
     applyFilters();
   }
@@ -692,14 +743,16 @@
           ${isActive?`<a href="/annonce?id=${ad.id}" class="btn-view"><i class="fas fa-eye"></i> Voir</a>`:''}
           <button class="btn-edit"><i class="fas fa-edit"></i> Modifier</button>
           <button class="btn-status"><i class="fas fa-toggle-on"></i> Statut</button>
-          ${isActive&&!ad.premium?`<a href="/tarifs" class="btn-boost"><i class="fas fa-bolt"></i> Booster</a>`:''}
-          ${isExpired?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
+          ${isActive&&!ad.premium?`<a href="/tarifs${ad.ref?'?ref='+encodeURIComponent(ad.ref):''}" class="btn-boost"><i class="fas fa-bolt"></i> Booster</a>`:''}
+          ${(isExpired||(days!==null&&days>0&&days<=7))?`<button class="btn-renew"><i class="fas fa-redo"></i> Renouveler</button>`:''}
+          <button class="btn-dupe" title="Dupliquer en brouillon"><i class="fas fa-copy"></i></button>
           <button class="btn-delete"><i class="fas fa-trash"></i></button>
         </div>`;
       card.querySelector('.btn-edit').addEventListener('click',()=>openEditModal(ad));
       card.querySelector('.btn-status').addEventListener('click',()=>openStatus(ad.id));
       card.querySelector('.btn-delete').addEventListener('click',()=>deleteAd(ad.id,title));
-      if(isExpired)card.querySelector('.btn-renew').addEventListener('click',()=>renewAd(ad.id));
+      card.querySelector('.btn-dupe').addEventListener('click',()=>duplicateAd(ad.id));
+      const _rb=card.querySelector('.btn-renew');if(_rb)_rb.addEventListener('click',()=>renewAd(ad.id));
       grid.appendChild(card);
     });
   }
@@ -783,6 +836,55 @@
     showToast(`Annonce renouvelée pour ${days} jours ✅`);loadListings();
   }
 
+  /* #7 — Skeleton de chargement */
+  function renderSkeleton(n){
+    const grid=document.getElementById('listingsGrid'),empty=document.getElementById('emptyState');
+    if(empty)empty.style.display='none';
+    grid.style.display='grid';
+    grid.innerHTML=Array.from({length:n||4}).map(()=>'<div class="skeleton-card"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div><div class="sk-line"></div></div>').join('');
+  }
+
+  /* #8 — Indicateur de complétude du profil */
+  function renderCompleteness(){
+    const card=document.getElementById('completeCard');if(!card||!_profile)return;
+    const checks=[
+      {k:'Photo',ok:!!_profile.agent_photo},
+      {k:'Bio',ok:!!(_profile.agent_bio&&_profile.agent_bio.trim())},
+      {k:'Téléphone',ok:!!(_profile.agent_phone||_profile.phone)},
+      {k:'Zone',ok:!!_profile.zone},
+      {k:'KYC vérifié',ok:_profile.kyc_status==='verified'},
+    ];
+    const done=checks.filter(c=>c.ok).length, pct=Math.round(done/checks.length*100);
+    if(pct>=100){card.style.display='none';return;}
+    card.style.display='block';
+    document.getElementById('completePct').textContent=pct;
+    document.getElementById('completeFill').style.width=pct+'%';
+    document.getElementById('completeMissing').innerHTML=checks.filter(c=>!c.ok).map(c=>`<span class="miss-chip">À compléter : ${c.k}</span>`).join('');
+  }
+
+  /* #9 — Dupliquer une annonce (en brouillon) */
+  function genRef(city){
+    const codes={'Douala':'DLA','Yaoundé':'YDE','Bafoussam':'BFS','Garoua':'GRE','Maroua':'MRW','Bamenda':'BDA','Ngaoundéré':'NGD','Bertoua':'BTA','Ebolowa':'EBW','Kribi':'KBI'};
+    const code=codes[city]||'CMR', y=new Date().getFullYear().toString().slice(-2), n=new Date();
+    const p=x=>String(x).padStart(2,'0');
+    return `SL${y}-${code}-${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}`;
+  }
+  async function duplicateAd(id){
+    const ad=_listings.find(a=>a.id===id);if(!ad)return;
+    if(!confirm('Dupliquer cette annonce ? Une copie sera créée en brouillon, que vous pourrez modifier puis publier.'))return;
+    const cols=['description','type','rent_sale','city','district','price','price_per_day','bedrooms','bathrooms','superficie','hauteur','business_rent','business_activity','furnished','rental_segment','parking','generator','pool','titre_foncier','charges','caution','images','owner_phone'];
+    const copy={};cols.forEach(k=>{if(ad[k]!==undefined&&ad[k]!==null)copy[k]=ad[k];});
+    copy.owner_id=_user.id;
+    copy.ref=genRef(ad.city);
+    copy.title=(ad.title||'Annonce')+' (copie)';
+    copy.status='draft';
+    copy.premium=false;
+    const days=ad.rent_sale==='sale'?60:30;const d=new Date();d.setDate(d.getDate()+days);copy.expires_at=d.toISOString();
+    const{error}=await _client.from('listings').insert([copy]);
+    if(error){showToast('Erreur : '+error.message);return;}
+    showToast('Annonce dupliquée en brouillon ✅');loadListings();
+  }
+
   /* ── Statut de l'annonce (disponible / négociation / loué-vendu) ── */
   function openStatus(id){
     document.getElementById('statusListingId').value=id;
@@ -816,7 +918,7 @@
     };
     const{error}=await _client.from('profiles').upsert({id:_user.id,...updates});
     if(error){showToast('Erreur : '+error.message);return;}
-    _profile={..._profile,...updates};
+    _profile={..._profile,...updates};renderCompleteness();
     document.getElementById('dashName').textContent=updates.name||_user.email;
     document.getElementById('dashUserName').textContent=updates.name||_user.email;
     showToast('Profil mis à jour ✅');

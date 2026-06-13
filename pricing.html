@@ -523,7 +523,8 @@
           <span class="feat-text">Support WhatsApp prioritaire</span>
         </li>
       </ul>
-      <a href="/rendez-vous" class="btn-plan primary">Devenir Agent Pro</a>
+      <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20l%27abonnement%20Agent%20Pro%20(10%20000%20FCFA%2Fmois)." target="_blank" rel="noopener" class="btn-plan primary"><i class="fab fa-whatsapp"></i> Devenir Agent Pro</a>
+      <a href="/rendez-vous" style="display:block;text-align:center;margin-top:.6rem;font-size:.8rem;color:#888;text-decoration:none">ou prendre rendez-vous</a>
     </div>
 
   </div>
@@ -650,7 +651,7 @@
     <p>Rejoignez les agents qui font confiance à SE LOGER CM pour développer leur activité.</p>
     <div class="cta-btns">
       <a href="/publier" class="btn-cta primary">Publier gratuitement</a>
-      <a href="/rendez-vous" class="btn-cta outline">Devenir Agent Pro</a>
+      <a href="https://wa.me/237650840714?text=Bonjour%2C%20je%20souhaite%20l%27abonnement%20Agent%20Pro%20(10%20000%20FCFA%2Fmois)." target="_blank" rel="noopener" class="btn-cta outline">Devenir Agent Pro</a>
     </div>
   </div>
 
@@ -671,6 +672,27 @@ function toggleFaq(el) {
     el.classList.add('open');
   }
 }
+
+/* Tunnel boost : si /tarifs?ref=<REF>, on cible une annonce précise.
+   On injecte la réf dans le message WhatsApp pré-rempli des deux boosts
+   et on affiche un bandeau contextuel. Scopé à .boost-section pour ne pas
+   toucher d'éventuels liens WhatsApp ailleurs (footer, etc.). */
+(function () {
+  var ref = new URLSearchParams(location.search).get('ref');
+  if (!ref) return;
+  ref = ref.trim().slice(0, 40);
+  if (!ref) return;
+  document.querySelectorAll('.boost-section a[href*="wa.me/237650840714"]').forEach(function (a) {
+    a.href = a.href + encodeURIComponent(ref);
+  });
+  var header = document.querySelector('.boost-header');
+  if (header) {
+    var b = document.createElement('div');
+    b.style.cssText = 'background:#fff4e8;border:2px solid #ff7a00;border-radius:12px;padding:.7rem 1rem;margin:1rem auto 0;max-width:520px;color:#ff7a00;font-weight:700;font-size:.9rem;text-align:center';
+    b.textContent = '⚡ Boost pour votre annonce ' + ref;
+    header.appendChild(b);
+  }
+})();
 </script>
 <script src="/assets/js/cookies.js" defer></script>
 </body>
