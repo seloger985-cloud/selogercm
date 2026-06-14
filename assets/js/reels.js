@@ -158,13 +158,44 @@ const SLCM_reels = (() => {
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, slug')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, owner_id, slug')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) { console.error('[reels] loadAllReelsFromSupabase:', error); return []; }
-    return (data || []).filter(r => r.video_url?.trim());
+    let rows = (data || []).filter(r => r.video_url?.trim());
+    /* #3 — Numéro de contact = profil agent (à jour) → snapshot annonce → numéro par défaut.
+       Évite que la mise à jour du contact sur le profil ne se reflète pas dans les Réels. */
+    try {
+      const ownerIds = [...new Set(rows.map(r => r.owner_id).filter(Boolean))];
+      if (ownerIds.length) {
+        const { data: profs } = await client.from('profiles').select('id, agent_phone, phone').in('id', ownerIds);
+        const pmap = {};
+        (profs || []).forEach(p => { pmap[p.id] = p; });
+        rows.forEach(r => {
+          const p = pmap[r.owner_id] || {};
+          r.owner_phone = p.agent_phone || p.phone || r.owner_phone || '237650840714';
+        });
+      } else {
+        rows.forEach(r => { r.owner_phone = r.owner_phone || '237650840714'; });
+      }
+    } catch (e) { rows.forEach(r => { r.owner_phone = r.owner_phone || '237650840714'; }); }
+    return rows;
+  }
+
+  /* #2 — Ouvre WhatsApp depuis un bouton reel/viewer (lit data-wa-listing). */
+  function openReelWhatsApp(btn) {
+    let d = {};
+    try { d = JSON.parse(btn.getAttribute('data-wa-listing') || '{}'); } catch (e) {}
+    let phone = String(d.owner_phone || '237650840714').replace(/\D/g, '');
+    if (phone.length === 9) phone = '237' + phone;            /* numéro CM sans indicatif */
+    const parts = ['Bonjour, je suis intéressé(e) par votre annonce'];
+    if (d.title) parts.push(' « ' + d.title + ' »');
+    if (d.price) parts.push(' (' + d.price + ')');
+    if (d.location) parts.push(' à ' + d.location);
+    parts.push(', vue dans les Réels SE LOGER CM. Est-elle toujours disponible ?');
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(parts.join('')), '_blank');
   }
 
   /* Catégorisation dynamique d'un reel.
@@ -628,6 +659,10 @@ const SLCM_reels = (() => {
         if (!video.muted && video.paused) video.play().catch(() => {});
       });
     });
+
+    track.querySelectorAll('.reel-wa-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); openReelWhatsApp(btn); });
+    });
   }
 
   function setActiveDesktopReel(idx) {
@@ -889,6 +924,10 @@ const SLCM_reels = (() => {
       };
       btn.addEventListener('touchend', toggleSound, { passive: false });
       btn.addEventListener('click', toggleSound);
+    });
+
+    viewer.querySelectorAll('.viewer-wa-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); openReelWhatsApp(btn); });
     });
 
     const slides = viewer.querySelectorAll('.viewer-slide');
