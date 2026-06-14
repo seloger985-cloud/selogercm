@@ -280,6 +280,7 @@ const SLCM_listings = (() => {
       ? getTransformUrl(rawImg, { width: 320, height: 240 })
       : 'assets/img/no-image.png';
     const hasVideo = !!listing.video_url;
+    const videoUid = hasVideo ? ((String(listing.video_url).match(/videodelivery\.net\/([^/]+)\//) || [])[1] || '') : '';
     const title = listing.title || listing.title_fr || 'Annonce';
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
@@ -323,7 +324,7 @@ const SLCM_listings = (() => {
             ${badge}
             ${soldBadge}
             ${agentBadges}
-            ${hasVideo ? '<div class="card-video-badge"><span class="pulse-dot"></span><i class="fas fa-video"></i> Vidéo</div>' : ''}
+            ${hasVideo ? `<div class="card-video-badge" data-video="${videoUid}" role="button" tabindex="0" style="cursor:pointer"><span class="pulse-dot"></span><i class="fas fa-video"></i> Vidéo</div>` : ''}
             ${fav}
           </div>
           <div class="listing-body" style="padding:1rem">
@@ -348,6 +349,38 @@ const SLCM_listings = (() => {
           </div>
         </a>
       </div>`;
+  }
+
+  /* ── Lecteur vidéo (lightbox) depuis le badge "Vidéo" des cards ──── */
+  function openVideoLightbox(uid) {
+    if (!uid) return;
+    let ov = document.getElementById('slcmVideoLightbox');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'slcmVideoLightbox';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:1rem';
+      ov.innerHTML = '<button id="slcmVideoClose" aria-label="Fermer" style="position:absolute;top:1rem;right:1rem;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:1.5rem;line-height:1;cursor:pointer">\u00d7</button><div id="slcmVideoFrame" style="width:min(420px,95vw);aspect-ratio:9/16;max-height:90vh"></div>';
+      document.body.appendChild(ov);
+      const close = () => { const f = document.getElementById('slcmVideoFrame'); if (f) f.innerHTML = ''; ov.style.display = 'none'; };
+      ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+      ov.querySelector('#slcmVideoClose').addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') close(); });
+    }
+    document.getElementById('slcmVideoFrame').innerHTML =
+      '<iframe src="https://iframe.videodelivery.net/' + uid + '?autoplay=true&muted=false&primaryColor=%23ff7a00" style="width:100%;height:100%;border:none;border-radius:14px" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    ov.style.display = 'flex';
+  }
+
+  /* Délégation : clic sur le badge "Vidéo" d'une card → ouvre la lightbox
+     et empêche la navigation vers la fiche annonce. */
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+      const badge = e.target.closest && e.target.closest('.card-video-badge');
+      if (!badge) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openVideoLightbox(badge.getAttribute('data-video'));
+    });
   }
 
   return {
