@@ -170,7 +170,7 @@ const SLCM_reels = (() => {
     try {
       const ownerIds = [...new Set(rows.map(r => r.owner_id).filter(Boolean))];
       if (ownerIds.length) {
-        const { data: profs } = await client.from('profiles').select('id, agent_phone, phone').in('id', ownerIds);
+        const { data: profs } = await client.from('public_listing_contacts').select('id, agent_phone, phone').in('id', ownerIds);
         const pmap = {};
         (profs || []).forEach(p => { pmap[p.id] = p; });
         rows.forEach(r => {

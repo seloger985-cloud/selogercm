@@ -1104,7 +1104,7 @@
         if (ad.owner_id && window.SLCM_DB?.client) {
           try {
             const { data: ownerProfile } = await window.SLCM_DB.client
-              .from('public_agents')
+              .from('public_listing_contacts')
               .select('agent_phone, phone')
               .eq('id', ad.owner_id)
               .single();
