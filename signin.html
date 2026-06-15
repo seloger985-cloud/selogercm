@@ -308,7 +308,7 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
     /* 1. Créer le compte email/password */
     const { data, error } = await client.auth.signUp({
       email, password: pass,
-      options: { data: { name, role } }
+      options: { data: { name, role, phone } }
     });
     if (error) {
       const msg = error.message || '';
