@@ -57,10 +57,13 @@ const SLCM_reels = (() => {
       } else if (window.Hls && Hls.isSupported()) {
         /* Chrome / Firefox via hls.js — config optimisée démarrage rapide mobile */
         const hls = new Hls({
-          enableWorker:       false,
-          startLevel:         2,      /* qualité moyenne d'entrée (pas la plus basse) */
-          maxBufferLength:    8,
-          maxMaxBufferLength: 15,
+          enableWorker:       true,   /* décodage/parsing hors thread principal → lecture plus fluide */
+          startLevel:         -1,    /* auto : niveau d'entrée selon la bande passante (robuste quel que soit le nb de rendus) */
+          capLevelToPlayerSize: false, /* ne PAS plafonner la qualité à la taille du <video> → plein écran = rendu max */
+          startFragPrefetch:  true,  /* pré-charge le 1er fragment → démarrage quasi-instantané */
+          abrEwmaDefaultEstimate: 800000, /* estimation initiale ~0,8 Mbps → monte plus vite en bon réseau */
+          maxBufferLength:    15,     /* cushion suffisant pour tenir un rendu haut, sans gaspiller la data */
+          maxMaxBufferLength: 30,
           autoStartLoad:      true,
           manifestLoadingMaxRetry: 3,
           fragLoadingMaxRetry:     3,
@@ -158,13 +161,22 @@ const SLCM_reels = (() => {
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, owner_id, slug')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, owner_id, slug, owner_is_pro, reels_boost_expires_at')
       .eq('status', 'active')
       .not('video_url', 'is', null)
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) { console.error('[reels] loadAllReelsFromSupabase:', error); return []; }
     let rows = (data || []).filter(r => r.video_url?.trim());
+    /* Gating Réels (Option B — transition douce) : on masque UNIQUEMENT les annonces
+       non-Pro dont le boost Réels a EXPIRÉ. Restent visibles : les Pro (Réels
+       automatiques), les boosts encore actifs, et le legacy/curé sans boost (null). */
+    const _nowReels = Date.now();
+    rows = rows.filter(r => {
+      if (r.owner_is_pro) return true;                                      // Pro → toujours visible
+      if (!r.reels_boost_expires_at) return true;                          // pas de boost → legacy/curé, on garde
+      return new Date(r.reels_boost_expires_at).getTime() > _nowReels;     // boost encore actif ?
+    });
     /* #3 — Numéro de contact = profil agent (à jour) → snapshot annonce → numéro par défaut.
        Évite que la mise à jour du contact sur le profil ne se reflète pas dans les Réels. */
     try {
