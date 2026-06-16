@@ -330,7 +330,7 @@
 
 <script>
 /* Quartiers : source canonique unique (config.js) — évite les listes restreintes/divergentes. */
-const CITIES = (window.SLCM_CONFIG && SLCM_CONFIG.cities)
+const CITIES = (typeof SLCM_CONFIG !== 'undefined' && SLCM_CONFIG.cities)
   || { 'Douala':[], 'Yaoundé':[], 'Bafoussam':[] };
 
 function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
