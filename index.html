@@ -514,7 +514,7 @@
   <!-- Scripts -->
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/i18n.js" defer></script>
-  <script src="/assets/js/listings.js" defer></script>
+  <script src="/assets/js/listings.js?v=2" defer></script>
   <script>
   /* ── Accueil : annonces via CDN cache (homepage-listings function) ── */
   document.addEventListener('DOMContentLoaded', async () => {
@@ -947,6 +947,39 @@ form.addEventListener('submit', async (e) => {
     "paymentAccepted": "Mobile Money, Cash",
     "hasMap": "https://maps.google.com/?q=Bonamoussadi+Douala+Cameroun"
   }
+  </script>
+  <!-- ════ CDM26 · rails latéraux festifs (Mondial) — réversible & daté ════ -->
+  <style id="cdm26-style">
+    body.cdm26 main section:not(.hero) > .container { position: relative; }
+    body.cdm26 main section:not(.hero) > .container::before,
+    body.cdm26 main section:not(.hero) > .container::after {
+      content: ""; position: absolute; top: 2.5rem; bottom: 2.5rem;
+      width: 3px; border-radius: 3px;
+      background: linear-gradient(180deg, #ff7a00 0%, #1f8a4c 100%);
+      pointer-events: none;
+    }
+    body.cdm26 main section:not(.hero) > .container::before { left: .5rem; }
+    body.cdm26 main section:not(.hero) > .container::after  { right: .5rem; }
+    @media (max-width: 640px) {
+      body.cdm26 main section:not(.hero) > .container::before,
+      body.cdm26 main section:not(.hero) > .container::after { top: 1.5rem; bottom: 1.5rem; }
+    }
+  </style>
+  <script>
+    /* Mondial 2026 : rails ON automatiquement du 11 juin au 20 juillet 2026.
+       Forçage manuel : localStorage.setItem('cdm26','on') ou 'off' ; supprimer la clé = retour à l'auto. */
+    (function () {
+      try {
+        var ov = localStorage.getItem('cdm26'), on;
+        if (ov === 'on') on = true;
+        else if (ov === 'off') on = false;
+        else {
+          var now = new Date();
+          on = now >= new Date('2026-06-11T00:00:00') && now <= new Date('2026-07-20T23:59:59');
+        }
+        if (on) document.body.classList.add('cdm26');
+      } catch (e) {}
+    })();
   </script>
 </body>
 </html>

@@ -31,7 +31,7 @@ const SLCM_listings = (() => {
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
     'type', 'status', 'statut', 'rental_segment', 'created_at', 'owner_phone',
-    'owner_kyc_verified', 'owner_is_pro'
+    'owner_kyc_verified', 'owner_is_pro', 'attributes'
   ].join(',');
 
   /* Construit une URL d'annonce robuste — préfère le slug, fallback id, garde contre undefined */
@@ -343,7 +343,17 @@ const SLCM_listings = (() => {
             </div>` : ''}
             <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap">
               <span style="background:#f0f0f0;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700">${mode}</span>
-              ${listing.bedrooms ? `<span style="background:#f0f0f0;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700">${listing.bedrooms} ch.</span>` : ''}
+              ${(() => {
+                if (listing.type === 'building') {
+                  const a = listing.attributes || {};
+                  const b = (t, o) => `<span style="background:${o ? '#fff4e8' : '#f0f0f0'};color:${o ? '#ff7a00' : 'inherit'};padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700">${t}</span>`;
+                  let h = b('🏢 Immeuble', true);
+                  if (a.appartements != null) h += b(a.appartements + ' appart.');
+                  if (a.niveaux != null) h += b(a.niveaux + ' niv.');
+                  return h;
+                }
+                return listing.bedrooms ? `<span style="background:#f0f0f0;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700">${listing.bedrooms} ch.</span>` : '';
+              })()}
               ${listing.furnished ? `<span style="background:#fff4e8;color:#ff7a00;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700">Meublé</span>` : ''}
             </div>
           </div>
