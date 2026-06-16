@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -329,11 +329,9 @@
 <script src="/assets/js/nav.js"></script>
 
 <script>
-const CITIES = {
-  'Douala':    ['Bonapriso','Akwa','Bali','Bonanjo','Deïdo','Bonamoussadi','Makepe','Kotto','Logpom','Ndogbong','PK8','Ndogpassi','Ndokoti'],
-  'Yaoundé':   ['Bastos','Nlongkak','Etoudi','Elig-Edzoa','Centre Ville','Melen','Mfandena','Omnisports'],
-  'Bafoussam': ['Banengo','Djeleng','Famla','Kamkop','Évêché','Tamdja']
-};
+/* Quartiers : source canonique unique (config.js) — évite les listes restreintes/divergentes. */
+const CITIES = (window.SLCM_CONFIG && SLCM_CONFIG.cities)
+  || { 'Douala':[], 'Yaoundé':[], 'Bafoussam':[] };
 
 function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
 let currentFilter = '';
@@ -476,9 +474,14 @@ function openEdit(id) {
 
 function refreshEditDistricts(city, selected) {
   const sel = document.getElementById('editDistrict');
-  sel.innerHTML = (CITIES[city]||[]).map(d =>
-    `<option value="${d}" ${d===selected?'selected':''}>${d}</option>`
+  const list = CITIES[city] || [];
+  sel.innerHTML = '<option value="">— Quartier —</option>' + list.map(d =>
+    `<option value="${d}">${d}</option>`
   ).join('');
+  if (selected) {
+    if (![...sel.options].some(o => o.value === selected)) sel.insertAdjacentHTML('beforeend', `<option value="${selected}">${selected}</option>`);
+    sel.value = selected;
+  }
 }
 
 document.getElementById('editCity').addEventListener('change', function() {
