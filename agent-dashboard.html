@@ -821,7 +821,7 @@
 
   function fillEditDistricts(city, selected){
     const sel=document.getElementById('editDistrict'); if(!sel) return;
-    const list=(window.SLCM_CONFIG&&SLCM_CONFIG.cities&&SLCM_CONFIG.cities[city])||[];
+    const list=(typeof SLCM_CONFIG!=='undefined'&&SLCM_CONFIG.cities&&SLCM_CONFIG.cities[city])||[];
     sel.innerHTML='<option value="">— Quartier —</option>'+list.map(d=>`<option value="${d}">${d}</option>`).join('');
     if(selected){ if(![...sel.options].some(o=>o.value===selected)) sel.insertAdjacentHTML('beforeend',`<option value="${selected}">${selected}</option>`); sel.value=selected; }
   }
