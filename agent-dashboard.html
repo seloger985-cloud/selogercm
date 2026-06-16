@@ -360,6 +360,7 @@
       <div class="modal-field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
       <div class="modal-field"><label>Ville</label><select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select></div>
       <div class="modal-field"><label>Quartier</label><select id="editDistrict"><option value="">— Quartier —</option></select></div>
+      <div class="modal-field"><label>Quartier</label><select id="editDistrict"><option value="">— Quartier —</option></select></div>
       <div class="modal-field"><label>Type</label>
         <select id="editType"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="villa">Villa</option><option value="studio">Studio</option><option value="duplex">Duplex</option></select>
       </div>
@@ -380,7 +381,22 @@
       </div>
       <div class="modal-field full" id="editVideoSection" style="display:none">
         <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s · 120 Mo max · vertical 9:16 · .mp4</span></label>
+        <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s · 120 Mo max · vertical 9:16 · .mp4</span></label>
         <div id="editVideoState" style="font-size:.83rem;margin:.4rem 0;color:#555"></div>
+        <!-- Conseils vidéo : pour un rendu net (replié par défaut) -->
+        <details class="reel-tips" style="margin:.2rem 0 .8rem;border:1px solid #ffe0c2;border-radius:12px;background:#fff8f0;overflow:hidden">
+          <summary style="cursor:pointer;padding:11px 13px;font-weight:700;font-size:.88rem;color:#ff7a00">🎬 Vidéo nette comme sur TikTok : les 5 réflexes</summary>
+          <div style="padding:0 13px 13px;font-size:.85rem;color:#333;line-height:1.6">
+            <ol style="margin:0;padding-left:1.2rem">
+              <li><strong>Filmez vertical</strong>, en <strong>1080p</strong> — bonne lumière, évitez le contre-jour.</li>
+              <li><strong>Montez et ajoutez la musique dans une appli de montage</strong> (CapCut, VN, InShot ou Samsung Studio).</li>
+              <li><strong>Exportez en qualité maximale</strong> (1080p, « qualité élevée »), puis <strong>uploadez ce fichier ici</strong>.</li>
+              <li>Musique : choisissez un son <strong>libre de droits</strong> (bibliothèque de l'appli).</li>
+              <li>Format : <strong>vertical 9:16</strong>, <strong>60 s maximum</strong>.</li>
+            </ol>
+            <p style="margin:9px 0 0;padding:8px 10px;background:#fff;border-left:3px solid #e11d48;border-radius:6px;color:#b00020;font-weight:600">⛔ À éviter : passer par les Réels d'Instagram/Facebook pour ajouter un son puis re-télécharger — ça écrase la qualité.</p>
+          </div>
+        </details>
         <!-- Conseils vidéo : pour un rendu net (replié par défaut) -->
         <details class="reel-tips" style="margin:.2rem 0 .8rem;border:1px solid #ffe0c2;border-radius:12px;background:#fff8f0;overflow:hidden">
           <summary style="cursor:pointer;padding:11px 13px;font-weight:700;font-size:.88rem;color:#ff7a00">🎬 Vidéo nette comme sur TikTok : les 5 réflexes</summary>
@@ -477,6 +493,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/supabase.js"></script>
+<script src="assets/js/config.js"></script>
 <script src="assets/js/config.js"></script>
 <script src="assets/js/listings.js"></script>
 <script>
@@ -861,6 +878,7 @@
     const listingId=document.getElementById('editId').value;
     const prog=document.getElementById('editVideoProgress'),bar=document.getElementById('editVideoBar'),st=document.getElementById('editVideoStatus'),state=document.getElementById('editVideoState');
     if(!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')){showToast('Format : .mp4 uniquement');return;}
+    if(file.size>120*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 120 Mo — exporte en 1080p, 60 s.`);return;}
     if(file.size>120*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 120 Mo — exporte en 1080p, 60 s.`);return;}
     let dur=null; try{dur=await getVideoDuration(file);}catch(e){showToast(e.message);return;}
     if(dur && dur>61){showToast(`Vidéo trop longue (${Math.round(dur)} s). Max 60 s.`);return;}

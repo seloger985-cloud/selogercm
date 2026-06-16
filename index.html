@@ -947,5 +947,35 @@ form.addEventListener('submit', async (e) => {
     "hasMap": "https://maps.google.com/?q=Bonamoussadi+Douala+Cameroun"
   }
   </script>
+  <!-- ════════ Thème saisonnier CDM26 — rails latéraux (À RETIRER après le Mondial) ════════ -->
+<style id="cdm26-style">
+  body.cdm26 main section:not(.hero) .container{ position:relative; }
+  body.cdm26 main section:not(.hero) .container::before,
+  body.cdm26 main section:not(.hero) .container::after{
+    content:""; position:absolute; top:2.5rem; bottom:2.5rem; width:3px;
+    border-radius:3px; pointer-events:none; z-index:1;
+    background:linear-gradient(180deg,#ff7a00 0 68%,#1f8a4c 68% 100%);
+  }
+  body.cdm26 main section:not(.hero) .container::before{ left:.5rem; }
+  body.cdm26 main section:not(.hero) .container::after { right:.5rem; }
+  @media (max-width:768px){
+    body.cdm26 main section:not(.hero) .container::before,
+    body.cdm26 main section:not(.hero) .container::after{ top:1.5rem; bottom:1.5rem; }
+  }
+</style>
+<script>
+/* CDM26 : s'active automatiquement du 11 juin au 19 juillet 2026, se retire seul après.
+   Override manuel : localStorage.setItem('cdm26','on')  ou  'off'. */
+(function(){
+  try{
+    var f = localStorage.getItem('cdm26'),
+        n = Date.now(),
+        a = Date.parse('2026-06-11T00:00:00'),
+        b = Date.parse('2026-07-20T00:00:00');
+    if (f === 'on' || (f !== 'off' && n >= a && n < b)) document.body.classList.add('cdm26');
+  }catch(e){}
+})();
+</script>
+<!-- ════════ fin CDM26 ════════ -->
 </body>
 </html>

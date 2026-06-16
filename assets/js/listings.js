@@ -280,7 +280,7 @@ const SLCM_listings = (() => {
       ? getTransformUrl(rawImg, { width: 320, height: 240 })
       : 'assets/img/no-image.png';
     const hasVideo = !!listing.video_url;
-    const videoUid = hasVideo ? ((String(listing.video_url).match(/videodelivery\.net\/([^/]+)\//) || [])[1] || '') : '';
+    const videoUid = hasVideo ? ((String(listing.video_url).match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/) || [])[1] || '') : '';
     const title = listing.title || listing.title_fr || 'Annonce';
     const mode  = listing.rent_sale === 'sale' ? 'À vendre' : 'À louer';
     const rentSale = listing.rent_sale || listing.rentSale || 'rent';
