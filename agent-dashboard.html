@@ -359,6 +359,7 @@
       <div class="modal-field full"><label>Titre</label><input id="editTitle" type="text"></div>
       <div class="modal-field"><label>Prix (FCFA)</label><input id="editPrice" type="number" min="0"></div>
       <div class="modal-field"><label>Ville</label><select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select></div>
+      <div class="modal-field"><label>Quartier</label><select id="editDistrict"><option value="">— Quartier —</option></select></div>
       <div class="modal-field"><label>Type</label>
         <select id="editType"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="villa">Villa</option><option value="studio">Studio</option><option value="duplex">Duplex</option></select>
       </div>
@@ -372,8 +373,22 @@
         <small style="display:block;color:#888;margin-top:.35rem">Glissez pour réorganiser · × pour retirer · 8 max</small>
       </div>
       <div class="modal-field full" id="editVideoSection" style="display:none">
-        <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s max · vertical 9:16 conseillé · .mp4</span></label>
+        <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s · 120 Mo max · vertical 9:16 · .mp4</span></label>
         <div id="editVideoState" style="font-size:.83rem;margin:.4rem 0;color:#555"></div>
+        <!-- Conseils vidéo : pour un rendu net (replié par défaut) -->
+        <details class="reel-tips" style="margin:.2rem 0 .8rem;border:1px solid #ffe0c2;border-radius:12px;background:#fff8f0;overflow:hidden">
+          <summary style="cursor:pointer;padding:11px 13px;font-weight:700;font-size:.88rem;color:#ff7a00">🎬 Vidéo nette comme sur TikTok : les 5 réflexes</summary>
+          <div style="padding:0 13px 13px;font-size:.85rem;color:#333;line-height:1.6">
+            <ol style="margin:0;padding-left:1.2rem">
+              <li><strong>Filmez vertical</strong>, en <strong>1080p</strong> — bonne lumière, évitez le contre-jour.</li>
+              <li><strong>Montez et ajoutez la musique dans une appli de montage</strong> (CapCut, VN, InShot ou Samsung Studio).</li>
+              <li><strong>Exportez en qualité maximale</strong> (1080p, « qualité élevée »), puis <strong>uploadez ce fichier ici</strong>.</li>
+              <li>Musique : choisissez un son <strong>libre de droits</strong> (bibliothèque de l'appli).</li>
+              <li>Format : <strong>vertical 9:16</strong>, <strong>60 s maximum</strong>.</li>
+            </ol>
+            <p style="margin:9px 0 0;padding:8px 10px;background:#fff;border-left:3px solid #e11d48;border-radius:6px;color:#b00020;font-weight:600">⛔ À éviter : passer par les Réels d'Instagram/Facebook pour ajouter un son puis re-télécharger — ça écrase la qualité.</p>
+          </div>
+        </details>
         <label class="edit-add-btn" id="editVideoAddBtn">🎬 Choisir une vidéo<input type="file" id="editVideoInput" accept="video/mp4,.mp4" hidden></label>
         <div id="editVideoProgress" style="display:none;margin-top:.6rem">
           <div style="background:#f0f0f0;border-radius:999px;height:8px;overflow:hidden"><div id="editVideoBar" style="height:100%;background:var(--orange);width:0%;transition:width .3s"></div></div>
@@ -456,6 +471,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/supabase.js"></script>
+<script src="assets/js/config.js"></script>
 <script src="assets/js/listings.js"></script>
 <script>
 
@@ -803,7 +819,14 @@
     });
   })();
 
-  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();setupEditVideo(ad);const ov=document.getElementById('editOverlay');ov.classList.add('open');const mb=ov.querySelector('.modal-box');if(mb)mb.scrollTop=0;}
+  function fillEditDistricts(city, selected){
+    const sel=document.getElementById('editDistrict'); if(!sel) return;
+    const list=(window.SLCM_CONFIG&&SLCM_CONFIG.cities&&SLCM_CONFIG.cities[city])||[];
+    sel.innerHTML='<option value="">— Quartier —</option>'+list.map(d=>`<option value="${d}">${d}</option>`).join('');
+    if(selected){ if(![...sel.options].some(o=>o.value===selected)) sel.insertAdjacentHTML('beforeend',`<option value="${selected}">${selected}</option>`); sel.value=selected; }
+  }
+  document.getElementById('editCity')?.addEventListener('change',e=>fillEditDistricts(e.target.value));
+  function openEditModal(ad){document.getElementById('editId').value=ad.id;document.getElementById('editTitle').value=ad.title||'';document.getElementById('editPrice').value=ad.price||'';document.getElementById('editCity').value=ad.city||'Douala';fillEditDistricts(ad.city||'Douala',ad.district||'');document.getElementById('editType').value=ad.type||'apartment';document.getElementById('editMode').value=ad.rent_sale||'rent';document.getElementById('editDesc').value=ad.description||'';editImages=(ad.images||[]).map(url=>({type:'existing',url}));renderEditThumbs();setupEditVideo(ad);const ov=document.getElementById('editOverlay');ov.classList.add('open');const mb=ov.querySelector('.modal-box');if(mb)mb.scrollTop=0;}
 
   /* ── Vidéo Réel : uploader direct → Cloudflare Stream (sas pending) ── */
   function setupEditVideo(ad){
@@ -832,7 +855,7 @@
     const listingId=document.getElementById('editId').value;
     const prog=document.getElementById('editVideoProgress'),bar=document.getElementById('editVideoBar'),st=document.getElementById('editVideoStatus'),state=document.getElementById('editVideoState');
     if(!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')){showToast('Format : .mp4 uniquement');return;}
-    if(file.size>60*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 60 Mo — exporte en 1080p.`);return;}
+    if(file.size>120*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 120 Mo — exporte en 1080p, 60 s.`);return;}
     let dur=null; try{dur=await getVideoDuration(file);}catch(e){showToast(e.message);return;}
     if(dur && dur>61){showToast(`Vidéo trop longue (${Math.round(dur)} s). Max 60 s.`);return;}
     prog.style.display='block';bar.style.width='0%';st.textContent='Préparation…';
@@ -863,7 +886,7 @@
   async function saveEdit(){
     const id=document.getElementById('editId').value;
     const btn=document.querySelector('#editOverlay .btn-save');
-    const updates={title:document.getElementById('editTitle').value.trim(),price:Number(document.getElementById('editPrice').value)||0,city:document.getElementById('editCity').value,type:document.getElementById('editType').value,rent_sale:document.getElementById('editMode').value,description:document.getElementById('editDesc').value.trim()};
+    const updates={title:document.getElementById('editTitle').value.trim(),price:Number(document.getElementById('editPrice').value)||0,city:document.getElementById('editCity').value,district:document.getElementById('editDistrict').value||null,type:document.getElementById('editType').value,rent_sale:document.getElementById('editMode').value,description:document.getElementById('editDesc').value.trim()};
     if(btn){btn.disabled=true;btn.textContent='Enregistrement…';}
     try{
       const newFiles=editImages.filter(x=>x.type==='new').map(x=>x.file);
