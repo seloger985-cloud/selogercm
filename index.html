@@ -282,7 +282,7 @@
               <select id="bedrooms" name="bedrooms" aria-label="Chambres" data-i18n-placeholder="bedrooms">
                 <option value="" data-i18n="home.bedrooms">Chambres</option>
                 <option value="1">1</option><option value="2">2</option>
-                <option value="3">3</option><option value="4">4+</option>
+                <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6+</option>
               </select>
             </div>
             <div class="field-black">
@@ -623,7 +623,7 @@
 
     // Bedrooms (sécurité si vide)
     if (bedroomsSel && bedroomsSel.options.length <= 1) {
-      setOptions(bedroomsSel, ['1','2','3','4+'], 'Bedrooms');
+      setOptions(bedroomsSel, ['1','2','3','4','5','6'], 'Bedrooms');
     }
 
     // Districts selon City

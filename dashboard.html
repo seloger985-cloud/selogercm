@@ -244,7 +244,19 @@
           <option value="2">2 chambres</option>
           <option value="3">3 chambres</option>
           <option value="4">4 chambres</option>
-          <option value="5">5 chambres +</option>
+          <option value="5">5 chambres</option>
+          <option value="6">6 chambres +</option>
+        </select>
+      </div>
+      <div class="field"><label>Salles de bain</label>
+        <select id="editBathrooms">
+          <option value="">—</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6 +</option>
         </select>
       </div>
       <div class="field"><label>Ville</label>
@@ -329,11 +341,9 @@
 <script src="/assets/js/nav.js"></script>
 
 <script>
-const CITIES = {
-  'Douala':    ['Bonapriso','Akwa','Bali','Bonanjo','Deïdo','Bonamoussadi','Makepe','Kotto','Logpom','Ndogbong','PK8','Ndogpassi','Ndokoti'],
-  'Yaoundé':   ['Bastos','Nlongkak','Etoudi','Elig-Edzoa','Centre Ville','Melen','Mfandena','Omnisports'],
-  'Bafoussam': ['Banengo','Djeleng','Famla','Kamkop','Évêché','Tamdja']
-};
+/* Quartiers : source canonique unique (config.js) — évite les listes restreintes/divergentes. */
+const CITIES = (typeof SLCM_CONFIG !== 'undefined' && SLCM_CONFIG.cities)
+  || { 'Douala':[], 'Yaoundé':[], 'Bafoussam':[] };
 
 function fmtPrice(n) { return (n||0).toLocaleString('fr-FR') + ' FCFA'; }
 let currentFilter = '';
@@ -468,6 +478,7 @@ function openEdit(id) {
   document.getElementById('editMode').value      = ad.rentSale || ad.rent_sale || 'rent';
   document.getElementById('editFurnished').value = String(!!ad.furnished);
   document.getElementById('editBedrooms').value  = ad.bedrooms != null ? String(ad.bedrooms) : '';
+  document.getElementById('editBathrooms').value = ad.bathrooms != null ? String(ad.bathrooms) : '';
   document.getElementById('editCity').value      = ad.city || 'Douala';
   document.getElementById('editDesc').value  = ad.description || '';
   refreshEditDistricts(ad.city||'Douala', ad.district||'');
@@ -476,9 +487,14 @@ function openEdit(id) {
 
 function refreshEditDistricts(city, selected) {
   const sel = document.getElementById('editDistrict');
-  sel.innerHTML = (CITIES[city]||[]).map(d =>
-    `<option value="${d}" ${d===selected?'selected':''}>${d}</option>`
+  const list = CITIES[city] || [];
+  sel.innerHTML = '<option value="">— Quartier —</option>' + list.map(d =>
+    `<option value="${d}">${d}</option>`
   ).join('');
+  if (selected) {
+    if (![...sel.options].some(o => o.value === selected)) sel.insertAdjacentHTML('beforeend', `<option value="${selected}">${selected}</option>`);
+    sel.value = selected;
+  }
 }
 
 document.getElementById('editCity').addEventListener('change', function() {
@@ -498,6 +514,7 @@ document.getElementById('editSave').addEventListener('click', async () => {
     rent_sale:   document.getElementById('editMode').value,
     furnished:   document.getElementById('editFurnished').value === 'true',
     bedrooms:    document.getElementById('editBedrooms').value !== '' ? Number(document.getElementById('editBedrooms').value) : null,
+    bathrooms:   document.getElementById('editBathrooms').value !== '' ? Number(document.getElementById('editBathrooms').value) : null,
     city:        document.getElementById('editCity').value,
     district:    document.getElementById('editDistrict').value,
     description: document.getElementById('editDesc').value.trim(),

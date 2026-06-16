@@ -147,6 +147,7 @@
           <option value="studio">Studio</option>
           <option value="villa">Villa</option>
           <option value="duplex">Duplex</option>
+          <option value="building">Immeuble</option>
           <option value="warehouse">Entrepôt</option>
           <option value="shop">Boutique / Local commercial</option>
           <option value="office">Bureau / Espace de travail</option>
@@ -161,7 +162,7 @@
         <select id="bedrooms" class="select" required>
           <option value="">Chambres</option>
           <option value="1">1</option><option value="2">2</option>
-          <option value="3">3</option><option value="4">4+</option>
+          <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6+</option>
         </select>
       </div>
 
@@ -186,8 +187,49 @@
           <option value="">Bains</option>
           <option value="1">1</option>
           <option value="2">2</option>
-          <option value="3">3+</option>
+          <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6+</option>
         </select>
+      </div>
+
+      <!-- Champs immeuble -->
+      <div id="buildingFields" style="display:none;grid-column:1/-1">
+        <div style="background:#fafafa;border:1.5px solid #eee;border-radius:14px;padding:1.1rem">
+          <p style="font-weight:800;margin:0 0 .8rem;color:#111">Détails de l'immeuble</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Nombre de niveaux *</label><input id="immNiveaux" type="number" min="0" class="input" placeholder="Ex : 4"></div>
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Nombre d'appartements *</label><input id="immAppartements" type="number" min="0" class="input" placeholder="Ex : 8"></div>
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Nombre de studios *</label><input id="immStudios" type="number" min="0" class="input" placeholder="Ex : 2"></div>
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Superficie terrain (m²) *</label><input id="immTerrain" type="number" min="0" class="input" placeholder="Ex : 500"></div>
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Année de construction</label><input id="immAnnee" type="number" min="1900" max="2100" class="input" placeholder="Ex : 2018"></div>
+            <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Usage *</label><select id="immUsage" class="select"><option value="">—</option><option value="residentiel">Résidentiel</option><option value="commercial">Commercial</option><option value="mixte">Mixte</option></select></div>
+          </div>
+          <div style="margin-top:1rem"><label style="font-weight:700;display:block;margin-bottom:.25rem">Précisions / composition</label><textarea id="immPrecisions" class="input" rows="2" placeholder="Ex : 4 studios + 2 F3 + 1 boutique en RDC"></textarea></div>
+          <div style="margin-top:1rem">
+            <label style="font-weight:700;display:block;margin-bottom:.4rem">Équipements communs</label>
+            <div style="display:flex;flex-wrap:wrap;gap:.9rem">
+              <label style="font-weight:500"><input type="checkbox" class="immEquip" value="ascenseur"> Ascenseur</label>
+              <label style="font-weight:500"><input type="checkbox" class="immEquip" value="groupe_electrogene"> Groupe électrogène</label>
+              <label style="font-weight:500"><input type="checkbox" class="immEquip" value="forage"> Forage / château d'eau</label>
+              <label style="font-weight:500"><input type="checkbox" class="immEquip" value="gardiennage"> Gardiennage</label>
+              <label style="font-weight:500"><input type="checkbox" class="immEquip" value="cloture"> Clôture</label>
+            </div>
+          </div>
+          <div id="buildingRentFields" style="display:none;margin-top:1rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Caution / avance (mois)</label><input id="immCaution" type="number" min="0" class="input" placeholder="Ex : 2"></div>
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Meublé *</label><select id="immMeuble" class="select"><option value="">—</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Durée de bail (années) *</label><input id="immBail" type="number" min="0" class="input" placeholder="Ex : 3"></div>
+            </div>
+          </div>
+          <div id="buildingSaleFields" style="display:none;margin-top:1rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Revenus locatifs mensuels (FCFA)</label><input id="immRevenus" type="number" min="0" class="input" placeholder="Ex : 1200000"></div>
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Taux d'occupation (%)</label><input id="immOccupation" type="number" min="0" max="100" class="input" placeholder="Ex : 90"></div>
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Titre foncier *</label><select id="immTitre" class="select"><option value="">—</option><option value="titre">Titré</option><option value="en_cours">En cours</option><option value="morcellement">Morcellement</option></select></div>
+              <div><label style="font-weight:700;display:block;margin-bottom:.25rem">Rendement estimé</label><input id="immRendement" class="input" readonly placeholder="—" style="background:#f0f0f0"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Champs commerciaux (entrepôt/boutique uniquement) -->
@@ -394,6 +436,18 @@
           updateTypeFields();
         }
 
+        /* Immeuble */
+        if (d.type === 'building' && d.attributes) {
+          const a = d.attributes;
+          const setv = (id, v) => { if (v != null && v !== '') { const el = document.getElementById(id); if (el) el.value = v; } };
+          setv('immNiveaux', a.niveaux); setv('immAppartements', a.appartements); setv('immStudios', a.studios);
+          setv('immPrecisions', a.precisions); setv('immTerrain', a.terrain_m2); setv('immAnnee', a.annee); setv('immUsage', a.usage);
+          (a.equipements || []).forEach(v => { const c = document.querySelector('.immEquip[value="' + v + '"]'); if (c) c.checked = true; });
+          setv('immCaution', a.caution_mois); setv('immMeuble', a.meuble); setv('immBail', a.bail_annees);
+          setv('immRevenus', a.revenus_mensuels); setv('immOccupation', a.taux_occupation); setv('immTitre', a.titre_foncier);
+          updateBuildingFields(); computeRendement();
+        }
+
         /* Booléens */
         if (d.furnished)  {
           document.getElementById('furnished').checked = true;
@@ -472,6 +526,12 @@
         document.getElementById('chargesField').style.display = 'none';
         document.getElementById('titreFoncierField').style.display = isBusiness ? 'none' : 'block';
       }
+      if (document.getElementById('type').value === 'building') {
+        document.getElementById('cautionField').style.display = 'none';
+        document.getElementById('chargesField').style.display = 'none';
+        document.getElementById('titreFoncierField').style.display = 'none';
+      }
+      updateBuildingFields();
     }
     modeRentBtn.addEventListener('click',()=>{currentMode='rent';syncMode();syncPricePerDay();});
     modeSaleBtn.addEventListener('click',()=>{currentMode='sale';syncMode();syncPricePerDay();});
@@ -586,28 +646,48 @@
     const terrainTypes = ['plots-of-land'];
     const businessTypes = ['fonds-commerce'];
 
+    function updateBuildingFields(){
+      const isBuilding = document.getElementById('type').value === 'building';
+      const rent = currentMode === 'rent';
+      const rf = document.getElementById('buildingRentFields'); if (rf) rf.style.display = (isBuilding && rent) ? 'block' : 'none';
+      const sf = document.getElementById('buildingSaleFields'); if (sf) sf.style.display = (isBuilding && !rent) ? 'block' : 'none';
+      ['immNiveaux','immAppartements','immStudios','immTerrain','immUsage'].forEach(id => { const el = document.getElementById(id); if (el) el.required = isBuilding; });
+      ['immMeuble','immBail'].forEach(id => { const el = document.getElementById(id); if (el) el.required = isBuilding && rent; });
+      const t = document.getElementById('immTitre'); if (t) t.required = isBuilding && !rent;
+    }
+    function computeRendement(){
+      const el = document.getElementById('immRendement'); if (!el) return;
+      const prix = Number(document.getElementById('price').value || 0);
+      const rev  = Number((document.getElementById('immRevenus') || {}).value || 0);
+      el.value = (prix && rev) ? (Math.round((rev * 12) / prix * 1000) / 10) + ' %' : '';
+    }
+    document.getElementById('immRevenus')?.addEventListener('input', computeRendement);
+    document.getElementById('price')?.addEventListener('input', computeRendement);
+
     function updateTypeFields() {
       const val = typeSelect.value;
       const isCommercial = commercialTypes.includes(val);
       const isTerrain    = terrainTypes.includes(val);
       const isBusiness   = businessTypes.includes(val);
+      const isBuilding   = val === 'building';
 
       document.getElementById('commercialFields').style.display = isCommercial ? 'block' : 'none';
       document.getElementById('terrainFields').style.display    = isTerrain    ? 'block' : 'none';
       document.getElementById('businessFields').style.display   = isBusiness ? 'block' : 'none';
-      document.getElementById('bedroomsField').style.display    = (isCommercial || isTerrain || isBusiness) ? 'none'  : 'block';
-      document.getElementById('bathroomsField').style.display   = (isCommercial || isTerrain || isBusiness) ? 'none'  : 'block';
-      document.getElementById('bedrooms').required = !(isCommercial || isTerrain || isBusiness);
+      document.getElementById('buildingFields').style.display = isBuilding ? 'block' : 'none';
+      document.getElementById('bedroomsField').style.display    = (isCommercial || isTerrain || isBusiness || isBuilding) ? 'none'  : 'block';
+      document.getElementById('bathroomsField').style.display   = (isCommercial || isTerrain || isBusiness || isBuilding) ? 'none'  : 'block';
+      document.getElementById('bedrooms').required = !(isCommercial || isTerrain || isBusiness || isBuilding);
 
       /* Masquer meublé / prix journalier pour terrain & fonds de commerce */
       const furnishedRow = document.getElementById('furnished')?.closest('.checkline');
-      if (furnishedRow) furnishedRow.style.display = (isTerrain || isBusiness) ? 'none' : '';
+      if (furnishedRow) furnishedRow.style.display = (isTerrain || isBusiness || isBuilding) ? 'none' : '';
       const pricePerDayField = document.getElementById('pricePerDayField');
-      if (pricePerDayField && (isTerrain || isBusiness)) pricePerDayField.style.display = 'none';
+      if (pricePerDayField && (isTerrain || isBusiness || isBuilding)) pricePerDayField.style.display = 'none';
 
       const priceLabel = document.querySelector('label[for="price"]');
       if (priceLabel) {
-        priceLabel.innerHTML = isBusiness ? 'Prix du fonds (FCFA)' : (currentMode === 'sale' ? 'Prix de vente (FCFA)' : 'Prix mensuel (FCFA)');
+        priceLabel.innerHTML = isBusiness ? 'Prix du fonds (FCFA)' : (currentMode === 'sale' ? 'Prix de vente (FCFA)' : (isBuilding ? 'Loyer mensuel total (FCFA)' : 'Prix mensuel (FCFA)'));
       }
 
       syncMode();
@@ -767,6 +847,34 @@
       const user = await SLCM.getCurrentUser();
 
       /* ── Payload aligné sur le schéma Supabase ── */
+      /* ── Attributs immeuble (JSONB) ── */
+      const _numOrNull = id => { const v = document.getElementById(id).value; return v !== '' ? Number(v) : null; };
+      let buildingAttributes = null;
+      if (document.getElementById('type').value === 'building') {
+        buildingAttributes = {
+          niveaux:      _numOrNull('immNiveaux'),
+          appartements: _numOrNull('immAppartements'),
+          studios:      _numOrNull('immStudios'),
+          precisions:   document.getElementById('immPrecisions').value.trim() || null,
+          terrain_m2:   _numOrNull('immTerrain'),
+          annee:        _numOrNull('immAnnee'),
+          equipements:  [...document.querySelectorAll('.immEquip:checked')].map(c => c.value),
+          usage:        document.getElementById('immUsage').value || null,
+        };
+        if (currentMode === 'rent') {
+          buildingAttributes.caution_mois = _numOrNull('immCaution');
+          buildingAttributes.meuble       = document.getElementById('immMeuble').value || null;
+          buildingAttributes.bail_annees  = _numOrNull('immBail');
+        } else {
+          buildingAttributes.revenus_mensuels = _numOrNull('immRevenus');
+          buildingAttributes.taux_occupation  = _numOrNull('immOccupation');
+          buildingAttributes.titre_foncier    = document.getElementById('immTitre').value || null;
+          const _prix = Number(document.getElementById('price').value || 0);
+          const _rev  = buildingAttributes.revenus_mensuels;
+          buildingAttributes.rendement = (_prix && _rev) ? Math.round((_rev * 12) / _prix * 1000) / 10 : null;
+        }
+      }
+
       const payload = {
         ref,
         owner_id:      user ? user.id : null,
@@ -831,6 +939,7 @@
         /* Statut */
         status:        'active',
         premium:       false,
+        attributes:    buildingAttributes,
       };
 
       const { data, error } = await client.from('listings').insert([payload]).select().single();
