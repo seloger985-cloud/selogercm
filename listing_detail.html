@@ -919,10 +919,37 @@
         { label: 'Référence',  val: ad.ref || '—' },
         { label: 'Ville',      val: ad.city      || '—' },
         { label: 'Quartier',   val: ad.district  || '—' },
-        { label: 'Chambres',   val: ad.bedrooms  || '—' },
-        { label: 'Salles de bain', val: ad.bathrooms || '—' },
-        { label: 'Type',       val: capitalize(ad.type) || '—' },
-        { label: 'Statut',     val: ad.furnished ? 'Meublé' : 'Non meublé' },
+        ...(ad.type !== 'building' ? [{ label: 'Chambres',   val: ad.bedrooms  || '—' }] : []),
+        ...(ad.type !== 'building' ? [{ label: 'Salles de bain', val: ad.bathrooms || '—' }] : []),
+        { label: 'Type',       val: ad.type === 'building' ? 'Immeuble' : (capitalize(ad.type) || '—') },
+        ...(ad.type === 'building' && ad.attributes ? (() => {
+          const a = ad.attributes;
+          const eqMap = { ascenseur:'Ascenseur', groupe_electrogene:'Groupe électrogène', forage:"Forage / château d'eau", gardiennage:'Gardiennage', cloture:'Clôture' };
+          const usageMap = { residentiel:'Résidentiel', commercial:'Commercial', mixte:'Mixte' };
+          const titreMap = { titre:'Titré', en_cours:'En cours', morcellement:'Morcellement' };
+          const out = [
+            { label: 'Niveaux',      val: a.niveaux != null ? a.niveaux : '—' },
+            { label: 'Appartements', val: a.appartements != null ? a.appartements : '—' },
+            { label: 'Studios',      val: a.studios != null ? a.studios : '—' },
+            ...(a.terrain_m2 ? [{ label: 'Superficie terrain', val: a.terrain_m2 + ' m²' }] : []),
+            ...(a.annee ? [{ label: 'Année', val: a.annee }] : []),
+            ...(a.usage ? [{ label: 'Usage', val: usageMap[a.usage] || a.usage }] : []),
+            ...((a.equipements && a.equipements.length) ? [{ label: 'Équipements', val: a.equipements.map(e => eqMap[e] || e).join(', ') }] : []),
+          ];
+          if (ad.rent_sale === 'rent') {
+            if (a.meuble) out.push({ label: 'Meublé', val: a.meuble === 'oui' ? 'Oui' : 'Non' });
+            if (a.bail_annees) out.push({ label: 'Durée de bail', val: a.bail_annees + (a.bail_annees > 1 ? ' ans' : ' an') });
+            if (a.caution_mois) out.push({ label: 'Caution', val: a.caution_mois + ' mois' });
+          } else {
+            if (a.revenus_mensuels) out.push({ label: 'Revenus locatifs', val: (a.revenus_mensuels).toLocaleString('fr-FR') + ' FCFA/mois' });
+            if (a.taux_occupation != null) out.push({ label: "Taux d'occupation", val: a.taux_occupation + ' %' });
+            if (a.rendement != null) out.push({ label: 'Rendement estimé', val: a.rendement + ' %' });
+            if (a.titre_foncier) out.push({ label: 'Titre foncier', val: titreMap[a.titre_foncier] || a.titre_foncier });
+          }
+          if (a.precisions) out.push({ label: 'Composition', val: a.precisions });
+          return out;
+        })() : []),
+        ...(ad.type !== 'building' ? [{ label: 'Statut',     val: ad.furnished ? 'Meublé' : 'Non meublé' }] : []),
         ...(ad.type === 'fonds-commerce' && ad.business_activity ? [{ label: 'Activité', val: ad.business_activity }] : []),
         ...(ad.type === 'fonds-commerce' && ad.business_rent ? [{ label: 'Loyer mensuel', val: (ad.business_rent || 0).toLocaleString('fr-FR') + ' FCFA/mois' }] : []),
         { label: 'Parking',    val: ad.parking ? '✅ Oui' : '❌ Non' },
@@ -930,7 +957,7 @@
         { label: 'Piscine',      val: ad.pool ? '✅ Oui' : '❌ Non' },
         ...(ad.rent_sale === 'rent' && ad.caution ? [{ label: 'Caution', val: (ad.caution || 0).toLocaleString('fr-FR') + ' FCFA' }] : []),
         ...(ad.rent_sale === 'rent' && ad.charges ? [{ label: 'Charges locatives', val: (ad.charges || 0).toLocaleString('fr-FR') + ' FCFA/mois' }] : []),
-        ...(ad.rent_sale === 'sale' ? [{ label: 'Titre foncier', val: ad.titre_foncier ? '✅ Disponible' : '❌ Non disponible' }] : []),
+        ...(ad.rent_sale === 'sale' && ad.type !== 'building' ? [{ label: 'Titre foncier', val: ad.titre_foncier ? '✅ Disponible' : '❌ Non disponible' }] : []),
         { label: 'Mode',       val: mode },
       ];
 
