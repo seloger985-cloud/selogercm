@@ -57,6 +57,29 @@ async function fetchListing(slug) {
   return rows && rows[0] ? rows[0] : null;
 }
 
+/* Récupère jusqu'à 6 annonces similaires (même quartier en priorité, sinon même ville)
+   pour créer un maillage interne explorable entre fiches. */
+async function fetchRelated(ad) {
+  if (!SB_KEY || !ad) return [];
+  const base = `${SUPABASE_URL}/rest/v1/listings?status=eq.active&select=slug,title,district,city,price,rent_sale&order=created_at.desc&limit=6`;
+  const ex = ad.id ? `&id=neq.${encodeURIComponent(ad.id)}` : '';
+  const tries = [];
+  if (ad.district) tries.push(`${base}${ex}&district=eq.${encodeURIComponent(ad.district)}`);
+  if (ad.city)     tries.push(`${base}${ex}&city=eq.${encodeURIComponent(ad.city)}`);
+  for (const url of tries) {
+    try {
+      const res = await fetch(url, {
+        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' },
+      });
+      if (!res.ok) continue;
+      const rows = await res.json();
+      const list = (rows || []).filter(r => r && r.slug);
+      if (list.length) return list;
+    } catch (_) { /* essaie le critère suivant */ }
+  }
+  return [];
+}
+
 function buildSeo(ad, slug) {
   const adTitle = ad.title || ad.title_en || ad.title_fr || 'Annonce immobilière';
   const adCity = [ad.district, ad.city].filter(Boolean).join(', ') || 'Douala';
@@ -112,11 +135,19 @@ function buildSeo(ad, slug) {
   return { adTitle, adCity, adPrice, adMode, adImg, adImgFull, adUrl, pageTitle, adDesc, schema };
 }
 
-function buildPrerender(ad, seo) {
+function buildPrerender(ad, seo, related = []) {
   const desc = ad.description
     ? `<div class="desc-block"><h2>Description</h2><p>${esc(ad.description)}</p></div>`
     : '';
   const modeLabel = ad.rent_sale === 'sale' ? 'À vendre' : 'À louer';
+  const relatedHtml = (related && related.length)
+    ? `<nav class="similar-listings" aria-label="Biens similaires" style="margin-top:1.6rem;border-top:1px solid #eee;padding-top:1rem">
+        <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:.7rem">Biens similaires à ${esc(seo.adCity)}</h2>
+        <ul style="list-style:none;padding:0;margin:0;display:grid;gap:.55rem">
+          ${related.map(r => `<li><a href="${SITE}/annonce/${encodeURIComponent(r.slug)}" style="color:#111;text-decoration:none;font-weight:600">${esc(r.title || 'Annonce immobilière')}</a> <span style="color:#888;font-size:.9rem">— ${esc([r.district, r.city].filter(Boolean).join(', '))} · ${esc((r.price || 0).toLocaleString('fr-FR'))} FCFA${r.rent_sale === 'sale' ? '' : '/mois'}</span></li>`).join('')}
+        </ul>
+      </nav>`
+    : '';
   return `
     <article class="listing-seo-prerender info-panel" style="background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 6px 20px rgba(0,0,0,.07)">
       <img src="${esc(seo.adImgFull)}" alt="${esc(seo.adTitle)}" width="800" height="450" style="width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:1rem" loading="eager" fetchpriority="high">
@@ -125,6 +156,7 @@ function buildPrerender(ad, seo) {
       <p style="color:#555;margin-bottom:1rem"><strong>${esc(seo.adCity)}</strong> · ${esc(modeLabel)}</p>
       ${desc}
       <p style="margin-top:1rem"><a href="${esc(seo.adUrl)}" style="color:#ff7a00;font-weight:700">Voir l'annonce complète sur SE LOGER CM</a></p>
+      ${relatedHtml}
     </article>`;
 }
 
@@ -254,7 +286,8 @@ exports.handler = async function (event) {
     }
 
     const seo = buildSeo(ad, slug);
-    const prerender = buildPrerender(ad, seo);
+    const related = await fetchRelated(ad);
+    const prerender = buildPrerender(ad, seo, related);
     const template = readTemplate();
 
     const body = template
