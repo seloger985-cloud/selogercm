@@ -172,6 +172,7 @@
             <a href="/confidentialite">${C.privacy[lang]}</a>
             <a href="/cgu">${C.cgu[lang]}</a>
             <a href="/cookies">${C.cookies[lang]}</a>
+            <a href="/toutes-les-annonces">Toutes nos annonces</a>
           </div>
         </div>
       </div>
