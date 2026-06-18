@@ -251,6 +251,11 @@
   status = 200
 
 [[redirects]]
+  from = "/toutes-les-annonces"
+  to = "/.netlify/functions/listings-index"
+  status = 200
+  
+[[redirects]]
   from = "/sitemap-articles.xml"
   to = "/.netlify/functions/sitemap-articles"
   status = 200
