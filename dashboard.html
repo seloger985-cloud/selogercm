@@ -216,15 +216,15 @@
         <select id="editType">
           <option value="apartment">Appartement</option>
           <option value="house">Maison</option>
-          <option value="villa">Villa</option>
           <option value="studio">Studio</option>
+          <option value="villa">Villa</option>
           <option value="duplex">Duplex</option>
+          <option value="building">Immeuble</option>
           <option value="warehouse">Entrepôt</option>
-          <option value="commercial">Local commercial</option>
-          <option value="shop">Boutique</option>
-          <option value="office">Bureau</option>
+          <option value="shop">Boutique / Local commercial</option>
+          <option value="office">Bureau / Espace de travail</option>
+          <option value="fonds-commerce">Fonds de commerce</option>
           <option value="plots-of-land">Terrain</option>
-          <option value="immeuble">Immeuble</option>
         </select>
       </div>
       <div class="field"><label>Opération</label>
@@ -263,6 +263,38 @@
         <select id="editCity"><option>Douala</option><option>Yaoundé</option><option>Bafoussam</option></select>
       </div>
       <div class="field"><label>Quartier</label><select id="editDistrict"></select></div>
+      <div class="field full" id="editBuildingFields" style="display:none;border:1px solid #ffe0c2;background:#fff8f2;border-radius:10px;padding:.8rem">
+        <div style="font-weight:800;color:var(--orange);margin-bottom:.6rem">🏢 Caractéristiques de l'immeuble</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem">
+          <div><label>Niveaux</label><input id="editImmNiveaux" type="number" min="0"></div>
+          <div><label>Appartements</label><input id="editImmAppartements" type="number" min="0"></div>
+          <div><label>Studios</label><input id="editImmStudios" type="number" min="0"></div>
+          <div><label>Terrain (m²)</label><input id="editImmTerrain" type="number" min="0"></div>
+          <div><label>Année</label><input id="editImmAnnee" type="number" min="1900" max="2100"></div>
+          <div><label>Usage</label><select id="editImmUsage"><option value="">—</option><option value="residentiel">Résidentiel</option><option value="commercial">Commercial</option><option value="mixte">Mixte</option></select></div>
+        </div>
+        <div style="margin-top:.6rem"><label>Précisions / composition</label><textarea id="editImmPrecisions" rows="2"></textarea></div>
+        <div style="margin-top:.6rem"><label style="display:block;margin-bottom:.3rem">Équipements</label>
+          <div style="display:flex;flex-wrap:wrap;gap:.6rem;font-weight:500">
+            <label><input type="checkbox" class="editImmEquip" value="ascenseur"> Ascenseur</label>
+            <label><input type="checkbox" class="editImmEquip" value="groupe_electrogene"> Groupe électrogène</label>
+            <label><input type="checkbox" class="editImmEquip" value="forage"> Forage</label>
+            <label><input type="checkbox" class="editImmEquip" value="gardiennage"> Gardiennage</label>
+            <label><input type="checkbox" class="editImmEquip" value="cloture"> Clôture</label>
+          </div>
+        </div>
+        <div id="editBuildingRent" style="display:none;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-top:.6rem">
+          <div><label>Caution (mois)</label><input id="editImmCaution" type="number" min="0"></div>
+          <div><label>Meublé</label><select id="editImmMeuble"><option value="">—</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+          <div><label>Bail (années)</label><input id="editImmBail" type="number" min="0"></div>
+        </div>
+        <div id="editBuildingSale" style="display:none;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-top:.6rem">
+          <div><label>Revenus mensuels (FCFA)</label><input id="editImmRevenus" type="number" min="0"></div>
+          <div><label>Occupation (%)</label><input id="editImmOccupation" type="number" min="0" max="100"></div>
+          <div><label>Titre foncier</label><select id="editImmTitre"><option value="">—</option><option value="titre">Titré</option><option value="en_cours">En cours</option><option value="morcellement">Morcellement</option></select></div>
+          <div><label>Rendement</label><input id="editImmRendement" readonly style="background:#f0f0f0"></div>
+        </div>
+      </div>
       <div class="field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
     </div>
     <div class="modal-actions">
@@ -482,6 +514,16 @@ function openEdit(id) {
   document.getElementById('editCity').value      = ad.city || 'Douala';
   document.getElementById('editDesc').value  = ad.description || '';
   refreshEditDistricts(ad.city||'Douala', ad.district||'');
+  (function(){
+    var a = ad.attributes || {};
+    var setv = function(id,v){ var el=document.getElementById(id); if(el) el.value=(v==null?'':v); };
+    setv('editImmNiveaux',a.niveaux); setv('editImmAppartements',a.appartements); setv('editImmStudios',a.studios);
+    setv('editImmPrecisions',a.precisions); setv('editImmTerrain',a.terrain_m2); setv('editImmAnnee',a.annee); setv('editImmUsage',a.usage);
+    document.querySelectorAll('.editImmEquip').forEach(function(c){ c.checked=(a.equipements||[]).indexOf(c.value)>-1; });
+    setv('editImmCaution',a.caution_mois); setv('editImmMeuble',a.meuble); setv('editImmBail',a.bail_annees);
+    setv('editImmRevenus',a.revenus_mensuels); setv('editImmOccupation',a.taux_occupation); setv('editImmTitre',a.titre_foncier);
+  })();
+  updateEditBuildingFields();
   document.getElementById('editOverlay').classList.add('open');
 }
 
@@ -500,6 +542,34 @@ function refreshEditDistricts(city, selected) {
 document.getElementById('editCity').addEventListener('change', function() {
   refreshEditDistricts(this.value, '');
 });
+
+function updateEditBuildingFields() {
+  var isBuilding = document.getElementById('editType').value === 'building';
+  var isRent = document.getElementById('editMode').value === 'rent';
+  var box = document.getElementById('editBuildingFields');
+  if (box) box.style.display = isBuilding ? '' : 'none';
+  ['editBedrooms','editBathrooms','editFurnished'].forEach(function(id){
+    var el = document.getElementById(id); var f = el && el.closest('.field');
+    if (f) f.style.display = isBuilding ? 'none' : '';
+  });
+  var rentB = document.getElementById('editBuildingRent');
+  var saleB = document.getElementById('editBuildingSale');
+  if (rentB) rentB.style.display = (isBuilding && isRent) ? 'grid' : 'none';
+  if (saleB) saleB.style.display = (isBuilding && !isRent) ? 'grid' : 'none';
+  computeEditRendement();
+}
+function computeEditRendement() {
+  var el = document.getElementById('editImmRendement');
+  if (!el) return;
+  var prix = Number(document.getElementById('editPrice').value || 0);
+  var revEl = document.getElementById('editImmRevenus');
+  var rev = Number((revEl && revEl.value) || 0);
+  el.value = (prix && rev) ? (Math.round((rev*12)/prix*1000)/10) + ' %' : '—';
+}
+document.getElementById('editType').addEventListener('change', updateEditBuildingFields);
+document.getElementById('editMode').addEventListener('change', updateEditBuildingFields);
+document.getElementById('editPrice').addEventListener('input', computeEditRendement);
+(function(){ var r = document.getElementById('editImmRevenus'); if (r) r.addEventListener('input', computeEditRendement); })();
 
 document.getElementById('editCancel').addEventListener('click', () => {
   document.getElementById('editOverlay').classList.remove('open');
@@ -520,6 +590,35 @@ document.getElementById('editSave').addEventListener('click', async () => {
     description: document.getElementById('editDesc').value.trim(),
     updated_at:  new Date().toISOString(),
   };
+  if (updates.type === 'building') {
+    var numOrNull = function(id){ var el=document.getElementById(id); var v=el?el.value:''; return (v!=='' && v!=null) ? Number(v) : null; };
+    var isRent = updates.rent_sale === 'rent';
+    var attrs = {
+      niveaux:      numOrNull('editImmNiveaux'),
+      appartements: numOrNull('editImmAppartements'),
+      studios:      numOrNull('editImmStudios'),
+      precisions:   (document.getElementById('editImmPrecisions').value||'').trim() || null,
+      terrain_m2:   numOrNull('editImmTerrain'),
+      annee:        numOrNull('editImmAnnee'),
+      equipements:  [].slice.call(document.querySelectorAll('.editImmEquip:checked')).map(function(c){return c.value;}),
+      usage:        document.getElementById('editImmUsage').value || null
+    };
+    if (isRent) {
+      attrs.caution_mois = numOrNull('editImmCaution');
+      attrs.meuble       = document.getElementById('editImmMeuble').value || null;
+      attrs.bail_annees  = numOrNull('editImmBail');
+    } else {
+      attrs.revenus_mensuels = numOrNull('editImmRevenus');
+      attrs.taux_occupation  = numOrNull('editImmOccupation');
+      attrs.titre_foncier    = document.getElementById('editImmTitre').value || null;
+      attrs.rendement = (updates.price && attrs.revenus_mensuels) ? Math.round((attrs.revenus_mensuels*12)/updates.price*1000)/10 : null;
+    }
+    updates.attributes = attrs;
+    updates.bedrooms = null;
+    updates.bathrooms = null;
+  } else {
+    updates.attributes = null;
+  }
   const { error } = await window.SLCM_DB.client.from('listings').update(updates).eq('id', id);
   if (error) { alert('Erreur : ' + error.message); return; }
   const idx = allListings.findIndex(a => a.id === id);

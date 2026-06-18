@@ -27,7 +27,7 @@ const fmt = n => (Number(n) || 0).toLocaleString('fr-FR');
 const TYPE_LABELS = {
   apartment: 'Appartement', studio: 'Studio', house: 'Maison', villa: 'Villa',
   duplex: 'Duplex', office: 'Bureau', shop: 'Local commercial',
-  'fonds-commerce': 'Fonds de commerce', land: 'Terrain', warehouse: 'Entrepôt',
+  'fonds-commerce': 'Fonds de commerce', 'plots-of-land': 'Terrain', warehouse: 'Entrepôt',
   building: 'Immeuble',
 };
 
