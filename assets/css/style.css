@@ -10,6 +10,9 @@
   --font: "Poppins", sans-serif;
 }
 
+/* Reset marge body (couvre tout l'écran sur mobile) */
+html, body { margin: 0; }
+
 /* Reset */
 * {
   margin: 0;
