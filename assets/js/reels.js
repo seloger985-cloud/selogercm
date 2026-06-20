@@ -61,8 +61,10 @@ const SLCM_reels = (() => {
           startLevel:         -1,    /* auto : niveau d'entrée selon la bande passante (robuste quel que soit le nb de rendus) */
           capLevelToPlayerSize: false, /* ne PAS plafonner la qualité à la taille du <video> → plein écran = rendu max */
           startFragPrefetch:  true,  /* pré-charge le 1er fragment → démarrage quasi-instantané */
-          abrEwmaDefaultEstimate: 800000, /* estimation initiale ~0,8 Mbps → monte plus vite en bon réseau */
-          maxBufferLength:    15,     /* cushion suffisant pour tenir un rendu haut, sans gaspiller la data */
+          abrEwmaDefaultEstimate: 1800000, /* ~1,8 Mbps : entre en ~540-720p au lieu de 360-480p */
+          abrBandWidthUpFactor:    0.85,   /* monte de palier plus volontiers (defaut 0.7) -> atteint vite le rendu max */
+          abrEwmaFastVoD:          2.5,    /* estimation debit plus reactive (defaut 3.0) -> grimpe en ~1-2 s */
+          maxBufferLength:    18,     /* cushion pour tenir le haut rendu sans rebuffering */
           maxMaxBufferLength: 30,
           autoStartLoad:      true,
           manifestLoadingMaxRetry: 3,
