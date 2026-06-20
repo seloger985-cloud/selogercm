@@ -412,22 +412,7 @@
       </div>
       <div class="modal-field full" id="editVideoSection" style="display:none">
         <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s · 120 Mo max · vertical 9:16 · .mp4</span></label>
-        <label>🎬 Vidéo Réel <span style="font-weight:400;color:#888;font-size:.8rem">— 60 s · 120 Mo max · vertical 9:16 · .mp4</span></label>
         <div id="editVideoState" style="font-size:.83rem;margin:.4rem 0;color:#555"></div>
-        <!-- Conseils vidéo : pour un rendu net (replié par défaut) -->
-        <details class="reel-tips" style="margin:.2rem 0 .8rem;border:1px solid #ffe0c2;border-radius:12px;background:#fff8f0;overflow:hidden">
-          <summary style="cursor:pointer;padding:11px 13px;font-weight:700;font-size:.88rem;color:#ff7a00">🎬 Vidéo nette comme sur TikTok : les 5 réflexes</summary>
-          <div style="padding:0 13px 13px;font-size:.85rem;color:#333;line-height:1.6">
-            <ol style="margin:0;padding-left:1.2rem">
-              <li><strong>Filmez vertical</strong>, en <strong>1080p</strong> — bonne lumière, évitez le contre-jour.</li>
-              <li><strong>Montez et ajoutez la musique dans une appli de montage</strong> (CapCut, VN, InShot ou Samsung Studio).</li>
-              <li><strong>Exportez en qualité maximale</strong> (1080p, « qualité élevée »), puis <strong>uploadez ce fichier ici</strong>.</li>
-              <li>Musique : choisissez un son <strong>libre de droits</strong> (bibliothèque de l'appli).</li>
-              <li>Format : <strong>vertical 9:16</strong>, <strong>60 s maximum</strong>.</li>
-            </ol>
-            <p style="margin:9px 0 0;padding:8px 10px;background:#fff;border-left:3px solid #e11d48;border-radius:6px;color:#b00020;font-weight:600">⛔ À éviter : passer par les Réels d'Instagram/Facebook pour ajouter un son puis re-télécharger — ça écrase la qualité.</p>
-          </div>
-        </details>
         <!-- Conseils vidéo : pour un rendu net (replié par défaut) -->
         <details class="reel-tips" style="margin:.2rem 0 .8rem;border:1px solid #ffe0c2;border-radius:12px;background:#fff8f0;overflow:hidden">
           <summary style="cursor:pointer;padding:11px 13px;font-weight:700;font-size:.88rem;color:#ff7a00">🎬 Vidéo nette comme sur TikTok : les 5 réflexes</summary>
@@ -448,6 +433,7 @@
           <div id="editVideoStatus" style="font-size:.78rem;color:#666;margin-top:.3rem"></div>
         </div>
         <small style="display:block;color:#888;margin-top:.35rem">Votre vidéo est validée par l'équipe avant d'apparaître dans les Réels.</small>
+        <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#444;margin-top:.6rem;cursor:pointer"><input type="checkbox" id="editVideoDetailOnly" style="margin-top:.15rem"> Vidéo standard (WhatsApp) — afficher seulement sur la fiche, pas dans les Réels</label>
       </div>
       <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
     </div>
@@ -889,6 +875,7 @@
     const allowed = !!_profile.is_pro || boostActive;
     sec.style.display = allowed ? 'block' : 'none';
     if(!allowed) return;
+    var _do=document.getElementById('editVideoDetailOnly'); if(_do)_do.checked=!!ad.video_detail_only;
     const st=document.getElementById('editVideoState');
     if(ad.video_url)            st.innerHTML='✅ Vidéo en ligne dans les Réels.';
     else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation.';
@@ -967,6 +954,7 @@
         else{attrs.revenus_mensuels=numOrNull('editImmRevenus');attrs.taux_occupation=numOrNull('editImmOccupation');attrs.titre_foncier=document.getElementById('editImmTitre').value||null;attrs.rendement=(updates.price&&attrs.revenus_mensuels)?Math.round((attrs.revenus_mensuels*12)/updates.price*1000)/10:null;}
         updates.attributes=attrs;updates.bedrooms=null;updates.bathrooms=null;
       } else { updates.attributes=null; }
+      updates.video_detail_only = !!(document.getElementById('editVideoDetailOnly') && document.getElementById('editVideoDetailOnly').checked);
       const{error}=await _client.from('listings').update(updates).eq('id',id);
       if(error){showToast('Erreur : '+error.message);return;}
       closeEditModal();showToast('Annonce mise à jour ✅');loadListings();
