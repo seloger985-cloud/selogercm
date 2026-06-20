@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -138,6 +138,11 @@
       flex-shrink: 0;
     }
     .gallery-thumbs img.active { opacity: 1; outline: 2px solid var(--orange); }
+    .video-tour { margin: 0 0 1.5rem; }
+    .video-tour-title { font-size: 1.1rem; font-weight: 800; margin: 0 0 .8rem; display: flex; align-items: center; gap: .5rem; }
+    .video-tour-title i { color: var(--orange); }
+    .video-frame { width: 100%; max-width: 340px; aspect-ratio: 9 / 16; margin: 0 auto; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
+    .video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
 
     /* ── Layout 2 colonnes ── */
     .layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
@@ -982,6 +987,18 @@
         ? `<div class="desc-block"><h3>Description</h3><p>${escapeHtml(ad.description)}</p></div>`
         : '';
 
+      /* ── Visite vidéo (Cloudflare Stream) ── */
+      const videoUid = ad.video_url
+        ? ((String(ad.video_url).match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/) || [])[1] || '')
+        : '';
+      const videoHtml = videoUid ? `
+        <div class="video-tour">
+          <h3 class="video-tour-title"><i class="fas fa-video"></i> Visite vidéo</h3>
+          <div class="video-frame">
+            <iframe src="https://iframe.videodelivery.net/${videoUid}?primaryColor=%23ff7a00" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>` : '';
+
       pageContent.innerHTML = `
         <!-- GALERIE -->
         <div class="gallery">
@@ -995,6 +1012,8 @@
           </div>
           ${images.length > 1 ? `<div class="gallery-thumbs" id="thumbsRow">${thumbsHtml}</div>` : ''}
         </div>
+
+        ${videoHtml}
 
         <!-- LAYOUT 2 COL -->
         <div class="layout">
