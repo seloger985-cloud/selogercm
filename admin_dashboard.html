@@ -464,7 +464,7 @@
         if (btn.classList.contains('b-boost')) { openBoostModal(id); return; }
 
         if (btn.classList.contains('b-video')) {
-          openVideoModal(id, ad.video_url || '');
+          openVideoModal(id, ad.video_url || '', ad.video_detail_only);
           return;
         }
         if (btn.classList.contains('toggle-premium')) {
@@ -865,9 +865,10 @@
     }
 
     /* ── Modal URL vidéo ── */
-    function openVideoModal(listingId, currentUrl) {
+    function openVideoModal(listingId, currentUrl, detailOnly) {
       document.getElementById('videoUrlListingId').value = listingId;
       document.getElementById('videoUrlInput').value = currentUrl;
+      document.getElementById('videoUrlDetailOnly').checked = !!detailOnly;
       document.getElementById('videoUrlError').textContent = '';
       document.getElementById('videoUrlOverlay').style.display = 'flex';
       setTimeout(() => document.getElementById('videoUrlInput').focus(), 100);
@@ -888,7 +889,7 @@
       btn.disabled = true; btn.textContent = '⏳';
       const { error } = await window.SLCM_DB.client
         .from('listings')
-        .update({ video_url: url || null })
+        .update({ video_url: url || null, video_detail_only: document.getElementById('videoUrlDetailOnly').checked })
         .eq('id', listingId);
 
       btn.disabled = false; btn.textContent = 'Enregistrer';
@@ -910,6 +911,9 @@
       <input type="hidden" id="videoUrlListingId">
       <input id="videoUrlInput" type="text" placeholder="https://videodelivery.net/.../manifest/video.m3u8"
         style="width:100%;border:1.5px solid #e5e5e5;border-radius:10px;padding:.75rem 1rem;font-family:inherit;font-size:.85rem;margin-bottom:.5rem">
+      <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#444;margin-bottom:.6rem;cursor:pointer">
+        <input type="checkbox" id="videoUrlDetailOnly" style="margin-top:.15rem"> Vidéo standard (WhatsApp) — afficher seulement sur la fiche, pas dans les Réels
+      </label>
       <div id="videoUrlError" style="color:#c00;font-size:.8rem;min-height:1.2rem;margin-bottom:.75rem"></div>
       <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
         <button onclick="saveVideoUrl(true)" style="padding:.55rem .9rem;border-radius:10px;border:1.5px solid #fee2e2;background:#fee2e2;color:#dc2626;font-family:inherit;font-weight:700;cursor:pointer;font-size:.8rem">Supprimer video</button>
@@ -2237,13 +2241,4 @@
     /* Convertit un montant en lettres (français, simplifié pour FCFA) */
     function amountInWords(n) {
       n = Math.floor(Number(n) || 0);
-      if (n === 0) return 'zéro francs CFA';
-
-      const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
-                     'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize',
-                     'dix-sept', 'dix-huit', 'dix-neuf'];
-      const tens  = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
-
-      function below1000(num) {
-        if (num === 0) return '';
-        let result = '
+      if (n ==
