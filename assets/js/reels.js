@@ -163,9 +163,10 @@ const SLCM_reels = (() => {
     if (!client) { console.warn('[reels] Supabase indisponible'); return []; }
     const { data, error } = await client
       .from('listings')
-      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, owner_id, slug, owner_is_pro, reels_boost_expires_at')
+      .select('id, title, city, district, price, rent_sale, type, furnished, video_url, images, premium, created_at, owner_phone, owner_id, slug, owner_is_pro, reels_boost_expires_at, video_detail_only')
       .eq('status', 'active')
       .not('video_url', 'is', null)
+      .eq('video_detail_only', false)
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) { console.error('[reels] loadAllReelsFromSupabase:', error); return []; }
@@ -1116,7 +1117,7 @@ const SLCM_reels = (() => {
       cta:      'Voir toutes les visites →',
       cfTag:    'homepage-section-1',
       /* Supabase fallback : résidentiel non meublé */
-      sbFilter: (q) => q.eq('furnished', false).not('video_url', 'is', null),
+      sbFilter: (q) => q.eq('furnished', false).not('video_url', 'is', null).eq('video_detail_only', false),
     },
     reelsSection2: {
       title:    'Ils ont leur style, trouvez le vôtre',
@@ -1124,7 +1125,7 @@ const SLCM_reels = (() => {
       cta:      'Voir les meublés et espaces pros →',
       cfTag:    'homepage-section-2',
       /* Supabase fallback : meublé + commercial + studio */
-      sbFilter: (q) => q.or('furnished.eq.true,type.in.(commercial,office,studio)').not('video_url', 'is', null),
+      sbFilter: (q) => q.or('furnished.eq.true,type.in.(commercial,office,studio)').not('video_url', 'is', null).eq('video_detail_only', false),
     },
   };
 
