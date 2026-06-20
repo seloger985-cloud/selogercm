@@ -107,8 +107,7 @@ function buildSeo(ad, slug) {
     warehouse: 'Place',
   };
   const schemaType = typeMap[ad.type] || 'Residence';
-  const schema = {
-    '@context': 'https://schema.org',
+  const listingSchema = {
     '@type': schemaType,
     name: adTitle,
     description: adDesc,
@@ -131,6 +130,25 @@ function buildSeo(ad, slug) {
         : 'https://schema.org/LeaseOut',
     },
   };
+
+  // VideoObject si l'annonce a une visite vidéo -> éligible aux résultats enrichis vidéo
+  const videoUid = ad.video_url
+    ? ((String(ad.video_url).match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/) || [])[1] || '')
+    : '';
+  let schema;
+  if (videoUid) {
+    const videoSchema = {
+      '@type': 'VideoObject',
+      name: 'Visite vidéo - ' + adTitle,
+      description: adDesc,
+      thumbnailUrl: 'https://videodelivery.net/' + videoUid + '/thumbnails/thumbnail.jpg',
+      uploadDate: ad.created_at ? new Date(ad.created_at).toISOString() : new Date().toISOString(),
+      embedUrl: 'https://iframe.videodelivery.net/' + videoUid,
+    };
+    schema = { '@context': 'https://schema.org', '@graph': [listingSchema, videoSchema] };
+  } else {
+    schema = Object.assign({ '@context': 'https://schema.org' }, listingSchema);
+  }
 
   return { adTitle, adCity, adPrice, adMode, adImg, adImgFull, adUrl, pageTitle, adDesc, schema };
 }
