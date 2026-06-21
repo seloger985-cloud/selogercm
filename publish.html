@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -360,6 +360,20 @@
             <div class="upload-progress-bar" id="uploadProgressBar"></div>
           </div>
           <div class="upload-status" id="uploadStatus"></div>
+        </div>
+      </div>
+
+      <!-- Vidéo (optionnel) -->
+      <div class="full" id="videoBlock" style="display:none">
+        <label style="font-weight:700;display:block;margin-bottom:.4rem">🎬 Visite vidéo <span style="font-weight:400;color:#888;font-size:.85rem">— optionnel · .mp4 · 60 s · 120 Mo · vertical 9:16</span></label>
+        <div id="videoLocked" style="display:none;padding:.85rem 1rem;background:#fff8f0;border:1px solid #ffe0c2;border-radius:12px;font-size:.88rem;color:#7a4a00;line-height:1.5">
+          🔒 La visite vidéo se débloque dès que votre <strong>KYC est vérifié</strong>. <a href="/agent-dashboard" style="color:#ff7a00;font-weight:700;text-decoration:none">Vérifier mon identité →</a>
+        </div>
+        <div id="videoZone" style="display:none">
+          <label id="videoAddBtn" style="display:inline-block;cursor:pointer;padding:.7rem 1.1rem;border-radius:12px;border:1.5px dashed #ffb066;background:#fff8f0;color:#ff7a00;font-weight:700">🎬 Choisir une vidéo<input id="videoInput" type="file" accept="video/mp4,.mp4" hidden></label>
+          <div class="upload-progress" id="videoProgress" style="display:none"><div class="upload-progress-bar" id="videoProgressBar"></div></div>
+          <div class="upload-status" id="videoStatus"></div>
+          <div id="videoUpsell" style="display:none;margin-top:.5rem;padding:.7rem .9rem;background:#f6f7f9;border-radius:10px;font-size:.83rem;color:#555;line-height:1.5">Votre vidéo s'affichera sur votre annonce. Pour la diffuser dans les <strong>Réels</strong> de la page d'accueil, passez <strong>Pro</strong> ou activez un <strong>boost</strong>.</div>
         </div>
       </div>
 
@@ -942,6 +956,13 @@
         attributes:    buildingAttributes,
       };
 
+      /* Vidéo : fiche immédiate (detail-only) ou sas Réels (Pro/boost) */
+      if (window.SLCM_pubVideo && window.SLCM_pubVideo.url) {
+        const _pv = window.SLCM_pubVideo;
+        if (!(_pv.isPro || _pv.boost)) { payload.video_url = _pv.url; payload.video_detail_only = true; }
+        else { payload.pending_video_url = _pv.url; payload.video_detail_only = false; }
+      }
+
       const { data, error } = await client.from('listings').insert([payload]).select().single();
 
       if (!error && data) {
@@ -1072,6 +1093,56 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/assets/js/supabase.js"></script>
   <script src="/assets/js/auth.js"></script>
+  <script>
+  /* ── Visite vidéo au publish : porte = KYC vérifié ; sas Réels = Pro/boost ── */
+  window.SLCM_pubVideo = { url: null, isPro: false, boost: false, kycOk: false };
+  (async function(){
+    const blk = document.getElementById('videoBlock'); if(!blk) return;
+    let tries=0; while((!window.SLCM_DB||!window.SLCM_DB.client)&&tries<50){ await new Promise(r=>setTimeout(r,100)); tries++; }
+    const client = window.SLCM_DB && window.SLCM_DB.client; if(!client) return;
+    let user=null; try{ user = (window.SLCM && SLCM.getCurrentUser) ? await SLCM.getCurrentUser() : null; }catch(e){}
+    if(!user) return;
+    let prof=null;
+    try{ const r = await client.from('profiles').select('kyc_status,is_pro,reels_boost_expires_at').eq('id', user.id).single(); prof = r.data; }catch(e){}
+    const kycOk = !!(prof && prof.kyc_status === 'verified');
+    const isPro = !!(prof && prof.is_pro);
+    const boost = !!(prof && prof.reels_boost_expires_at && new Date(prof.reels_boost_expires_at) > new Date());
+    window.SLCM_pubVideo.isPro = isPro; window.SLCM_pubVideo.boost = boost; window.SLCM_pubVideo.kycOk = kycOk;
+    blk.style.display = 'block';
+    if(!kycOk){ document.getElementById('videoLocked').style.display = 'block'; return; }
+    document.getElementById('videoZone').style.display = 'block';
+    if(!(isPro||boost)) document.getElementById('videoUpsell').style.display = 'block';
+    const inp=document.getElementById('videoInput');
+    const prog=document.getElementById('videoProgress'), bar=document.getElementById('videoProgressBar'), st=document.getElementById('videoStatus');
+    function dur(file){ return new Promise((res,rej)=>{ const v=document.createElement('video'); v.preload='metadata'; v.onloadedmetadata=()=>{URL.revokeObjectURL(v.src);res(v.duration);}; v.onerror=()=>{URL.revokeObjectURL(v.src);rej(new Error('Vidéo illisible (.mp4 H.264 attendu).'));}; v.src=URL.createObjectURL(file); }); }
+    inp.addEventListener('change', async e=>{
+      const file=e.target.files[0]; e.target.value=''; if(!file) return;
+      if(!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')){ st.textContent='Format : .mp4 uniquement'; return; }
+      if(file.size>120*1024*1024){ st.textContent='Trop lourde ('+(file.size/1048576).toFixed(0)+' Mo). Max 120 Mo.'; return; }
+      let d=null; try{ d=await dur(file); }catch(err){ st.textContent=err.message; return; }
+      if(d && d>61){ st.textContent='Trop longue ('+Math.round(d)+' s). Max 60 s.'; return; }
+      prog.style.display='block'; bar.style.width='0%'; st.textContent='Préparation…';
+      try{
+        const r=await fetch('/.netlify/functions/cf-upload-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Reel',listingId:'',maxDuration:60})});
+        const j=await r.json();
+        if(j.error||!j.uploadURL) throw new Error(j.error||"URL d'upload manquante");
+        st.textContent='Envoi vers Cloudflare Stream…';
+        await new Promise((resolve,reject)=>{
+          const fd=new FormData(); fd.append('file',file,file.name||'reel.mp4');
+          const xhr=new XMLHttpRequest();
+          xhr.open('POST', j.uploadURL);
+          xhr.upload.onprogress=ev=>{ if(ev.lengthComputable) bar.style.width=Math.round(ev.loaded/ev.total*100)+'%'; };
+          xhr.onload=()=> xhr.status<300 ? resolve() : reject(new Error('CF Stream HTTP '+xhr.status));
+          xhr.onerror=()=> reject(new Error('Erreur réseau — vérifiez votre connexion'));
+          xhr.send(fd);
+        });
+        window.SLCM_pubVideo.url = j.hlsUrl;
+        prog.style.display='none';
+        st.textContent = (isPro||boost) ? '✅ Vidéo prête — visible dans les Réels après validation.' : '✅ Vidéo prête — visible sur votre annonce.';
+      }catch(err){ prog.style.display='none'; st.textContent='Erreur upload : '+err.message; }
+    });
+  })();
+  </script>
   <script src="/assets/js/listings.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => { SLCM.requireLogin(); });
