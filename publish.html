@@ -1109,15 +1109,16 @@
     let user=null; try{ user = (window.SLCM && SLCM.getCurrentUser) ? await SLCM.getCurrentUser() : null; }catch(e){}
     if(!user) return;
 
-    /* Lecture du statut en base → met à jour window.SLCM_pubVideo, renvoie {admitted, reelsOk} */
+    /* Lecture du statut en base → met à jour window.SLCM_pubVideo, renvoie {admitted, reelsOk}
+       NB : reels_boost_expires_at vit sur listings (par annonce), PAS sur profiles. À la création
+       il n'y a pas encore de boost → l'éligibilité Réels au publish = is_pro seul. */
     async function readStatus(){
       let prof=null;
-      try{ const r = await client.from('profiles').select('kyc_status,is_pro,reels_boost_expires_at').eq('id', user.id).single(); prof = r.data; }catch(e){}
+      try{ const r = await client.from('profiles').select('kyc_status,is_pro').eq('id', user.id).single(); prof = r.data; }catch(e){}
       const kycOk = !!(prof && prof.kyc_status === 'verified');
       const isPro = !!(prof && prof.is_pro);
-      const boost = !!(prof && prof.reels_boost_expires_at && new Date(prof.reels_boost_expires_at) > new Date());
-      window.SLCM_pubVideo.kycOk = kycOk; window.SLCM_pubVideo.isPro = isPro; window.SLCM_pubVideo.boost = boost;
-      const reelsOk = isPro || boost;
+      window.SLCM_pubVideo.kycOk = kycOk; window.SLCM_pubVideo.isPro = isPro; window.SLCM_pubVideo.boost = false;
+      const reelsOk = isPro;
       return { admitted: kycOk || reelsOk, reelsOk: reelsOk };
     }
 
