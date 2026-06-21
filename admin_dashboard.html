@@ -1744,8 +1744,9 @@
         progressWrap.style.display = 'block';
 
         await new Promise((resolve, reject) => {
+          const fd = new FormData(); fd.append('file', selectedFile, selectedFile.name || 'reel.mp4');
           const xhr = new XMLHttpRequest();
-          xhr.open('PUT', uploadURL);
+          xhr.open('POST', uploadURL);
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
               const pct = Math.round((e.loaded / e.total) * 100);
@@ -1756,7 +1757,7 @@
           };
           xhr.onload  = () => xhr.status < 300 ? resolve() : reject(new Error('CF Stream HTTP ' + xhr.status));
           xhr.onerror = () => reject(new Error('Erreur réseau — vérifiez votre connexion et réessayez'));
-          xhr.send(selectedFile);
+          xhr.send(fd);
         });
         progressWrap.style.display = 'none';
 
@@ -2238,7 +2239,4 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    /* Convertit un montant en lettres (français, simplifié pour FCFA) */
-    function amountInWords(n) {
-      n = Math.floor(Number(n) || 0);
-      if (n ==
+    /* Convertit un montant en lettres (français, simplifié pour
