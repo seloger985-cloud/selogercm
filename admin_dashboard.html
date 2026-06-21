@@ -613,6 +613,14 @@
       if (el) el.textContent = count ? `(${count})` : '';
     }
 
+    function _cfUid(u){ return (String(u||'').match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/)||[])[1]||''; }
+    async function _cfDelete(url){ /* args suivants = URLs à conserver */
+      const uid=_cfUid(url); if(!uid) return;
+      const keep=[].slice.call(arguments,1).map(_cfUid).filter(Boolean);
+      if(keep.includes(uid)) return;   /* encore référencée ailleurs → ne pas supprimer */
+      try{ await fetch('/.netlify/functions/cf-tag-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid,_delete:true})}); }catch(e){}
+    }
+
     async function loadPendingVideos(){
       const grid  = document.getElementById('vidGrid');
       const empty = document.getElementById('vidEmpty');
@@ -634,7 +642,7 @@
         const title  = esc(l.title || 'Annonce');
         const ref    = esc(l.ref || '—');
         const loc    = esc([l.district, l.city].filter(Boolean).join(' · '));
-        const hasLive = l.video_url ? '<div style="font-size:.72rem;color:#e65100;font-weight:700;margin-top:.25rem">⚠️ Remplacera la vidéo en ligne actuelle</div>' : '';
+        const hasLive = (l.video_url && _cfUid(l.video_url) !== _cfUid(l.pending_video_url)) ? '<div style="font-size:.72rem;color:#e65100;font-weight:700;margin-top:.25rem">⚠️ Remplacera la vidéo en ligne actuelle</div>' : '';
         return `
           <article data-id="${l.id}" style="border:1.5px solid #eee;border-radius:14px;overflow:hidden;background:#fff">
             <div style="position:relative;aspect-ratio:9/16;background:#000;max-height:300px">
@@ -664,18 +672,23 @@
       if (!window.SLCM_DB?.client){ alert('Connexion Supabase indisponible'); return; }
 
       if (e.target.closest('.vid-approve')){
-        const { data: row } = await window.SLCM_DB.client.from('listings').select('pending_video_url').eq('id', id).single();
+        const { data: row } = await window.SLCM_DB.client.from('listings').select('pending_video_url, video_url').eq('id', id).single();
         if (!row?.pending_video_url){ showToast('Aucune vidéo en attente'); loadPendingVideos(); return; }
         const { error } = await window.SLCM_DB.client.from('listings')
-          .update({ video_url: row.pending_video_url, pending_video_url: null }).eq('id', id);
+          .update({ video_url: row.pending_video_url, pending_video_url: null, video_detail_only: false }).eq('id', id);
         if (error){ showToast('Erreur : ' + error.message); return; }
+        try{ await window.SLCM_DB.client.from('listings').update({ reels_rejected: false }).eq('id', id); }catch(_){}
+        _cfDelete(row.video_url, row.pending_video_url);   /* ancien asset remplacé, sauf s'il est le même */
         showToast('Vidéo approuvée ✅ — en ligne dans les Réels'); loadPendingVideos();
       }
       if (e.target.closest('.vid-reject')){
-        if (!confirm('Rejeter cette vidéo ? Elle ne sera pas publiée.')) return;
+        if (!confirm('Rejeter cette vidéo pour les Réels ? Elle restera visible sur la fiche si déjà en ligne.')) return;
+        const { data: row } = await window.SLCM_DB.client.from('listings').select('pending_video_url, video_url').eq('id', id).single();
         const { error } = await window.SLCM_DB.client.from('listings').update({ pending_video_url: null }).eq('id', id);
         if (error){ showToast('Erreur : ' + error.message); return; }
-        showToast('Vidéo rejetée'); loadPendingVideos();
+        try{ await window.SLCM_DB.client.from('listings').update({ reels_rejected: true }).eq('id', id); }catch(_){}
+        if (row?.pending_video_url) _cfDelete(row.pending_video_url, row.video_url);  /* supprime le CF sauf s'il sert aussi de vidéo fiche */
+        showToast('Vidéo refusée pour les Réels'); loadPendingVideos();
       }
     });
 
@@ -887,6 +900,9 @@
       }
 
       btn.disabled = true; btn.textContent = '⏳';
+      /* ancienne vidéo (pour cleanup CF) */
+      let _old = {};
+      try { const { data } = await window.SLCM_DB.client.from('listings').select('video_url, pending_video_url').eq('id', listingId).single(); _old = data || {}; } catch(_){}
       const { error } = await window.SLCM_DB.client
         .from('listings')
         .update({ video_url: url || null, video_detail_only: document.getElementById('videoUrlDetailOnly').checked })
@@ -895,6 +911,9 @@
       btn.disabled = false; btn.textContent = 'Enregistrer';
 
       if (error) { errEl.textContent = 'Erreur : ' + error.message; return; }
+
+      /* supprime l'ancien asset CF s'il a changé et n'est plus référencé (ni nouvelle URL, ni pending) */
+      _cfDelete(_old.video_url, url, _old.pending_video_url);
 
       document.getElementById('videoUrlOverlay').style.display = 'none';
       showToast(deleteVideo ? 'Vidéo supprimée' : '🎬 URL vidéo enregistrée');
@@ -2197,48 +2216,4 @@
     const ISSUER_DEFAULT = {
       name: 'SE LOGER CM',
       tagline: 'Unique Solutions, Smart Living',
-      address: 'Boulevard de la République, Bonamoussadi, Douala',
-      phone: '(+237) 650 840 714',
-      email: 'armand.k@selogercm.com',
-      rccm: 'DLA-02-2024-A10-00712',
-      niu: 'PO68916714973N'
-    };
-
-    /* ──── Refs DOM ──── */
-    const overlay  = document.getElementById('receiptOverlay');
-    const openBtn  = document.getElementById('openReceipt');
-    const closeBtn = document.getElementById('rcptClose');
-    const cancelBtn = document.getElementById('rcptCancel');
-    const generateBtn = document.getElementById('rcptGenerate');
-
-    const fPayer   = document.getElementById('rcptPayerName');
-    const fPhone   = document.getElementById('rcptPayerPhone');
-    const fAmount  = document.getElementById('rcptAmount');
-    const fDate    = document.getElementById('rcptDate');
-    const fCat     = document.getElementById('rcptCategory');
-    const fMeth    = document.getElementById('rcptMethod');
-    const fDesc    = document.getElementById('rcptDescription');
-    const fNotes   = document.getElementById('rcptNotes');
-    const statusEl = document.getElementById('rcptStatus');
-
-    const renderEl = document.getElementById('receiptDocRender');
-
-    /* ──── Helpers ──── */
-    function fmtMoney(n) {
-      return Number(n || 0).toLocaleString('fr-FR') + ' FCFA';
-    }
-    function fmtDate(isoDate) {
-      if (!isoDate) return '';
-      const [y, m, d] = isoDate.split('-');
-      return `${d}/${m}/${y}`;
-    }
-    function escapeHtml(str) {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    /* Convertit un montant en lettres (français, simplifié pour FCFA) */
-    function amountInWords(n) {
-      
+      ad
