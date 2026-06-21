@@ -959,8 +959,9 @@
       /* Vidéo : fiche immédiate (detail-only) ou sas Réels (Pro/boost) */
       if (window.SLCM_pubVideo && window.SLCM_pubVideo.url) {
         const _pv = window.SLCM_pubVideo;
-        if (!(_pv.isPro || _pv.boost)) { payload.video_url = _pv.url; payload.video_detail_only = true; }
-        else { payload.pending_video_url = _pv.url; payload.video_detail_only = false; }
+        payload.video_url = _pv.url;            /* visible immédiatement sur la fiche */
+        payload.video_detail_only = true;       /* mais PAS (encore) dans les Réels */
+        if (_pv.isPro || _pv.boost) payload.pending_video_url = _pv.url;  /* Pro : soumis aux Réels (l'admin promeut en mettant video_detail_only=false) */
       }
 
       const { data, error } = await client.from('listings').insert([payload]).select().single();
@@ -997,8 +998,8 @@
       const _pv = window.SLCM_pubVideo || {};
       const _videoNote = _pv.url
         ? ((_pv.isPro || _pv.boost)
-            ? '<br><span style="color:#ff7a00;font-weight:700">🎬 Votre vidéo est en attente de validation avant d\'apparaître dans les Réels.</span>'
-            : '<br><span style="color:#16a34a;font-weight:700">🎬 Votre vidéo est en ligne sur votre annonce.</span>')
+            ? '<br><span style="color:#16a34a;font-weight:700">🎬 Votre vidéo est en ligne sur votre fiche</span><span style="color:#ff7a00;font-weight:700"> — et en attente de validation pour les Réels.</span>'
+            : '<br><span style="color:#16a34a;font-weight:700">🎬 Votre vidéo est en ligne sur votre fiche.</span>')
         : '';
       modal.innerHTML = `
         <style>
@@ -1154,7 +1155,7 @@
           });
           window.SLCM_pubVideo.url = j.hlsUrl;
           prog.style.display='none';
-          st.textContent = (window.SLCM_pubVideo.isPro||window.SLCM_pubVideo.boost) ? '✅ Vidéo prête — visible dans les Réels après validation.' : '✅ Vidéo prête — visible sur votre annonce.';
+          st.textContent = (window.SLCM_pubVideo.isPro||window.SLCM_pubVideo.boost) ? '✅ Vidéo prête — sur votre fiche, et soumise aux Réels (après validation).' : '✅ Vidéo prête — visible sur votre fiche.';
         }catch(err){ prog.style.display='none'; st.textContent='Erreur upload : '+err.message; }
       });
     }
