@@ -604,7 +604,7 @@
     renderKycBanner(_profile.kyc_status || 'none');
 
     /* Arrivée depuis publish (#kyc) → ouvrir directement le menu KYC */
-    if(location.hash === '#kyc' && _profile.kyc_status !== 'verified'){
+    if(location.hash === '#kyc' && _profile.kyc_status !== 'verified' && !_profile.is_pro){
       setTimeout(function(){ try{ openKycUpload(); }catch(e){} }, 300);
     }
 
@@ -613,7 +613,7 @@
 
   function renderKycBanner(status) {
     const banner = document.getElementById('kycBanner');
-    if(status === 'verified') {
+    if(status === 'verified' || (_profile && _profile.is_pro)) {
       banner.style.display = 'none';
       return;
     }
