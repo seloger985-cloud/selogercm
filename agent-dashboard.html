@@ -872,13 +872,15 @@
   function setupEditVideo(ad){
     const sec=document.getElementById('editVideoSection'); if(!sec)return;
     const boostActive = ad.reels_boost_expires_at && new Date(ad.reels_boost_expires_at) > new Date();
-    const allowed = !!_profile.is_pro || boostActive;
+    const allowed = _profile.kyc_status === 'verified';
     sec.style.display = allowed ? 'block' : 'none';
     if(!allowed) return;
-    var _do=document.getElementById('editVideoDetailOnly'); if(_do)_do.checked=!!ad.video_detail_only;
+    var _reelsOk = !!_profile.is_pro || boostActive;
+    var _do=document.getElementById('editVideoDetailOnly');
+    if(_do){ if(_reelsOk){ _do.disabled=false; _do.checked=!!ad.video_detail_only; } else { _do.checked=true; _do.disabled=true; } }
     const st=document.getElementById('editVideoState');
-    if(ad.video_url)            st.innerHTML='✅ Vidéo en ligne dans les Réels.';
-    else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation.';
+    if(ad.video_url)            st.innerHTML=ad.video_detail_only?'✅ Vidéo en ligne sur votre annonce.':'✅ Vidéo en ligne dans les Réels.';
+    else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation pour les Réels.';
     else                        st.innerHTML='Aucune vidéo pour le moment.';
     document.getElementById('editVideoProgress').style.display='none';
     document.getElementById('editVideoBar').style.width='0%';
@@ -897,7 +899,6 @@
     const prog=document.getElementById('editVideoProgress'),bar=document.getElementById('editVideoBar'),st=document.getElementById('editVideoStatus'),state=document.getElementById('editVideoState');
     if(!file.type.includes('mp4') && !file.name.toLowerCase().endsWith('.mp4')){showToast('Format : .mp4 uniquement');return;}
     if(file.size>120*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 120 Mo — exporte en 1080p, 60 s.`);return;}
-    if(file.size>120*1024*1024){showToast(`Vidéo trop lourde (${(file.size/1048576).toFixed(0)} Mo). Max 120 Mo — exporte en 1080p, 60 s.`);return;}
     let dur=null; try{dur=await getVideoDuration(file);}catch(e){showToast(e.message);return;}
     if(dur && dur>61){showToast(`Vidéo trop longue (${Math.round(dur)} s). Max 60 s.`);return;}
     prog.style.display='block';bar.style.width='0%';st.textContent='Préparation…';
@@ -907,19 +908,23 @@
       if(j.error||!j.uploadURL)throw new Error(j.error||"URL d'upload manquante");
       st.textContent='Envoi vers Cloudflare Stream…';
       await new Promise((resolve,reject)=>{
+        const fd=new FormData();fd.append('file',file,file.name||'reel.mp4');
         const xhr=new XMLHttpRequest();
-        xhr.open('PUT',j.uploadURL);
+        xhr.open('POST',j.uploadURL);
         xhr.upload.onprogress=e=>{if(e.lengthComputable)bar.style.width=Math.round(e.loaded/e.total*100)+'%';};
         xhr.onload=()=>xhr.status<300?resolve():reject(new Error('CF Stream HTTP '+xhr.status));
         xhr.onerror=()=>reject(new Error('Erreur réseau — vérifiez votre connexion'));
-        xhr.send(file);
+        xhr.send(fd);
       });
-      const{error}=await _client.from('listings').update({pending_video_url:j.hlsUrl}).eq('id',listingId);
+      var _doEl=document.getElementById('editVideoDetailOnly');
+      var _detailOnly=_doEl?_doEl.checked:false;
+      var _upd=_detailOnly?{video_url:j.hlsUrl,video_detail_only:true,pending_video_url:null}:{pending_video_url:j.hlsUrl,video_detail_only:false};
+      const{error}=await _client.from('listings').update(_upd).eq('id',listingId);
       if(error)throw new Error(error.message);
       prog.style.display='none';st.textContent='';
-      state.innerHTML="⏳ Vidéo envoyée — en attente de validation par l'équipe.";
-      const idx=_listings.findIndex(a=>a.id===listingId);if(idx!==-1)_listings[idx].pending_video_url=j.hlsUrl;
-      showToast('Vidéo envoyée ✅ — en attente de validation');
+      state.innerHTML=_detailOnly?"✅ Vidéo en ligne sur votre annonce.":"⏳ Vidéo envoyée — en attente de validation pour les Réels.";
+      const idx=_listings.findIndex(a=>a.id===listingId);if(idx!==-1){if(_detailOnly){_listings[idx].video_url=j.hlsUrl;_listings[idx].video_detail_only=true;}else{_listings[idx].pending_video_url=j.hlsUrl;_listings[idx].video_detail_only=false;}}
+      showToast(_detailOnly?'Vidéo en ligne ✅':'Vidéo envoyée ✅ — en attente de validation');
     }catch(e){prog.style.display='none';st.textContent='';showToast('Erreur upload : '+e.message);}
   }
   (function(){const vi=document.getElementById('editVideoInput');if(vi)vi.addEventListener('change',e=>{const f=e.target.files[0];if(f)uploadReel(f);e.target.value='';});})();
