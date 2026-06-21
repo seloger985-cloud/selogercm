@@ -1,0 +1,9 @@
+{
+  "name": "selogercm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dépendances des fonctions Netlify de selogercm.com",
+  "dependencies": {
+    "nodemailer": "^6.9.0"
+  }
+}
