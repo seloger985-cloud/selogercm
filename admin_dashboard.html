@@ -620,7 +620,7 @@
       if (!window.SLCM_DB?.client){ grid.innerHTML = '<p style="color:#dc2626">Connexion Supabase indisponible.</p>'; return; }
       const { data, error } = await window.SLCM_DB.client
         .from('listings')
-        .select('id, ref, title, title_en, title_fr, city, district, pending_video_url, video_url')
+        .select('id, ref, title, city, district, pending_video_url, video_url')
         .not('pending_video_url', 'is', null)
         .order('updated_at', { ascending: false });
       if (error){ grid.innerHTML = '<p style="color:#dc2626">Erreur : ' + esc(error.message) + '</p>'; return; }
@@ -631,7 +631,7 @@
         const uid    = (String(l.pending_video_url).match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/) || [])[1] || '';
         const thumb  = uid ? `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=1s&height=400` : '';
         const iframe = uid ? `https://iframe.videodelivery.net/${uid}` : '';
-        const title  = esc(l.title_en || l.title_fr || l.title || 'Annonce');
+        const title  = esc(l.title || 'Annonce');
         const ref    = esc(l.ref || '—');
         const loc    = esc([l.district, l.city].filter(Boolean).join(' · '));
         const hasLive = l.video_url ? '<div style="font-size:.72rem;color:#e65100;font-weight:700;margin-top:.25rem">⚠️ Remplacera la vidéo en ligne actuelle</div>' : '';
@@ -2239,4 +2239,6 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    /* Convertit un montant en lettres (français, simplifié pour
+    /* Convertit un montant en lettres (français, simplifié pour FCFA) */
+    function amountInWords(n) {
+      
