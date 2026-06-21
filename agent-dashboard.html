@@ -434,6 +434,7 @@
         </div>
         <small style="display:block;color:#888;margin-top:.35rem">Votre vidéo est validée par l'équipe avant d'apparaître dans les Réels.</small>
         <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#444;margin-top:.6rem;cursor:pointer"><input type="checkbox" id="editVideoDetailOnly" style="margin-top:.15rem"> Vidéo standard (WhatsApp) — afficher seulement sur la fiche, pas dans les Réels</label>
+        <div id="editVideoUpsell" style="display:none;margin-top:.5rem;padding:.6rem .8rem;background:#fff8f0;border:1px solid #ffe0c2;border-radius:10px;font-size:.8rem;color:#7a4a00;line-height:1.5">🔒 Les Réels sont réservés aux Pro/boost. <a id="editVideoUpsellLink" href="/tarifs" style="color:#ff7a00;font-weight:800;text-decoration:none;white-space:nowrap">Débloquer les Réels →</a></div>
       </div>
       <div class="modal-field full"><label>Description</label><textarea id="editDesc" rows="3"></textarea></div>
     </div>
@@ -601,6 +602,11 @@
 
     /* Bannière KYC */
     renderKycBanner(_profile.kyc_status || 'none');
+
+    /* Arrivée depuis publish (#kyc) → ouvrir directement le menu KYC */
+    if(location.hash === '#kyc' && _profile.kyc_status !== 'verified'){
+      setTimeout(function(){ try{ openKycUpload(); }catch(e){} }, 300);
+    }
 
     loadListings();
   }
@@ -872,12 +878,15 @@
   function setupEditVideo(ad){
     const sec=document.getElementById('editVideoSection'); if(!sec)return;
     const boostActive = ad.reels_boost_expires_at && new Date(ad.reels_boost_expires_at) > new Date();
-    const allowed = _profile.kyc_status === 'verified';
+    var _reelsOk = !!_profile.is_pro || boostActive;
+    const allowed = (_profile.kyc_status === 'verified') || _reelsOk;
     sec.style.display = allowed ? 'block' : 'none';
     if(!allowed) return;
-    var _reelsOk = !!_profile.is_pro || boostActive;
     var _do=document.getElementById('editVideoDetailOnly');
     if(_do){ if(_reelsOk){ _do.disabled=false; _do.checked=!!ad.video_detail_only; } else { _do.checked=true; _do.disabled=true; } }
+    var _ups=document.getElementById('editVideoUpsell');
+    if(_ups){ _ups.style.display=_reelsOk?'none':'block';
+      if(!_reelsOk){ var _l=document.getElementById('editVideoUpsellLink'); if(_l) _l.href='/tarifs'+(ad.ref?('?ref='+encodeURIComponent(ad.ref)):''); } }
     const st=document.getElementById('editVideoState');
     if(ad.video_url)            st.innerHTML=ad.video_detail_only?'✅ Vidéo en ligne sur votre annonce.':'✅ Vidéo en ligne dans les Réels.';
     else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation pour les Réels.';
