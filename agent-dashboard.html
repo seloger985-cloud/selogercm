@@ -888,9 +888,12 @@
     if(_ups){ _ups.style.display=_reelsOk?'none':'block';
       if(!_reelsOk){ var _l=document.getElementById('editVideoUpsellLink'); if(_l) _l.href='/tarifs'+(ad.ref?('?ref='+encodeURIComponent(ad.ref)):''); } }
     const st=document.getElementById('editVideoState');
-    if(ad.video_url)            st.innerHTML=ad.video_detail_only?'✅ Vidéo en ligne sur votre annonce.':'✅ Vidéo en ligne dans les Réels.';
-    else if(ad.pending_video_url) st.innerHTML='⏳ Vidéo en attente de validation pour les Réels.';
-    else                        st.innerHTML='Aucune vidéo pour le moment.';
+    if(ad.video_url && ad.pending_video_url)       st.innerHTML='⏳ En ligne sur votre fiche — en attente de validation pour les Réels.';
+    else if(ad.video_url && !ad.video_detail_only) st.innerHTML='✅ Vidéo en ligne dans les Réels.';
+    else if(ad.video_url && ad.reels_rejected)     st.innerHTML='❌ Vidéo non retenue pour les Réels — elle reste en ligne sur votre fiche.';
+    else if(ad.video_url)                          st.innerHTML='✅ Vidéo en ligne sur votre fiche.';
+    else if(ad.pending_video_url)                  st.innerHTML='⏳ Vidéo en attente de validation pour les Réels.';
+    else                                           st.innerHTML='Aucune vidéo pour le moment.';
     document.getElementById('editVideoProgress').style.display='none';
     document.getElementById('editVideoBar').style.width='0%';
     document.getElementById('editVideoStatus').textContent='';
@@ -902,6 +905,13 @@
       v.onerror=()=>{URL.revokeObjectURL(v.src);reject(new Error('Vidéo illisible (.mp4 H.264 attendu).'));};
       v.src=URL.createObjectURL(file);
     });
+  }
+  function _cfUid(u){ return (String(u||'').match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/)||[])[1]||''; }
+  async function _cfDelete(url){ /* args suivants = URLs à conserver */
+    const uid=_cfUid(url); if(!uid) return;
+    const keep=[].slice.call(arguments,1).map(_cfUid).filter(Boolean);
+    if(keep.includes(uid)) return;   /* encore référencée ailleurs → ne pas supprimer */
+    try{ await fetch('/.netlify/functions/cf-tag-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid,_delete:true})}); }catch(e){}
   }
   async function uploadReel(file){
     const listingId=document.getElementById('editId').value;
@@ -927,13 +937,21 @@
       });
       var _doEl=document.getElementById('editVideoDetailOnly');
       var _detailOnly=_doEl?_doEl.checked:false;
-      var _upd=_detailOnly?{video_url:j.hlsUrl,video_detail_only:true,pending_video_url:null}:{pending_video_url:j.hlsUrl,video_detail_only:false};
+      /* anciennes vidéos (pour cleanup CF Stream) */
+      var _old={}; try{ const _r=await _client.from('listings').select('video_url,pending_video_url').eq('id',listingId).single(); _old=_r.data||{}; }catch(e){}
+      /* Pro (Réels) : visible immédiatement sur la fiche (video_url) + soumis aux Réels (pending), video_detail_only=true jusqu'à validation. Non-Pro : fiche seule. */
+      var _upd={ video_url:j.hlsUrl, video_detail_only:true, pending_video_url:_detailOnly?null:j.hlsUrl };
       const{error}=await _client.from('listings').update(_upd).eq('id',listingId);
       if(error)throw new Error(error.message);
+      /* reset d'un éventuel refus précédent (best-effort, colonne optionnelle) */
+      try{ await _client.from('listings').update({reels_rejected:false}).eq('id',listingId); }catch(e){}
+      /* cleanup CF : supprimer les anciens assets remplacés, sauf s'ils sont encore référencés */
+      _cfDelete(_old.video_url, _upd.video_url, _upd.pending_video_url);
+      _cfDelete(_old.pending_video_url, _upd.video_url, _upd.pending_video_url);
       prog.style.display='none';st.textContent='';
-      state.innerHTML=_detailOnly?"✅ Vidéo en ligne sur votre annonce.":"⏳ Vidéo envoyée — en attente de validation pour les Réels.";
-      const idx=_listings.findIndex(a=>a.id===listingId);if(idx!==-1){if(_detailOnly){_listings[idx].video_url=j.hlsUrl;_listings[idx].video_detail_only=true;}else{_listings[idx].pending_video_url=j.hlsUrl;_listings[idx].video_detail_only=false;}}
-      showToast(_detailOnly?'Vidéo en ligne ✅':'Vidéo envoyée ✅ — en attente de validation');
+      state.innerHTML=_detailOnly?"✅ Vidéo en ligne sur votre fiche.":"⏳ En ligne sur votre fiche — en attente de validation pour les Réels.";
+      const idx=_listings.findIndex(a=>a.id===listingId);if(idx!==-1){_listings[idx].video_url=j.hlsUrl;_listings[idx].video_detail_only=true;_listings[idx].pending_video_url=_detailOnly?null:j.hlsUrl;_listings[idx].reels_rejected=false;}
+      showToast(_detailOnly?'Vidéo en ligne ✅':'En ligne sur la fiche ✅ — Réels en attente de validation');
     }catch(e){prog.style.display='none';st.textContent='';showToast('Erreur upload : '+e.message);}
   }
   (function(){const vi=document.getElementById('editVideoInput');if(vi)vi.addEventListener('change',e=>{const f=e.target.files[0];if(f)uploadReel(f);e.target.value='';});})();
