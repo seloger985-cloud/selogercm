@@ -367,13 +367,13 @@
       <div class="full" id="videoBlock" style="display:none">
         <label style="font-weight:700;display:block;margin-bottom:.4rem">🎬 Visite vidéo <span style="font-weight:400;color:#888;font-size:.85rem">— optionnel · .mp4 · 60 s · 120 Mo · vertical 9:16</span></label>
         <div id="videoLocked" style="display:none;padding:.85rem 1rem;background:#fff8f0;border:1px solid #ffe0c2;border-radius:12px;font-size:.88rem;color:#7a4a00;line-height:1.5">
-          🔒 La visite vidéo se débloque dès que votre <strong>KYC est vérifié</strong>. <a href="/agent-dashboard" style="color:#ff7a00;font-weight:700;text-decoration:none">Vérifier mon identité →</a>
+          🔒 La visite vidéo se débloque dès que votre <strong>KYC est vérifié</strong>. <a href="/agent-dashboard#kyc" style="color:#ff7a00;font-weight:700;text-decoration:none">Vérifier mon identité →</a>
         </div>
         <div id="videoZone" style="display:none">
           <label id="videoAddBtn" style="display:inline-block;cursor:pointer;padding:.7rem 1.1rem;border-radius:12px;border:1.5px dashed #ffb066;background:#fff8f0;color:#ff7a00;font-weight:700">🎬 Choisir une vidéo<input id="videoInput" type="file" accept="video/mp4,.mp4" hidden></label>
           <div class="upload-progress" id="videoProgress" style="display:none"><div class="upload-progress-bar" id="videoProgressBar"></div></div>
           <div class="upload-status" id="videoStatus"></div>
-          <div id="videoUpsell" style="display:none;margin-top:.5rem;padding:.7rem .9rem;background:#f6f7f9;border-radius:10px;font-size:.83rem;color:#555;line-height:1.5">Votre vidéo s'affichera sur votre annonce. Pour la diffuser dans les <strong>Réels</strong> de la page d'accueil, passez <strong>Pro</strong> ou activez un <strong>boost</strong>.</div>
+          <div id="videoUpsell" style="display:none;margin-top:.5rem;padding:.7rem .9rem;background:#f6f7f9;border-radius:10px;font-size:.83rem;color:#555;line-height:1.5">Votre vidéo s'affichera sur votre annonce. Pour la diffuser dans les <strong>Réels</strong> de la page d'accueil : <a href="/tarifs" style="color:#ff7a00;font-weight:800;text-decoration:none;white-space:nowrap">passez Pro ou boostez →</a></div>
         </div>
       </div>
 
@@ -994,6 +994,12 @@
       /* Modal overlay full-screen */
       const modal = document.createElement('div');
       modal.id = 'publishSuccessModal';
+      const _pv = window.SLCM_pubVideo || {};
+      const _videoNote = _pv.url
+        ? ((_pv.isPro || _pv.boost)
+            ? '<br><span style="color:#ff7a00;font-weight:700">🎬 Votre vidéo est en attente de validation avant d\'apparaître dans les Réels.</span>'
+            : '<br><span style="color:#16a34a;font-weight:700">🎬 Votre vidéo est en ligne sur votre annonce.</span>')
+        : '';
       modal.innerHTML = `
         <style>
           #publishSuccessModal {
@@ -1071,7 +1077,7 @@
         <div class="psm-card">
           <div class="psm-icon">✓</div>
           <h2>🎉 Annonce publiée avec succès !</h2>
-          <p>Votre annonce est désormais en ligne et visible par tous les visiteurs.<br>Que souhaitez-vous faire ?</p>
+          <p>Votre annonce est désormais en ligne et visible par tous les visiteurs.${_videoNote}<br>Que souhaitez-vous faire ?</p>
           <div class="psm-actions">
             <button type="button" class="psm-btn psm-btn-primary" onclick="window.location.reload()">
               <i class="fas fa-plus"></i> Publier une nouvelle annonce
@@ -1108,10 +1114,17 @@
     const isPro = !!(prof && prof.is_pro);
     const boost = !!(prof && prof.reels_boost_expires_at && new Date(prof.reels_boost_expires_at) > new Date());
     window.SLCM_pubVideo.isPro = isPro; window.SLCM_pubVideo.boost = boost; window.SLCM_pubVideo.kycOk = kycOk;
+    const reelsOk = isPro || boost;
+    const admitted = kycOk || reelsOk;   /* pro/boost admis même si kyc_status n'est pas littéralement 'verified' */
     blk.style.display = 'block';
-    if(!kycOk){ document.getElementById('videoLocked').style.display = 'block'; return; }
+    if(!admitted){
+      const lk=document.getElementById('videoLocked');
+      lk.style.display='block'; lk.style.cursor='pointer';
+      lk.addEventListener('click', ()=>{ window.location.href='/agent-dashboard#kyc'; });
+      return;
+    }
     document.getElementById('videoZone').style.display = 'block';
-    if(!(isPro||boost)) document.getElementById('videoUpsell').style.display = 'block';
+    if(!reelsOk) document.getElementById('videoUpsell').style.display = 'block';
     const inp=document.getElementById('videoInput');
     const prog=document.getElementById('videoProgress'), bar=document.getElementById('videoProgressBar'), st=document.getElementById('videoStatus');
     function dur(file){ return new Promise((res,rej)=>{ const v=document.createElement('video'); v.preload='metadata'; v.onloadedmetadata=()=>{URL.revokeObjectURL(v.src);res(v.duration);}; v.onerror=()=>{URL.revokeObjectURL(v.src);rej(new Error('Vidéo illisible (.mp4 H.264 attendu).'));}; v.src=URL.createObjectURL(file); }); }
