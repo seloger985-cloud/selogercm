@@ -7,7 +7,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["listing_detail.html"]
+  included_files = ["listing_detail.html", "article.html"]
 
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
@@ -74,8 +74,9 @@
 
 [[redirects]]
   from = "/article/:id"
-  to = "/article.html"
+  to = "/.netlify/functions/article-seo"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/services"
