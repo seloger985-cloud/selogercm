@@ -7,7 +7,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["listing_detail.html", "article.html"]
+  included_files = ["listing_detail.html", "article.html", "vente_detail.html"]
 
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
@@ -56,6 +56,19 @@
   from = "/annonce"
   to = "/listing_detail.html"
   status = 200
+
+# ── Vente à dossier complet ──
+[[redirects]]
+  from = "/vente/*"
+  to = "/.netlify/functions/sale-seo"
+  status = 200
+  force = true
+
+# Collection /vente : temporaire vers /annonces (302) en attendant la page dédiée
+[[redirects]]
+  from = "/vente"
+  to = "/annonces"
+  status = 302
 
 [[redirects]]
   from = "/publier"

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bien à vendre — SE LOGER CM</title>
+  <meta name="description" content="Bien à vendre à Douala, dossier complet — documents consultables en agence. SE LOGER CM.">
+  <link rel="canonical" href="https://selogercm.com/vente">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://hozlyddiqodvjguqywty.supabase.co" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" as="style" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="/assets/js/notify.js" defer></script>
+
+  <style>
+    :root{ --orange:#ff7a00; --ink:#15161b; }
+    .vente-wrap{ max-width:1080px; margin:0 auto; padding:0 18px; }
+    .vente-wrap *{ box-sizing:border-box; }
+    .v-crumb{ font-size:.8rem; color:#9aa1ab; padding:14px 0 0; }
+    .v-crumb b{ color:#6b7280; font-weight:600; }
+
+    /* galerie */
+    .v-gal{ display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-top:12px; }
+    .v-main{ position:relative; height:380px; border-radius:16px; overflow:hidden; background:#eee; cursor:zoom-in; }
+    .v-main img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .v-main iframe{ width:100%; height:100%; border:0; }
+    .v-badges{ position:absolute; top:14px; left:14px; display:flex; gap:8px; z-index:3; }
+    .v-bdg{ font-size:.7rem; font-weight:800; letter-spacing:.03em; padding:6px 10px; border-radius:8px; color:#fff; }
+    .v-bdg.sale{ background:var(--ink); } .v-bdg.doc{ background:var(--orange); box-shadow:0 4px 12px rgba(255,122,0,.4); }
+    .v-thumbs{ display:grid; grid-template-rows:repeat(3,1fr); gap:10px; }
+    .v-th{ position:relative; border-radius:14px; overflow:hidden; cursor:pointer; background:#eee; }
+    .v-th img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .v-th .play, .v-th .more{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1rem; background:rgba(0,0,0,.42); }
+    .v-th .play i{ font-size:1.3rem; }
+
+    /* layout 2 colonnes */
+    .v-body{ display:grid; grid-template-columns:1fr 332px; gap:26px; margin-top:26px; align-items:start; padding-bottom:80px; }
+    .v-card{ background:#fff; border:1px solid #eef0f3; border-radius:16px; padding:22px; margin-bottom:18px; box-shadow:0 6px 18px rgba(20,30,50,.04); }
+    .v-h1{ font-size:1.6rem; font-weight:800; color:var(--ink); line-height:1.2; }
+    .v-loc{ color:#6b7280; font-size:.92rem; margin-top:5px; }
+    .v-h2{ font-size:1.05rem; font-weight:800; color:var(--ink); margin:0 0 14px; padding-left:11px; border-left:4px solid var(--orange); }
+
+    .v-specs{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .v-spec{ background:#f8f9fb; border-radius:11px; padding:12px; }
+    .v-spec .val{ font-size:1.15rem; font-weight:800; color:var(--ink); }
+    .v-spec .k{ font-size:.72rem; color:#8a909a; margin-top:2px; }
+    .v-via{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+    .v-chip{ font-size:.8rem; font-weight:600; color:#3a4048; background:#eef6f1; border:1px solid #d6eade; padding:6px 11px; border-radius:20px; }
+    .v-chip b{ color:#1f7a44; }
+    .v-desc{ font-size:.9rem; line-height:1.8; color:#4a4f57; margin-top:16px; }
+
+    /* dossier juridique */
+    .v-dossier{ border:1.5px solid #ffe0c2; background:#fffaf4; }
+    .v-doclist{ display:flex; flex-direction:column; gap:9px; }
+    .v-doc{ display:flex; align-items:center; gap:11px; background:#fff; border:1px solid #f0e6d8; border-radius:11px; padding:11px 13px; }
+    .v-doc .ic{ width:30px; height:30px; border-radius:8px; background:#e9f7ef; color:#1f7a44; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; }
+    .v-doc .t{ font-size:.85rem; font-weight:700; color:var(--ink); }
+    .v-doc .s{ font-size:.72rem; color:#8a909a; margin-top:1px; }
+    .v-doc .tag{ margin-left:auto; font-size:.66rem; font-weight:700; color:#1f7a44; background:#e9f7ef; padding:4px 9px; border-radius:20px; white-space:nowrap; }
+    .v-previews{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .v-pv{ width:140px; height:96px; border-radius:11px; overflow:hidden; border:1px solid #e7e0d3; position:relative; background:#f3f0ea; }
+    .v-pv img{ width:100%; height:100%; object-fit:cover; }
+    .v-pv .lbl{ position:absolute; left:6px; bottom:6px; font-size:.62rem; font-weight:700; color:#7a7266; background:rgba(255,255,255,.85); padding:2px 6px; border-radius:5px; }
+    .v-legal{ margin-top:14px; font-size:.72rem; line-height:1.6; color:#8a7c63; background:#fff6ea; border-radius:9px; padding:10px 12px; }
+
+    /* frais */
+    .v-table{ width:100%; border-collapse:collapse; font-size:.86rem; }
+    .v-table td{ padding:9px 4px; border-bottom:1px solid #f0f2f5; }
+    .v-table td:last-child{ text-align:right; font-weight:700; color:var(--ink); }
+    .v-muted{ color:#8a909a; font-size:.72rem; }
+    .v-table tr.tot td{ border-top:2px solid #e7e9ee; border-bottom:none; font-weight:800; color:var(--ink); padding-top:11px; }
+
+    /* parcours */
+    .v-steps{ display:flex; flex-direction:column; }
+    .v-step{ display:flex; gap:13px; position:relative; padding-bottom:16px; }
+    .v-step:last-child{ padding-bottom:0; }
+    .v-step .n{ width:27px; height:27px; border-radius:50%; background:var(--orange); color:#fff; font-size:.8rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:2; }
+    .v-step:not(:last-child)::before{ content:""; position:absolute; left:13px; top:27px; bottom:0; width:2px; background:#ffe0c2; }
+    .v-step .st{ font-size:.85rem; font-weight:700; color:var(--ink); }
+    .v-step .sd{ font-size:.76rem; color:#8a909a; margin-top:1px; }
+
+    /* carte prix */
+    .v-side{ position:sticky; top:90px; }
+    .v-price-card{ background:#fff; border:1px solid #eef0f3; border-radius:16px; padding:20px; box-shadow:0 10px 28px rgba(20,30,50,.08); }
+    .v-pc-bdg{ font-size:.66rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--orange); }
+    .v-pc-price{ font-size:1.7rem; font-weight:900; color:var(--ink); margin-top:6px; }
+    .v-pc-ppm{ font-size:.78rem; color:#8a909a; margin-top:1px; }
+    .v-btn{ display:flex; align-items:center; justify-content:center; gap:.5rem; text-align:center; font-weight:700; border-radius:11px; padding:13px; font-size:.9rem; margin-top:11px; text-decoration:none; cursor:pointer; }
+    .v-btn.p{ background:var(--orange); color:#fff; } .v-btn.w{ background:#25d366; color:#fff; } .v-btn.g{ background:#fff; color:var(--ink); border:1.5px solid #e2e5ea; }
+    .v-pc-note{ font-size:.72rem; color:#8a909a; margin-top:13px; line-height:1.5; text-align:center; }
+
+    /* barre mobile */
+    .v-mbar{ display:none; }
+
+    /* lightbox */
+    .v-lb{ position:fixed; inset:0; background:rgba(10,11,14,.95); z-index:9999; display:none; align-items:center; justify-content:center; }
+    .v-lb.open{ display:flex; }
+    .v-lb img{ max-width:92vw; max-height:86vh; border-radius:8px; transition:transform .2s ease, opacity .2s ease; touch-action:none; }
+    .v-lb .lbx, .v-lb .lbn{ position:absolute; background:rgba(255,255,255,.12); color:#fff; border:0; width:46px; height:46px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .v-lb .lbx{ top:18px; right:18px; } .v-lb .lbn.prev{ left:18px; top:50%; transform:translateY(-50%); } .v-lb .lbn.next{ right:18px; top:50%; transform:translateY(-50%); }
+    .v-lb .lbc{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.7); font-size:.8rem; }
+
+    .v-loading{ text-align:center; padding:80px 20px; color:#8a909a; }
+
+    @media (max-width:820px){
+      .v-gal{ grid-template-columns:1fr; }
+      .v-main{ height:250px; }
+      .v-thumbs{ grid-template-rows:none; grid-template-columns:repeat(4,1fr); height:70px; }
+      .v-body{ grid-template-columns:1fr; gap:0; }
+      .v-side{ position:static; margin-bottom:18px; }
+      .v-specs{ grid-template-columns:1fr 1fr; }
+      .v-mbar{ display:flex; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #eef0f3; padding:10px 14px; gap:10px; align-items:center; z-index:50; box-shadow:0 -6px 20px rgba(0,0,0,.06); }
+      .v-mbar .mp{ font-size:1rem; font-weight:900; color:var(--ink); line-height:1; flex-shrink:0; }
+      .v-mbar .mp small{ display:block; font-size:.6rem; font-weight:600; color:#8a909a; }
+      .v-mbar .mb{ flex:1; display:flex; align-items:center; justify-content:center; gap:.4rem; text-align:center; font-weight:700; border-radius:10px; padding:12px; font-size:.85rem; text-decoration:none; }
+      .v-mbar .mb.p{ background:var(--orange); color:#fff; } .v-mbar .mb.w{ background:#25d366; color:#fff; flex:0 0 46px; }
+    }
+  </style>
+</head>
+<body>
+  <header></header>
+
+  <main class="vente-wrap">
+    <div id="venteRoot">
+      <div class="v-loading"><i class="fas fa-spinner fa-spin"></i> Chargement du bien…</div>
+    </div>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="v-lb" id="vLb" role="dialog" aria-modal="true">
+    <button class="lbx" id="vLbClose" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    <button class="lbn prev" id="vLbPrev" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
+    <img id="vLbImg" src="" alt="Photo du bien">
+    <button class="lbn next" id="vLbNext" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
+    <div class="lbc" id="vLbCounter"></div>
+  </div>
+
+  <div class="v-mbar" id="vMbar" style="display:none"></div>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="/assets/js/supabase.js" defer></script>
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/footer.js" defer></script>
+  <script src="/assets/js/nav.js" defer></script>
+
+  <script>
+  (function(){
+    'use strict';
+    const SITE = 'https://selogercm.com';
+    const WA   = '237650840714';
+
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const fmt = (n) => (Number(n) || 0).toLocaleString('fr-FR');
+    const tImg = (url, w, h) => window.SLCM_listings?.getTransformUrl ? SLCM_listings.getTransformUrl(url, { width:w, height:h }) : url;
+    const cfFull = (url) => window.SLCM_listings?.cfVariant ? SLCM_listings.cfVariant(url, 'full') : url;
+    const streamUid = (u) => (String(u||'').match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/) || [])[1] || '';
+
+    const TITLE_STATUS = {
+      titre_foncier: 'Titre foncier — pleine propriété',
+      immatriculation_en_cours: 'Immatriculation en cours',
+      non_titre: 'Non titré'
+    };
+    const SELLER = { particulier:'Particulier', promoteur:'Promoteur agréé' };
+
+    function waitClient(cb, tries){
+      tries = tries || 0;
+      if (window.SLCM_DB && window.SLCM_DB.client) return cb(window.SLCM_DB.client);
+      if (tries > 100) return cb(null);
+      setTimeout(() => waitClient(cb, tries + 1), 50);
+    }
+
+    function getSlug(){
+      const parts = location.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'vente' && parts[1]) return { slug: decodeURIComponent(parts[1]) };
+      const p = new URLSearchParams(location.search);
+      if (p.get('slug')) return { slug: p.get('slug') };
+      if (p.get('id'))   return { id: p.get('id') };
+      return {};
+    }
+
+    waitClient(async (client) => {
+      const root = document.getElementById('venteRoot');
+      if (!client){ root.innerHTML = '<div class="v-loading">Service indisponible. Réessayez.</div>'; return; }
+
+      const ref = getSlug();
+      if (!ref.slug && !ref.id){ location.replace('/annonces'); return; }
+
+      // 1) Annonce
+      let ad = null;
+      try {
+        let q = client.from('listings').select('*').eq('status','active').limit(1);
+        q = ref.slug ? q.eq('slug', ref.slug) : q.eq('id', ref.id);
+        const { data } = await q;
+        ad = data && data[0];
+      } catch(e){ /* noop */ }
+
+      if (!ad){ root.innerHTML = '<div class="v-loading">Ce bien n\'est plus disponible. <a href="/annonces">Voir les annonces →</a></div>'; return; }
+
+      // Redirection : si ce n'est pas une vente à dossier complet, renvoyer vers la fiche normale
+      if (!(ad.rent_sale === 'sale' && ad.dossier_complet)){
+        location.replace('/annonce/' + (ad.slug || ad.id));
+        return;
+      }
+      // URL propre
+      if (!ref.slug && ad.slug){ history.replaceState({}, '', '/vente/' + ad.slug); }
+
+      // 2) Dossier (vue publique sûre)
+      let dossier = {};
+      try {
+        const { data } = await client.from('sale_dossier_public').select('*').eq('listing_id', ad.id).limit(1);
+        dossier = (data && data[0]) || {};
+      } catch(e){ /* dossier optionnel */ }
+
+      render(ad, dossier);
+    });
+
+    function render(ad, d){
+      const title = ad.title || 'Bien à vendre';
+      const loc   = [ad.district, ad.city].filter(Boolean).join(', ');
+      const images = Array.isArray(ad.images) ? ad.images.filter(Boolean) : [];
+      const vUid  = streamUid(ad.video_url);
+      document.title = title + ' — À vendre — SE LOGER CM';
+
+      // ---- Galerie : vidéo en tête ----
+      const firstImg = images[0] ? tImg(images[0], 900, 640) : '/assets/img/og-cover.png';
+      const thumbs = [];
+      if (vUid) thumbs.push(`<div class="v-th" data-video="1"><img src="${esc(tImg(images[0]||'',240,170))}" alt=""><div class="play"><i class="fas fa-play"></i></div></div>`);
+      images.slice(0, vUid ? 2 : 3).forEach((src,i) => {
+        thumbs.push(`<div class="v-th" data-idx="${i}"><img src="${esc(tImg(src,240,170))}" alt="photo ${i+1}"></div>`);
+      });
+      if (images.length > (vUid ? 2 : 3)){
+        const k = (vUid ? 2 : 3);
+        thumbs[thumbs.length-1] = `<div class="v-th" data-idx="${k-0}"><img src="${esc(tImg(images[k-0]||images[0],240,170))}" alt=""><div class="more">+${images.length - k} photos</div></div>`;
+      }
+
+      // ---- Spécifications ----
+      const specs = [];
+      if (d.land_area)  specs.push(['val', d.land_area + ' m²', 'Terrain']);
+      if (d.built_area) specs.push(['val', d.built_area + ' m²', 'Surface bâtie']);
+      if (ad.bedrooms)  specs.push(['val', ad.bedrooms, 'Chambres']);
+      specs.push(['val', (d.title_status ? '✓' : '—'), 'Titre']);
+      const specsHtml = specs.map(s => `<div class="v-spec"><div class="val">${esc(s[1])}</div><div class="k">${esc(s[2])}</div></div>`).join('');
+
+      const via = [].concat(Array.isArray(d.viabilisation)?d.viabilisation:[], Array.isArray(d.equipements)?d.equipements:[]);
+      const viaHtml = via.length ? `<div class="v-via">${via.map(v => `<span class="v-chip"><b>✓</b> ${esc(v)}</span>`).join('')}</div>` : '';
+
+      // ---- Dossier juridique ----
+      const docs = Array.isArray(d.documents) ? d.documents : [];
+      const docsHtml = docs.length ? docs.map(doc => `
+        <div class="v-doc"><div class="ic">✓</div>
+          <div><div class="t">${esc(doc.label||'Document')}</div>${doc.sub?`<div class="s">${esc(doc.sub)}</div>`:''}</div>
+          <span class="tag">${esc(doc.status||'Consultable en agence')}</span></div>`).join('') : '<p class="v-muted">Dossier en cours de constitution.</p>';
+      const previews = docs.filter(x => x.preview_url).map(x =>
+        `<div class="v-pv"><img src="${esc(x.preview_url)}" alt=""><span class="lbl">${esc(x.label||'')} — extrait</span></div>`).join('');
+      const titleStatusLine = d.title_status ? `<p class="v-desc" style="margin-top:0"><strong>${esc(TITLE_STATUS[d.title_status]||d.title_status)}</strong>${d.seller_type?` · Vendeur : ${esc(SELLER[d.seller_type]||d.seller_type)}`:''}</p>` : '';
+
+      // ---- Prix & coût ----
+      const price = Number(ad.price)||0;
+      let rows, total;
+      if (Array.isArray(d.price_breakdown) && d.price_breakdown.length){
+        rows = d.price_breakdown.map(r => `<tr><td>${esc(r.label)}</td><td>${typeof r.amount==='number'?fmt(r.amount):esc(r.amount)}</td></tr>`).join('');
+        total = price + d.price_breakdown.reduce((s,r)=> s + (typeof r.amount==='number'?r.amount:0), 0);
+      } else {
+        const reg = Math.round(price*0.05), notr = Math.round(price*0.025), mut = Math.round(price*0.01);
+        rows = `<tr><td>Droits d'enregistrement & mutation <span class="v-muted">(estim.)</span></td><td>≈ ${fmt(reg)}</td></tr>
+                <tr><td>Émoluments du notaire <span class="v-muted">(estim.)</span></td><td>≈ ${fmt(notr)}</td></tr>
+                <tr><td>Mutation du titre — conservation foncière</td><td>≈ ${fmt(mut)}</td></tr>
+                <tr><td>Commission d'agence</td><td>incluse</td></tr>`;
+        total = price + reg + notr + mut;
+      }
+
+      const refParam = encodeURIComponent(ad.ref || ad.slug || ad.id || '');
+      const waMsg = encodeURIComponent('Bonjour, je suis intéressé(e) par ce bien à vendre : ' + title + ' (' + location.href + ')');
+      const waHref = 'https://wa.me/' + WA + '?text=' + waMsg;
+      const ppm = d.land_area ? `≈ ${fmt(Math.round(price/d.land_area))} / m² de terrain` : '';
+
+      document.getElementById('venteRoot').innerHTML = `
+        <div class="v-crumb">Acheter › ${esc(ad.district||'Douala')} › <b>${esc(title)}</b></div>
+
+        <div class="v-gal">
+          <div class="v-main" id="vMain">
+            <div class="v-badges"><span class="v-bdg sale">À vendre</span><span class="v-bdg doc">Dossier complet</span></div>
+            <img id="vMainImg" src="${esc(firstImg)}" alt="${esc(title)}">
+          </div>
+          <div class="v-thumbs" id="vThumbs">${thumbs.join('')}</div>
+        </div>
+
+        <div class="v-body">
+          <div>
+            <div style="margin:6px 2px 0">
+              <h1 class="v-h1">${esc(title)}</h1>
+              <div class="v-loc"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> ${esc(loc)}</div>
+            </div>
+
+            <div class="v-card" style="margin-top:18px">
+              <h2 class="v-h2">Le bien</h2>
+              <div class="v-specs">${specsHtml}</div>
+              ${viaHtml ? `<div style="margin-top:16px"><div class="v-muted" style="font-weight:700;color:#6b7280;margin-bottom:7px">Viabilisation & équipements</div>${viaHtml}</div>`:''}
+              ${ad.description ? `<p class="v-desc">${esc(ad.description)}</p>`:''}
+            </div>
+
+            <div class="v-card v-dossier">
+              <h2 class="v-h2">Dossier juridique</h2>
+              ${titleStatusLine}
+              <div class="v-doclist">${docsHtml}</div>
+              ${previews ? `<div class="v-previews">${previews}</div>`:''}
+              <div class="v-legal">Documents fournis par le vendeur, consultables en agence. SE LOGER CM agit comme intermédiaire de mise en relation. Toute vente immobilière doit, à peine de nullité, être passée devant notaire (acte authentique — art. 8 de l'ordonnance n° 74-1 du 6 juillet 1974).</div>
+            </div>
+
+            <div class="v-card">
+              <h2 class="v-h2">Prix & coût réel de l'acquisition</h2>
+              <table class="v-table">
+                <tr><td><strong>Prix du bien</strong></td><td>${fmt(price)}</td></tr>
+                ${rows}
+                <tr class="tot"><td>Budget total estimé</td><td>≈ ${fmt(total)}</td></tr>
+              </table>
+              <div class="v-legal" style="background:#f8f9fb;color:#8a909a">Montants indicatifs en FCFA, à confirmer par le notaire selon le dossier.</div>
+            </div>
+
+            <div class="v-card">
+              <h2 class="v-h2">Un achat accompagné, étape par étape</h2>
+              <div class="v-steps">
+                <div class="v-step"><div class="n">1</div><div><div class="st">Visite du bien</div><div class="sd">Sur place, avec un conseiller SE LOGER CM</div></div></div>
+                <div class="v-step"><div class="n">2</div><div><div class="st">Vérification des documents</div><div class="sd">Consultation du dossier original en agence</div></div></div>
+                <div class="v-step"><div class="n">3</div><div><div class="st">Compromis de vente</div><div class="sd">Accord des parties, conditions fixées</div></div></div>
+                <div class="v-step"><div class="n">4</div><div><div class="st">Signature chez le notaire</div><div class="sd">Acte authentique — obligatoire</div></div></div>
+                <div class="v-step"><div class="n">5</div><div><div class="st">Enregistrement & mutation du titre</div><div class="sd">Le bien est inscrit à votre nom</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="v-side">
+            <div class="v-price-card">
+              <div class="v-pc-bdg">À vendre · Dossier complet</div>
+              <div class="v-pc-price">${fmt(price)} <span style="font-size:.9rem">FCFA</span></div>
+              ${ppm ? `<div class="v-pc-ppm">${ppm}</div>`:''}
+              <a class="v-btn p" href="/rendez-vous?ref=${refParam}"><i class="fas fa-calendar-check"></i> Prendre rendez-vous</a>
+              <a class="v-btn w" href="${waHref}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Discuter sur WhatsApp</a>
+              <a class="v-btn g" href="/rendez-vous?ref=${refParam}">Consulter le dossier en agence</a>
+              <div class="v-pc-note">Réf. ${esc(ad.ref || ad.slug || ad.id)} · Mis en vente par SE LOGER CM, intermédiaire de mise en relation.</div>
+            </div>
+          </div>
+        </div>`;
+
+      // barre mobile
+      const mbar = document.getElementById('vMbar');
+      mbar.innerHTML = `<div class="mp">${fmt(Math.round(price/1e6))} M<small>FCFA</small></div>
+        <a class="mb p" href="/rendez-vous?ref=${refParam}">Prendre RDV</a>
+        <a class="mb w" href="${waHref}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i></a>`;
+      mbar.style.display = '';
+
+      wireGallery(ad, images, firstImg, vUid);
+    }
+
+    /* ══ Galerie + lightbox + zoom ══ */
+    function wireGallery(ad, images, firstImg, vUid){
+      const main = document.getElementById('vMain');
+      const mainImg = document.getElementById('vMainImg');
+      const thumbs = document.getElementById('vThumbs');
+      let idx = 0;
+
+      function showVideo(){
+        if (!vUid) return;
+        main.innerHTML = `<iframe src="https://iframe.videodelivery.net/${vUid}?primaryColor=%23ff7a00&autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+        main.style.cursor = 'default';
+      }
+      function showImg(i){
+        idx = (i + images.length) % images.length;
+        main.innerHTML = `<div class="v-badges"><span class="v-bdg sale">À vendre</span><span class="v-bdg doc">Dossier complet</span></div><img id="vMainImg" src="${tImg(images[idx],900,640)}" alt="">`;
+        main.style.cursor = 'zoom-in';
+        // précharge voisines
+        [idx+1, idx-1].forEach(j => { const k=(j+images.length)%images.length; if(k!==idx){ const im=new Image(); im.src=tImg(images[k],900,640);} });
+      }
+
+      thumbs?.querySelectorAll('.v-th').forEach(t => {
+        t.addEventListener('click', () => {
+          if (t.dataset.video) return showVideo();
+          showImg(Number(t.dataset.idx)||0);
+        });
+      });
+      main.addEventListener('click', (e) => {
+        if (main.querySelector('iframe')) return;            // vidéo en cours : pas de lightbox
+        openLb(idx);
+      });
+
+      // ----- Lightbox -----
+      const lb = document.getElementById('vLb'), lbImg = document.getElementById('vLbImg'), lbC = document.getElementById('vLbCounter');
+      let lbi = 0, zS=1, zX=0, zY=0, stX=0, stY=0, pX=0, pY=0, pd0=0, ps0=1, single=false, lastTap=0, lastTouch=0;
+
+      function applyZ(a){ lbImg.style.transition=(a?'transform .2s ease, ':'transform 0s, ')+'opacity .2s ease'; lbImg.style.transform='translate('+zX+'px,'+zY+'px) scale('+zS+')'; }
+      function resetZ(){ zS=1; zX=0; zY=0; applyZ(true); }
+      function clampZ(){ const w=lbImg.clientWidth,h=lbImg.clientHeight,mx=Math.max(0,(w*zS-w)/2),my=Math.max(0,(h*zS-h)/2); zX=Math.max(-mx,Math.min(mx,zX)); zY=Math.max(-my,Math.min(my,zY)); }
+      function zToggle(cx,cy){ if(zS>1){resetZ();return;} zS=2.5; const r=lbImg.getBoundingClientRect(); zX=(r.left+r.width/2-cx)*(zS-1); zY=(r.top+r.height/2-cy)*(zS-1); clampZ(); applyZ(true); }
+      function lbGo(i){ lbi=(i+images.length)%images.length; resetZ(); lbImg.style.opacity='0'; setTimeout(()=>{ lbImg.src=cfFull(images[lbi]); lbImg.style.opacity='1'; },150); lbC.textContent=(lbi+1)+' / '+images.length; }
+      function openLb(i){ lb.classList.add('open'); document.body.style.overflow='hidden'; lbGo(i); }
+      function closeLb(){ lb.classList.remove('open'); document.body.style.overflow=''; resetZ(); }
+
+      document.getElementById('vLbClose').addEventListener('click', closeLb);
+      document.getElementById('vLbPrev').addEventListener('click', () => lbGo(lbi-1));
+      document.getElementById('vLbNext').addEventListener('click', () => lbGo(lbi+1));
+      lb.addEventListener('click', (e) => { if(e.target===lb) closeLb(); });
+      document.addEventListener('keydown', (e) => { if(!lb.classList.contains('open')) return; if(e.key==='Escape')closeLb(); if(e.key==='ArrowRight')lbGo(lbi+1); if(e.key==='ArrowLeft')lbGo(lbi-1); });
+
+      lbImg.style.touchAction='none'; lbImg.style.transformOrigin='center center';
+      let lastTouchTime=0;
+      lbImg.addEventListener('dblclick', (e)=>{ if(Date.now()-lastTouchTime<600)return; e.preventDefault(); zToggle(e.clientX,e.clientY); });
+      lbImg.addEventListener('wheel', (e)=>{ e.preventDefault(); zS=Math.max(1,Math.min(4,zS+(e.deltaY<0?0.3:-0.3))); if(zS===1){zX=0;zY=0;} clampZ(); applyZ(true); }, {passive:false});
+      lbImg.addEventListener('touchstart', (e)=>{ lastTouchTime=Date.now();
+        if(e.touches.length===2){ single=false; pd0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)||1; ps0=zS; }
+        else if(e.touches.length===1){ single=true; stX=e.touches[0].clientX; stY=e.touches[0].clientY; pX=zX; pY=zY; const now=Date.now(); if(now-lastTap<300){ zToggle(stX,stY); lastTap=0; } else lastTap=now; }
+      }, {passive:true});
+      lbImg.addEventListener('touchmove', (e)=>{
+        if(e.touches.length===2){ const dd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); zS=Math.max(1,Math.min(4,ps0*dd/pd0)); clampZ(); applyZ(false); e.preventDefault(); }
+        else if(e.touches.length===1 && zS>1){ zX=pX+(e.touches[0].clientX-stX); zY=pY+(e.touches[0].clientY-stY); clampZ(); applyZ(false); e.preventDefault(); }
+      }, {passive:false});
+      lbImg.addEventListener('touchend', (e)=>{
+        if(single && zS===1 && e.changedTouches.length){ const dx=e.changedTouches[0].clientX-stX, dy=e.changedTouches[0].clientY-stY; if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){ dx<0?lbGo(lbi+1):lbGo(lbi-1); } }
+      }, {passive:true});
+    }
+  })();
+  </script>
+</body>
+</html>
