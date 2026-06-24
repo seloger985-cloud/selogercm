@@ -138,6 +138,24 @@
       flex-shrink: 0;
     }
     .gallery-thumbs img.active { opacity: 1; outline: 2px solid var(--orange); }
+    .visit-cta {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      background: linear-gradient(120deg,#fff4e9,#ffe9d3);
+      border: 1px solid #ffe0c2; border-radius: 14px;
+      padding: 1rem 1.2rem; margin: 0 0 1.5rem;
+    }
+    .visit-cta-head { display: flex; align-items: center; gap: .8rem; flex: 1 1 240px; }
+    .visit-cta-head > i { color: var(--orange); font-size: 1.4rem; }
+    .visit-cta-head strong { display: block; font-size: 1rem; color: #15161b; font-weight: 800; }
+    .visit-cta-head span { display: block; font-size: .85rem; color: #8a6a42; margin-top: 2px; }
+    .visit-cta-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .vc-btn { font-weight: 700; font-size: .9rem; padding: .7rem 1.2rem; border-radius: 10px; text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; gap: .4rem; }
+    .vc-rdv { background: #15161b; color: #fff; }
+    .vc-wa  { background: #25D366; color: #fff; }
+    @media (max-width: 600px) {
+      .visit-cta-actions { width: 100%; }
+      .vc-btn { flex: 1; justify-content: center; }
+    }
     .video-tour { margin: 0 0 1.5rem; }
     .video-tour-title { font-size: 1.1rem; font-weight: 800; margin: 0 0 .8rem; display: flex; align-items: center; gap: .5rem; }
     .video-tour-title i { color: var(--orange); }
@@ -1013,6 +1031,21 @@
           ${images.length > 1 ? `<div class="gallery-thumbs" id="thumbsRow">${thumbsHtml}</div>` : ''}
         </div>
 
+        <!-- CTA : voir le bien en personne -->
+        <div class="visit-cta">
+          <div class="visit-cta-head">
+            <i class="fas fa-calendar-check"></i>
+            <div>
+              <strong>Voir ce bien en personne</strong>
+              <span>Planifiez une visite — un conseiller SE LOGER CM vous accompagne.</span>
+            </div>
+          </div>
+          <div class="visit-cta-actions">
+            <a class="vc-btn vc-rdv" href="/rendez-vous?ref=${encodeURIComponent(ad.ref || ad.id || '')}">Prendre rendez-vous</a>
+            <a class="vc-btn vc-wa" id="visitWa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+          </div>
+        </div>
+
         ${videoHtml}
 
         <!-- LAYOUT 2 COL -->
@@ -1342,6 +1375,13 @@
         if (galSwiped) { galSwiped = false; return; }  // un swipe n'ouvre pas le plein écran
         openLightbox(currentIdx);
       });
+
+      // CTA « Voir ce bien en personne » → WhatsApp pré-rempli
+      const visitWa = document.getElementById('visitWa');
+      if (visitWa) {
+        const vmsg = 'Bonjour, je souhaite visiter ce bien : ' + title + ' (' + location.href + ')';
+        visitWa.href = 'https://wa.me/237650840714?text=' + encodeURIComponent(vmsg);
+      }
 
       /* ══ Lightbox complète ══ */
       let lbIdx = 0;
