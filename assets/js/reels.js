@@ -21,14 +21,11 @@ const SLCM_reels = (() => {
   const DESKTOP_LIMIT = 12; /* Carrousel Netflix fusionné sur desktop */
   const MOBILE_LIMIT  = 6;  /* 6 vidéos par section sur mobile */
 
-  /* Quota mobile pour la section 1 (homepage)
-     La section 2 mobile est dédiée aux meublés + commerciaux + studios,
-     donc inutile de doublonner ici. Section 1 = location non meublée + vente. */
-  const MOBILE_QUOTA = {
-    rentUnfurnished: 5,
-    sale: 1
-    /* Total = MOBILE_LIMIT = 6 */
-  };
+  /* Composition éditoriale de l'unique section Réels (homepage).
+     Mobile : 3 non meublé + 2 meublé + 1 commercial = 6.
+     Desktop : ×2 = 6 non meublé + 4 meublé + 2 commercial = 12. */
+  const MOBILE_QUOTA  = { nonMeuble: 3, meuble: 2, commercial: 1 };  /* total 6  */
+  const DESKTOP_QUOTA = { nonMeuble: 6, meuble: 4, commercial: 2 };  /* total 12 */
 
   let reels = [];
   let isMobile = window.innerWidth < MOBILE_BREAKPOINT;
@@ -101,30 +98,36 @@ const SLCM_reels = (() => {
     return (n || 0).toLocaleString('fr-FR') + ' FCFA';
   }
 
-  function categorize(r) {
-    if (r.rent_sale === 'sale') return 'sale';
-    if (r.furnished === true)   return 'rentFurnishedOrCommercial';
-    if (r.type === 'commercial' || r.type === 'warehouse') return 'rentFurnishedOrCommercial';
-    return 'rentUnfurnished';
+  /* Range un réel dans un des 3 paniers éditoriaux.
+     Commercial prime, puis meublé, sinon non meublé. La vente n'entre pas
+     dans les Réels (elle a sa propre vitrine « Dossier complet »). */
+  const COMMERCIAL_TYPES = ['office', 'shop', 'commercial', 'warehouse'];
+  function bucketOf(r) {
+    if (COMMERCIAL_TYPES.indexOf(r.type) !== -1) return 'commercial';
+    if (r.furnished === true) return 'meuble';
+    return 'nonMeuble';
   }
 
-  function applyMobileQuota(allReels) {
-    const buckets = { rentUnfurnished: [], rentFurnishedOrCommercial: [], sale: [] };
-    allReels.forEach(r => buckets[categorize(r)].push(r));
+  /* Compose la sélection selon le quota (mobile ou desktop).
+     Chaque panier est tourné (rotation horaire déterministe) puis on prélève
+     son quota ; on complète jusqu'à `limit` avec le reste si un panier manque. */
+  function composeReels(allReels, quota, limit) {
+    const buckets = { nonMeuble: [], meuble: [], commercial: [] };
+    allReels.forEach(r => { const b = bucketOf(r); if (buckets[b]) buckets[b].push(r); });
+    Object.keys(buckets).forEach(k => { buckets[k] = rotatePool(buckets[k]); });
 
     const selected = [];
     const used = new Set();
 
-    Object.entries(MOBILE_QUOTA).forEach(([cat, quota]) => {
-      buckets[cat].slice(0, quota).forEach(r => {
-        selected.push(r);
-        used.add(r.id);
+    Object.keys(quota).forEach(cat => {
+      (buckets[cat] || []).slice(0, quota[cat]).forEach(r => {
+        if (!used.has(r.id)) { selected.push(r); used.add(r.id); }
       });
     });
 
-    if (selected.length < MOBILE_LIMIT) {
-      for (const r of allReels) {
-        if (selected.length >= MOBILE_LIMIT) break;
+    if (selected.length < limit) {
+      for (const r of rotatePool(allReels)) {
+        if (selected.length >= limit) break;
         if (!used.has(r.id)) { selected.push(r); used.add(r.id); }
       }
     }
@@ -132,7 +135,7 @@ const SLCM_reels = (() => {
     return selected.sort((a, b) => {
       if (a.premium !== b.premium) return a.premium ? -1 : 1;
       return (b.created_at || '').localeCompare(a.created_at || '');
-    });
+    }).slice(0, limit);
   }
 
   async function loadReels() {
@@ -149,11 +152,11 @@ const SLCM_reels = (() => {
     const all = await loadAllReelsFromSupabase();
     if (!all.length) return [];
 
-    /* Filtrer pour la section 1 : non meublé ET pas studio/commercial/office */
-    const section1 = all.filter(r => getSection(r) === 'section-1');
-    const rotated = rotatePool(section1);
-    if (isMobile) return applyMobileQuota(rotated);
-    return rotated.slice(0, DESKTOP_LIMIT);
+    /* Section unique : composition 3-2-1 (mobile) ou 6-4-2 (desktop),
+       rotation horaire déterministe par panier. */
+    const quota = isMobile ? MOBILE_QUOTA : DESKTOP_QUOTA;
+    const limit = isMobile ? MOBILE_LIMIT : DESKTOP_LIMIT;
+    return composeReels(all, quota, limit);
   }
 
   /* Lecture unique du pool Supabase — source de vérité unique pour les 2 sections.
@@ -587,6 +590,36 @@ const SLCM_reels = (() => {
         animation: spinnerRotate .7s linear infinite;
       }
       @keyframes spinnerRotate { to { transform: rotate(360deg); } }
+
+      #slcmReelViewer .viewer-share {
+        display: inline-flex; align-items: center; gap: .45rem;
+        margin-top: .6rem; padding: .5rem .9rem; border-radius: 10px;
+        background: rgba(255,255,255,.16); color: #fff; border: 0;
+        font-family: inherit; font-weight: 700; font-size: .85rem; cursor: pointer;
+        pointer-events: auto;
+      }
+
+      /* ── Lecteur plein écran PC : vidéo à gauche, détails à droite ── */
+      @media (min-width: 768px) {
+        #slcmReelViewer .viewer-slide {
+          display: flex; flex-direction: row; align-items: center; justify-content: center;
+          gap: 3rem; padding: 0 6vw; background: #0a0b0d;
+        }
+        #slcmReelViewer .viewer-video {
+          width: auto; height: 86vh; max-height: 86vh; max-width: 42vw;
+          object-fit: contain; border-radius: 16px; flex: 0 0 auto;
+          box-shadow: 0 24px 70px rgba(0,0,0,.6);
+        }
+        #slcmReelViewer .viewer-info {
+          position: static; inset: auto; background: none;
+          padding: 0; width: 360px; max-width: 360px; flex: 0 0 360px;
+        }
+        #slcmReelViewer .viewer-title { font-size: 1.6rem; }
+        #slcmReelViewer .viewer-loc, #slcmReelViewer .viewer-price { font-size: 1rem; }
+        #slcmReelViewer .viewer-cta { display: inline-block; margin-top: 1rem; }
+        #slcmReelViewer .viewer-wa-btn { margin-top: .8rem; }
+        #slcmReelViewer .viewer-counter { left: 50%; transform: translateX(-50%); }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -651,12 +684,15 @@ const SLCM_reels = (() => {
     if (next) next.addEventListener('click', () => setActiveDesktopReel(activeIndex + 1));
 
     track.addEventListener('click', (e) => {
+      if (e.target.closest('a, button')) return;  /* liens/boutons (Voir l'annonce, son, WA) passent */
       const card = e.target.closest('.reel-card');
       if (!card) return;
       const idx = parseInt(card.dataset.index, 10);
+      e.preventDefault();
       if (idx !== activeIndex) {
-        e.preventDefault();
-        setActiveDesktopReel(idx);
+        setActiveDesktopReel(idx);              /* carte latérale → on la recentre */
+      } else {
+        _viewerReels = reels; openViewer(idx);  /* carte centrée → lecteur plein écran */
       }
     });
 
@@ -756,36 +792,41 @@ const SLCM_reels = (() => {
       </button>`;
   }
 
-  /* Autoplay muted dans le strip — libère les ressources hors viewport */
+  /* Autoplay muted dans le strip — UNE seule vidéo à la fois (la plus visible).
+     Économise la data : on ne charge/joue que la vignette centrée ; les autres
+     restent en poster. Au scroll horizontal, l'active bascule automatiquement. */
   function bindStripVideoObserver(strip, data) {
     if (!('IntersectionObserver' in window)) return;
-    const thumbs = strip.querySelectorAll('.reel-thumb');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const thumb = entry.target;
-        const vid   = thumb.querySelector('.reel-thumb-vid');
-        const img   = thumb.querySelector('.reel-thumb-img');
+    const thumbs = Array.prototype.slice.call(strip.querySelectorAll('.reel-thumb'));
+    const ratios = new Map();
+
+    function activate(winner) {
+      thumbs.forEach(thumb => {
+        const vid = thumb.querySelector('.reel-thumb-vid');
+        const img = thumb.querySelector('.reel-thumb-img');
         if (!vid) return;
-        if (entry.isIntersecting) {
-          /* Entrée dans le viewport : charger et jouer silencieusement */
+        if (thumb === winner) {
           const src = thumb.dataset.videoSrc;
-          if (src && !vid._hlsLoaded) {
-            loadVideo(vid, src, true);
-            vid._hlsLoaded = true;
-          } else if (vid.paused) {
-            vid.play().catch(() => {});
-          }
+          if (src && !vid._hlsLoaded) { loadVideo(vid, src, true); vid._hlsLoaded = true; }
+          else if (vid.paused) { vid.play().catch(() => {}); }
           vid.style.display = 'block';
           if (img) img.style.display = 'none';
         } else {
-          /* Sortie du viewport : pause + libérer bande passante */
           vid.pause();
           if (vid._hls) vid._hls.stopLoad();
           vid.style.display = 'none';
           if (img) img.style.display = 'block';
         }
       });
-    }, { root: strip, threshold: 0.6 });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => ratios.set(e.target, e.isIntersecting ? e.intersectionRatio : 0));
+      let winner = null, best = 0.5; /* seuil mini pour activer */
+      ratios.forEach((ratio, thumb) => { if (ratio > best) { best = ratio; winner = thumb; } });
+      activate(winner);
+    }, { root: strip, threshold: [0, 0.25, 0.5, 0.75, 1] });
+
     thumbs.forEach(t => observer.observe(t));
   }
 
@@ -895,6 +936,10 @@ const SLCM_reels = (() => {
             data-wa-listing='${escapeHtml(JSON.stringify({id: r.id||'', title: r.title||'Visite', price: fmtPrice(r.price), location: [r.district,r.city].filter(Boolean).join(', '), owner_phone: r.owner_phone||''}))}'>
             <i class="fab fa-whatsapp"></i> Contacter sur WhatsApp
           </button>
+          <button class="viewer-share" type="button"
+            data-share-ref="${escapeHtml(r.slug || r.id || '')}" data-share-title="${escapeHtml(r.title || 'Visite')}">
+            <i class="fas fa-share"></i> Partager
+          </button>
         </div>
       </div>`;
   }
@@ -943,6 +988,23 @@ const SLCM_reels = (() => {
 
     viewer.querySelectorAll('.viewer-wa-btn').forEach(btn => {
       btn.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); openReelWhatsApp(btn); });
+    });
+
+    viewer.querySelectorAll('.viewer-share').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); e.preventDefault();
+        const url = location.origin + '/visites-express/' + (btn.dataset.shareRef || '');
+        const title = btn.dataset.shareTitle || 'Visite Express';
+        if (navigator.share) {
+          navigator.share({ title: title, text: title, url: url }).catch(() => {});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url)
+            .then(() => { btn.innerHTML = '<i class="fas fa-check"></i> Lien copié'; setTimeout(() => { btn.innerHTML = '<i class="fas fa-share"></i> Partager'; }, 1800); })
+            .catch(() => {});
+        } else {
+          window.prompt('Copiez le lien :', url);
+        }
+      });
     });
 
     const slides = viewer.querySelectorAll('.viewer-slide');
@@ -995,6 +1057,7 @@ const SLCM_reels = (() => {
               video.addEventListener('canplay',  () => loader.classList.add('is-hidden'), { once: true });
             }
             viewerIndex = idx;
+            replaceReelUrl((_viewerReels || reels)[idx]);
             /* Pre-warm le slide suivant */
             const nextSlide = slides[idx + 1];
             if (nextSlide) {
@@ -1027,6 +1090,12 @@ const SLCM_reels = (() => {
     }
   }
 
+  /* ── URL profonde partageable /visites-express/{slug} ── */
+  function reelPath(r){ return '/visites-express/' + ((r && (r.slug || r.id)) || ''); }
+  function pushReelUrl(r){ try { if (r) history.pushState({ slcmReel: true }, '', reelPath(r)); } catch(e){} }
+  function replaceReelUrl(r){ try { if (r && location.pathname.indexOf('/visites-express/') === 0) history.replaceState({ slcmReel: true }, '', reelPath(r)); } catch(e){} }
+  function restoreReelUrl(){ try { if (location.pathname.indexOf('/visites-express/') === 0) history.replaceState({}, '', '/'); } catch(e){} }
+
   function openViewer(startIndex) {
     if (!reels.length) return;
     buildViewer();
@@ -1035,6 +1104,7 @@ const SLCM_reels = (() => {
 
     viewerOpen = true;
     viewerIndex = Math.max(0, Math.min(startIndex, reels.length - 1));
+    pushReelUrl(reels[viewerIndex]);
     viewer.classList.add('is-open');
     viewer.setAttribute('aria-hidden', 'false');
     document.body.classList.add('slcm-reel-viewer-open');
@@ -1064,6 +1134,7 @@ const SLCM_reels = (() => {
     const viewer = document.getElementById('slcmReelViewer');
     if (!viewer) return;
     viewerOpen = false;
+    restoreReelUrl();
     _viewerReels = null; /* reset — section 1 par défaut au prochain ouverture */
     viewer.classList.remove('is-open');
     viewer.setAttribute('aria-hidden', 'true');
@@ -1199,6 +1270,25 @@ const SLCM_reels = (() => {
         }
       }
     }
+
+    /* ── Partage : ouvrir le bon réel si on arrive sur /visites-express/{ref} ── */
+    const _m = location.pathname.match(/^\/visites-express\/([^/?#]+)/);
+    if (_m) {
+      const _ref = decodeURIComponent(_m[1]);
+      const _idx = reels.findIndex(r => String(r.slug) === _ref || String(r.id) === _ref);
+      if (_idx >= 0) {
+        openViewer(_idx);
+      } else {
+        /* Réel hors composition courante → charger la base complète pour le retrouver */
+        const _all = await loadAllReelsFromSupabase();
+        const _fi = _all.findIndex(r => String(r.slug) === _ref || String(r.id) === _ref);
+        if (_fi >= 0) { reels = _all; _viewerReels = _all; openViewer(_fi); }
+      }
+    }
+    /* Bouton retour : ferme le lecteur quand on quitte une URL de réel */
+    window.addEventListener('popstate', () => {
+      if (viewerOpen && location.pathname.indexOf('/visites-express/') !== 0) closeViewer();
+    });
 
     window.addEventListener('resize', handleResize);
   }

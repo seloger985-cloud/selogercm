@@ -7,7 +7,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["listing_detail.html", "article.html", "vente_detail.html"]
+  included_files = ["listing_detail.html", "article.html", "vente_detail.html", "index.html"]
 
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
@@ -69,6 +69,13 @@
   from = "/vente"
   to = "/annonces"
   status = 302
+
+# ── Visites Express (réels vidéo partageables) ──
+[[redirects]]
+  from = "/visites-express/*"
+  to = "/.netlify/functions/visite-seo"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/publier"

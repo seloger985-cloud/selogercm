@@ -31,13 +31,18 @@ const SLCM_listings = (() => {
     'rent_sale', 'furnished', 'premium', 'boost_expires_at',
     'price', 'price_per_day', 'bedrooms', 'district', 'city',
     'type', 'status', 'statut', 'rental_segment', 'created_at', 'owner_phone',
-    'owner_kyc_verified', 'owner_is_pro', 'attributes'
+    'owner_kyc_verified', 'owner_is_pro', 'attributes', 'dossier_complet'
   ].join(',');
 
   /* Construit une URL d'annonce robuste — préfère le slug, fallback id, garde contre undefined */
   function getListingUrl(listing) {
     const ref = (listing && (listing.slug || listing.id)) || '';
     if (!ref) return '/annonces';  /* garde-fou : redirige vers la liste si pas d'identifiant */
+    /* Bien à dossier complet (en vente) → page de vente dédiée /vente/{slug} */
+    const mode = listing && (listing.rent_sale || listing.rentSale);
+    if (listing && listing.dossier_complet === true && mode === 'sale') {
+      return '/vente/' + encodeURIComponent(ref);
+    }
     return '/annonce/' + encodeURIComponent(ref);
   }
 

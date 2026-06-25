@@ -925,13 +925,16 @@ form.addEventListener('submit', async (e) => {
     }
 
     /* ── 1) Reels : hls.js + reels.js quand section visible ────────── */
-    loadWhenVisible('#reelsSection',
-      [
-        'https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js',
-        '/assets/js/reels.js?v=7'
-      ],
-      '600px'  /* anticipe loin pour démarrer le chargement avant que l'user scrolle vraiment */
-    );
+    var _reelScripts = [
+      'https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js',
+      '/assets/js/reels.js?v=8'
+    ];
+    if (location.pathname.indexOf('/visites-express/') === 0) {
+      /* Lien profond partagé : charger reels.js tout de suite pour ouvrir le lecteur sans scroll */
+      _reelScripts.reduce(function (p, s) { return p.then(function () { return loadScript(s); }); }, Promise.resolve()).catch(function () {});
+    } else {
+      loadWhenVisible('#reelsSection', _reelScripts, '600px');  /* anticipe loin */
+    }
 
     /* ── 2) Testimonials : quand sa section devient visible ────────── */
     loadWhenVisible('#testimonialsSection, .testimonials-section, [data-testimonials]',
