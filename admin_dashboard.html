@@ -461,6 +461,7 @@
         if (!ad) return;
         if (!window.SLCM_DB?.client) { alert('Connexion Supabase non disponible'); return; }
 
+        if (btn.classList.contains('b-dossier')) { openDossierModal(id); return; }
         if (btn.classList.contains('b-boost')) { openBoostModal(id); return; }
 
         if (btn.classList.contains('b-video')) {
@@ -544,6 +545,7 @@
               <button class="b-sold" style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7" data-id="${ad.id}" data-mode="${ad.rent_sale}">
                 ${ad.rent_sale === 'sale' ? '🔑 Vendu' : '🏠 Loué'}
               </button>` : `<span style="font-size:.75rem;font-weight:700;color:#888">${ad.statut === 'vendu' ? '✅ Vendu' : '✅ Loué'}</span>`}
+              ${ad.rentSale === 'sale' ? `<button class="b-dossier" style="background:#eef6ff;color:#1f6feb;border:1px solid #cfe2ff">${ad.dossier_complet ? '📁 Dossier ✓' : '📁 Dossier'}</button>` : ''}
               <button class="b-danger delete">Delete</button>
             </div>
           </div>
@@ -920,6 +922,95 @@
       _all = []; await render();
     }
 
+    /* ── Éditeur Dossier complet ── */
+    async function openDossierModal(id){
+      const client = window.SLCM_DB?.client;
+      if (!client) { alert('Connexion Supabase non disponible'); return; }
+      const ad = _all.find(a => a.id === id) || {};
+      document.getElementById('dossierListingId').value = id;
+      document.getElementById('dsTitleName').textContent = ad.title_fr || ad.title_en || ad.title || '';
+      document.getElementById('dsError').textContent = '';
+      const setV = (k,v)=>{ const el=document.getElementById(k); if(el) el.value = (v==null?'':v); };
+      ['dsLand','dsBuilt','dsViab','dsEquip','dsNotes','dsDocsExtra','dsPriceBreak','dsTitle','dsOwn','dsSeller'].forEach(k=>setV(k,''));
+      document.querySelectorAll('.ds-doc').forEach(c=>c.checked=false);
+      // flag dossier_complet (lu en direct pour fiabilité)
+      let complet = !!ad.dossier_complet;
+      try { const { data } = await client.from('listings').select('dossier_complet').eq('id', id).single(); if (data) complet = !!data.dossier_complet; } catch(_){}
+      document.getElementById('dsComplet').checked = complet;
+      // données sale_dossier existantes
+      let d = {};
+      try { const { data } = await client.from('sale_dossier').select('*').eq('listing_id', id).maybeSingle(); d = data || {}; } catch(_){}
+      setV('dsLand', d.land_area); setV('dsBuilt', d.built_area);
+      setV('dsViab', (d.viabilisation||[]).join(', ')); setV('dsEquip', (d.equipements||[]).join(', '));
+      setV('dsTitle', d.title_status||''); setV('dsOwn', d.ownership||''); setV('dsSeller', d.seller_type||'');
+      setV('dsNotes', d.notes||'');
+      const stdLabels = ['Titre foncier','Plan de bornage','Certificat de propriété','Quitus foncier',"Certificat d'urbanisme"];
+      const extra = [];
+      (Array.isArray(d.documents)?d.documents:[]).forEach(doc=>{
+        if (stdLabels.includes(doc.label)) {
+          const c = [...document.querySelectorAll('.ds-doc')].find(x=>x.value===doc.label); if (c) c.checked = true;
+        } else if (doc.label) {
+          extra.push([doc.label, doc.status||'', doc.preview_url||''].filter(Boolean).join(' | '));
+        }
+      });
+      setV('dsDocsExtra', extra.join('\n'));
+      setV('dsPriceBreak', Array.isArray(d.price_breakdown) ? d.price_breakdown.map(r=>`${r.label} | ${r.amount}`).join('\n') : '');
+      document.getElementById('dossierOverlay').style.display = 'flex';
+    }
+
+    async function saveDossier(){
+      const client = window.SLCM_DB?.client;
+      if (!client) { alert('Connexion Supabase non disponible'); return; }
+      const id = document.getElementById('dossierListingId').value;
+      const errEl = document.getElementById('dsError');
+      const btn = document.getElementById('dsSaveBtn');
+      errEl.textContent = '';
+      const v = k => (document.getElementById(k)?.value || '').trim();
+      const numOrNull = k => { const x = v(k); return x==='' ? null : Number(x); };
+      const csv = k => v(k).split(',').map(s=>s.trim()).filter(Boolean);
+
+      const docs = [];
+      document.querySelectorAll('.ds-doc:checked').forEach(c => docs.push({ label: c.value, status: 'Consultable en agence' }));
+      v('dsDocsExtra').split('\n').map(l=>l.trim()).filter(Boolean).forEach(line=>{
+        const parts = line.split('|').map(x=>(x||'').trim());
+        const label = parts[0], status = parts[1], preview_url = parts[2];
+        if (label) docs.push(Object.assign({ label, status: status || 'Consultable en agence' }, preview_url ? { preview_url } : {}));
+      });
+
+      let price_breakdown = null;
+      const pb = v('dsPriceBreak');
+      if (pb) {
+        price_breakdown = pb.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+          const parts = line.split('|').map(x=>(x||'').trim());
+          const n = Number(String(parts[1]||'').replace(/\s/g,''));
+          return { label: parts[0], amount: isNaN(n) ? parts[1] : n };
+        });
+      }
+
+      const payload = {
+        listing_id: id,
+        land_area: numOrNull('dsLand'),
+        built_area: numOrNull('dsBuilt'),
+        viabilisation: csv('dsViab'),
+        equipements: csv('dsEquip'),
+        title_status: v('dsTitle') || null,
+        ownership: v('dsOwn') || null,
+        seller_type: v('dsSeller') || null,
+        documents: docs,
+        price_breakdown: price_breakdown,
+        notes: v('dsNotes') || null
+      };
+
+      btn.disabled = true; btn.textContent = '⏳';
+      const { error: e1 } = await client.from('sale_dossier').upsert(payload, { onConflict: 'listing_id' });
+      const { error: e2 } = await client.from('listings').update({ dossier_complet: document.getElementById('dsComplet').checked }).eq('id', id);
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+      if (e1 || e2) { errEl.textContent = 'Erreur : ' + ((e1||e2).message); return; }
+      document.getElementById('dossierOverlay').style.display = 'none';
+      if (typeof showToast === 'function') showToast('📁 Dossier enregistré');
+      _all = []; await render();
+    }
+
   </script>
 
   <!-- Modal URL video -->
@@ -943,6 +1034,66 @@
       </div>
     </div>
   </div>
+  <!-- Modal Dossier complet -->
+  <div id="dossierOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:18px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:1.8rem">
+      <h2 style="font-size:1.05rem;font-weight:800;margin-bottom:.3rem">📁 Dossier complet — <span id="dsTitleName" style="color:#ff7a00"></span></h2>
+      <p style="font-size:.8rem;color:#888;margin-bottom:1rem">Renseigne le dossier de vente. Coche « Dossier complet » pour publier ce bien sur <strong>/vente</strong> et dans la vitrine d'accueil.</p>
+      <input type="hidden" id="dossierListingId">
+
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:700;color:#15161b;background:#fff8f1;border:1px solid #ffe0c2;border-radius:10px;padding:.7rem .9rem;margin-bottom:1rem;cursor:pointer">
+        <input type="checkbox" id="dsComplet"> Marquer comme « Dossier complet » (visible publiquement)
+      </label>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label style="font-size:.78rem;font-weight:700;color:#555">Surface terrain (m²)</label><input id="dsLand" type="number" min="0" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit"></div>
+        <div><label style="font-size:.78rem;font-weight:700;color:#555">Surface bâtie (m²)</label><input id="dsBuilt" type="number" min="0" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit"></div>
+        <div><label style="font-size:.78rem;font-weight:700;color:#555">Statut du titre</label>
+          <select id="dsTitle" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;background:#fff">
+            <option value="">—</option><option value="titre_foncier">Titre foncier</option><option value="immatriculation_en_cours">Immatriculation en cours</option><option value="non_titre">Non titré</option>
+          </select></div>
+        <div><label style="font-size:.78rem;font-weight:700;color:#555">Propriété</label>
+          <select id="dsOwn" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;background:#fff">
+            <option value="">—</option><option value="pleine_propriete">Pleine propriété</option><option value="indivision">Indivision</option>
+          </select></div>
+        <div><label style="font-size:.78rem;font-weight:700;color:#555">Vendeur</label>
+          <select id="dsSeller" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;background:#fff">
+            <option value="">—</option><option value="particulier">Particulier</option><option value="promoteur">Promoteur</option>
+          </select></div>
+      </div>
+
+      <div style="margin-top:12px"><label style="font-size:.78rem;font-weight:700;color:#555">Viabilisation (séparés par des virgules)</label>
+        <input id="dsViab" type="text" placeholder="Eau CDE, ENEO, Route bitumée" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit"></div>
+      <div style="margin-top:10px"><label style="font-size:.78rem;font-weight:700;color:#555">Équipements (séparés par des virgules)</label>
+        <input id="dsEquip" type="text" placeholder="Forage, Groupe électrogène, Clôturé" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit"></div>
+
+      <div style="margin-top:14px">
+        <label style="font-size:.78rem;font-weight:700;color:#555">Documents fournis (cochés = « Consultable en agence »)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <label style="font-size:.82rem;display:flex;gap:.4rem;align-items:center"><input type="checkbox" class="ds-doc" value="Titre foncier"> Titre foncier</label>
+          <label style="font-size:.82rem;display:flex;gap:.4rem;align-items:center"><input type="checkbox" class="ds-doc" value="Plan de bornage"> Plan de bornage</label>
+          <label style="font-size:.82rem;display:flex;gap:.4rem;align-items:center"><input type="checkbox" class="ds-doc" value="Certificat de propriété"> Certificat de propriété</label>
+          <label style="font-size:.82rem;display:flex;gap:.4rem;align-items:center"><input type="checkbox" class="ds-doc" value="Quitus foncier"> Quitus foncier</label>
+          <label style="font-size:.82rem;display:flex;gap:.4rem;align-items:center"><input type="checkbox" class="ds-doc" value="Certificat d'urbanisme"> Certificat d'urbanisme</label>
+        </div>
+        <label style="font-size:.74rem;font-weight:700;color:#888;margin-top:8px;display:block">Autres documents (1 par ligne — format : Libellé | Statut | url-aperçu)</label>
+        <textarea id="dsDocsExtra" rows="2" placeholder="Plan cadastral | Consultable en agence" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;font-size:.82rem"></textarea>
+      </div>
+
+      <div style="margin-top:12px"><label style="font-size:.74rem;font-weight:700;color:#888">Détail des frais (optionnel — 1 par ligne : Libellé | Montant)</label>
+        <textarea id="dsPriceBreak" rows="2" placeholder="Droits d'enregistrement | 9250000" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;font-size:.82rem"></textarea></div>
+
+      <div style="margin-top:10px"><label style="font-size:.74rem;font-weight:700;color:#888">Notes internes (non publiques)</label>
+        <textarea id="dsNotes" rows="2" style="width:100%;border:1.5px solid #e5e5e5;border-radius:9px;padding:.55rem .8rem;font-family:inherit;font-size:.82rem"></textarea></div>
+
+      <div id="dsError" style="color:#c00;font-size:.8rem;min-height:1.1rem;margin-top:.6rem"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:.4rem">
+        <button onclick="document.getElementById('dossierOverlay').style.display='none'" style="padding:.65rem 1.2rem;border-radius:10px;border:1.5px solid #ddd;background:#fff;font-family:inherit;font-weight:700;cursor:pointer">Annuler</button>
+        <button id="dsSaveBtn" onclick="saveDossier()" style="padding:.65rem 1.4rem;border-radius:10px;border:none;background:#ff7a00;color:#fff;font-family:inherit;font-weight:800;cursor:pointer">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Boost Vitrine -->
   <div id="boostOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:1rem">
     <div style="background:#fff;border-radius:18px;width:100%;max-width:460px;padding:2rem">
