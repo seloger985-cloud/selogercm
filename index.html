@@ -193,6 +193,27 @@
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-WVWKFVTF');</script>
   <!-- End Google Tag Manager -->
+  <style id="slcm-reorg">
+    body.show-sale .louer-only{display:none !important}
+    body:not(.show-sale) .sale-only{display:none !important}
+    .slcm-seg{display:inline-flex;background:#eceef1;border-radius:11px;padding:4px;gap:3px;margin:0 0 1.1rem}
+    .slcm-seg button{font-size:.82rem;font-weight:700;color:#6b7280;padding:7px 15px;border-radius:8px;border:0;background:transparent;cursor:pointer;font-family:inherit}
+    .slcm-seg button.on{background:#fff;color:#15161b;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+    .slcm-band{background:#15161b;border-radius:18px;padding:1.5rem 1.5rem 1.7rem}
+    .slcm-band .section-title{color:#fff}
+    .slcm-band .section-sub{color:rgba(255,255,255,.6)}
+    .owner-band{background:linear-gradient(120deg,#fff4e9,#ffe9d3);border-radius:18px;padding:1.5rem 1.8rem;display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap}
+    .owner-band h3{font-size:1.2rem;font-weight:800;color:#15161b;margin:0}
+    .owner-band p{font-size:.85rem;color:#8a6a42;margin:.25rem 0 0}
+    .owner-band a{background:#15161b;color:#fff;font-weight:700;font-size:.85rem;padding:.8rem 1.4rem;border-radius:11px;text-decoration:none;white-space:nowrap}
+    .blog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem}
+    .blog-card{background:#fff;border:1px solid #eef0f3;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;display:block}
+    .blog-card .bimg{height:150px;background:#e6e8ec;background-size:cover;background-position:center}
+    .blog-card .bbody{padding:13px}
+    .blog-card .btitle{font-size:.95rem;font-weight:700;color:#15161b;line-height:1.3}
+    .blog-card .bmeta{font-size:.75rem;color:#8a909a;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+    @media(max-width:767px){.blog-grid{grid-template-columns:1fr}.owner-band{flex-direction:column;text-align:center;align-items:stretch}}
+  </style>
 </head>
 
 <body>
@@ -302,42 +323,57 @@
     <!-- ══ REELS VISITES EXPRESS ══ -->
     <!-- Ancre vide : reels.js peuple cette section au runtime depuis Supabase. -->
     <!-- Si aucune annonce n'a de video_url, la section reste masquée (.is-empty). -->
-    <section id="reelsSection" aria-label="Visites Express en vidéo"></section>
+    <section id="reelsSection" class="louer-only" aria-label="Visites Express en vidéo"></section>
 
     <!-- SECTIONS LOCATION (visibles par défaut) -->
     <div id="rentSections">
-      <!-- Top Unfurnished -->
-      <section id="unfurnished" class="snap section-soft" aria-label="Top Unfurnished">
+      <!-- À louer (bascule meublé) -->
+      <section class="snap section-soft" aria-label="À louer">
         <div class="container px pt pb">
           <h2 class="section-title" data-i18n="home.unfurnishedTitle">À louer — Nos sélections</h2>
-          <p class="section-sub" data-i18n="home.premium">Appartements et maisons non meublés</p>
-          <div id="unfurnishedGrid" class="grid grid-3" aria-live="polite"></div>
-          <button class="btn-voir-plus" onclick="revealCards('unfurnishedGrid', this)">
-            <i class="fas fa-chevron-down"></i> Voir les 6 annonces
-          </button>
+          <div class="slcm-seg" id="rentSeg">
+            <button type="button" class="on" data-rt="unf">Non meublé</button>
+            <button type="button" data-rt="fur">Meublé</button>
+            <button type="button" data-rt="all">Tous</button>
+          </div>
+          <div id="unfBlock">
+            <div id="unfurnishedGrid" class="grid grid-3" aria-live="polite"></div>
+            <button class="btn-voir-plus" onclick="revealCards('unfurnishedGrid', this)">
+              <i class="fas fa-chevron-down"></i> Voir les 6 annonces
+            </button>
+          </div>
+          <div id="furBlock" style="display:none">
+            <div id="furnishedGrid" class="grid grid-3"></div>
+            <button class="btn-voir-plus" onclick="revealCards('furnishedGrid', this)">
+              <i class="fas fa-chevron-down"></i> Voir les 6 annonces
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- Top Furnished -->
-      <section id="furnishedSection" class="snap section-soft" aria-label="Top Furnished">
+      <!-- À vendre · Dossier complet (cross-sell Louer) -->
+      <section class="snap section-soft louer-only" id="dossierRentSection" aria-label="A vendre dossier complet" hidden>
         <div class="container px pt pb">
-          <h2 class="section-title" data-i18n="home.furnishedTitle">Prêt à vivre</h2>
-          <p class="section-sub" data-i18n="home.premium">Meublé · Longue durée · Court séjour</p>
-          <div id="furnishedGrid" class="grid grid-3"></div>
-          <button class="btn-voir-plus" onclick="revealCards('furnishedGrid', this)">
-            <i class="fas fa-chevron-down"></i> Voir les 6 annonces
-          </button>
+          <div class="slcm-band">
+            <h2 class="section-title">À vendre · Dossier complet</h2>
+            <p class="section-sub">Une sélection rare de biens entièrement documentés — titre, bornage, certificats consultables en agence.</p>
+            <div id="dossierGridRent" class="grid grid-3"></div>
+            <div style="text-align:right;margin-top:.8rem"><a href="/vente" style="color:#ff7a00;font-weight:700;text-decoration:none">Voir tout &rarr;</a></div>
+          </div>
         </div>
       </section>
-
-      <!-- ══ REELS SECTION 2 ══ -->
-      <section id="reelsSection2" aria-label="Visites Express meublés et espaces pros"></section>
 
       <!-- Locaux Commerciaux à louer -->
       <section class="snap section-soft" aria-label="Locaux Commerciaux">
         <div class="container px pt pb">
           <h2 class="section-title" data-i18n="commercialTitle">Développez votre activité</h2>
           <p class="section-sub" data-i18n="commercialSub">Bureaux · Commerces · Entrepôts disponibles</p>
+          <div class="slcm-seg" id="commSeg">
+            <button type="button" class="on" data-ct="all">Tous</button>
+            <button type="button" data-ct="office">Bureaux</button>
+            <button type="button" data-ct="shop">Boutiques</button>
+            <button type="button" data-ct="warehouse">Entrepôts</button>
+          </div>
           <div id="commercialRentGrid" class="grid grid-3" aria-live="polite"></div>
           <button class="btn-voir-plus" onclick="revealCards('commercialRentGrid', this)">
             <i class="fas fa-chevron-down"></i> Voir les 6 annonces
@@ -348,6 +384,18 @@
 
     <!-- SECTIONS VENTE (cachées par défaut) -->
     <div id="saleSections" style="display:none">
+      <!-- À vendre · Dossier complet (tête onglet Vendre) -->
+      <section class="snap section-soft sale-only" id="dossierSaleSection" aria-label="A vendre dossier complet" hidden>
+        <div class="container px pt pb">
+          <div class="slcm-band">
+            <h2 class="section-title">À vendre · Dossier complet</h2>
+            <p class="section-sub">Une sélection rare de biens entièrement documentés — titre, bornage, certificats consultables en agence.</p>
+            <div id="dossierGridSale" class="grid grid-3"></div>
+            <div style="text-align:right;margin-top:.8rem"><a href="/vente" style="color:#ff7a00;font-weight:700;text-decoration:none">Voir tout &rarr;</a></div>
+          </div>
+        </div>
+      </section>
+
       <!-- Top Villas & Maisons -->
       <section class="snap section-soft" aria-label="Top Villas">
         <div class="container px pt pb">
@@ -360,7 +408,7 @@
       <!-- Top Terrains -->
       <section class="snap section-soft" aria-label="Top Terrains">
         <div class="container px pt pb">
-          <h2 class="section-title">Terrains d'Exception</h2>
+          <h2 class="section-title">Lots d'Exception</h2>
           <p class="section-sub">Opportunités foncières</p>
           <div id="terrainsGrid" class="grid grid-3"></div>
         </div>
@@ -377,14 +425,34 @@
     </div>
 
 
+    <!-- Blog (commun) -->
+    <section class="snap section-soft" id="blogSection" aria-label="Blog" hidden>
+      <div class="container px pt pb">
+        <h2 class="section-title">Le blog SE LOGER CM</h2>
+        <p class="section-sub">Conseils &amp; analyses du marché immobilier à Douala</p>
+        <div id="blogGrid" class="blog-grid"></div>
+        <div style="text-align:center;margin-top:1.5rem"><a href="/blog" style="display:inline-flex;align-items:center;gap:.4rem;color:#ff7a00;font-weight:700;text-decoration:none;font-size:.9rem">Tout voir <i class="fas fa-arrow-right"></i></a></div>
+      </div>
+    </section>
+
+    <!-- Publier (Louer) -->
+    <section class="snap section-soft louer-only" aria-label="Publier une annonce">
+      <div class="container px pt pb">
+        <div class="owner-band">
+          <div><h3>Vous avez un bien à louer ou à vendre ?</h3><p>Publiez votre annonce et touchez des milliers de chercheurs à Douala.</p></div>
+          <a href="/publier">Publier une annonce &rarr;</a>
+        </div>
+      </div>
+    </section>
+
     <!-- Témoignages clients -->
-    <section class="snap section-soft" aria-label="Témoignages clients">
+    <section class="snap section-soft sale-only" aria-label="Témoignages clients">
       <div class="container px pt pb">
         <h2 class="section-title"><span data-i18n="about.reviews.title">Ce que disent nos clients</span></h2>
         <p class="section-sub" data-i18n="about.reviews.sub">Des témoignages authentiques de personnes accompagnées par notre équipe.</p>
         <div id="testimonialsSection" class="temoignages-grid" style="margin-top:1.5rem"></div>
         <div style="text-align:center;margin-top:1.8rem">
-          <a href="about.html#temoignages" style="display:inline-flex;align-items:center;gap:.4rem;color:#ff7a00;font-weight:700;text-decoration:none;font-size:.9rem">
+          <a href='/about#temoignages' style='display:inline-flex;align-items:center;gap:.4rem;color:#ff7a00;font-weight:700;text-decoration:none;font-size:.9rem'>
             <span data-i18n="about.reviews.seeall">Voir tous les témoignages</span> <i class="fas fa-arrow-right"></i>
           </a>
         </div>
@@ -392,7 +460,7 @@
     </section>
 
     <!-- Partner / Contact -->
-    <section class="snap section-partner" aria-label="Partner with us" id="contact">
+    <section class="snap section-partner sale-only" aria-label="Partner with us" id="contact">
       <div class="container px pt pb">
         <div class="grid grid-2 align-center">
           <div class="left">
@@ -552,6 +620,7 @@
       fillGrid('unfurnishedGrid',  rotate(data.unfurnished  || [], 6));
       fillGrid('furnishedGrid',    rotate(data.furnished    || [], 6));
       fillGrid('commercialRentGrid', data.commercialRent || []);
+      window.__commRent = data.commercialRent || [];
       fillGrid('villasGrid',       data.villas         || []);
       fillGrid('terrainsGrid',     data.terrains       || []);
       fillGrid('commercialSaleGrid', data.commercialSale || []);
@@ -658,6 +727,7 @@
       const saleSec = document.getElementById('saleSections');
       if (rentSec) rentSec.style.display = mode === 'rent' ? 'block' : 'none';
       if (saleSec) saleSec.style.display = mode === 'sale' ? 'block' : 'none';
+      document.body.classList.toggle('show-sale', mode === 'sale');
     }
 
     rentTab?.addEventListener('click', () => { mode='rent'; refreshPrices(); toggleTabs(); toggleSections('rent'); });
@@ -980,6 +1050,68 @@ form.addEventListener('submit', async (e) => {
         if (on) document.body.classList.add('cdm26');
       } catch (e) {}
     })();
+  </script>
+  <script>
+  /* ── Réorganisation home : bascules meublé/commercial, bandes Dossier complet, blog ── */
+  (function(){
+    function ready(fn){ if(document.readyState!=='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
+    function waitDB(cb,t){ t=t||0; if(window.SLCM_DB&&window.SLCM_DB.client){return cb(window.SLCM_DB.client);} if(t>60){return cb(null);} setTimeout(function(){waitDB(cb,t+1);},100); }
+    function cardsHtml(rows){ return (window.SLCM_listings&&rows.length)?rows.map(function(l){return SLCM_listings.renderCard(l);}).join(''):'<p style="color:#aaa;grid-column:1/-1;text-align:center;padding:2rem">Aucune annonce.</p>'; }
+
+    ready(function(){
+      /* 1) Bascule meublé */
+      var seg=document.getElementById('rentSeg');
+      if(seg){ seg.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return;
+        seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+        var rt=b.dataset.rt, unf=document.getElementById('unfBlock'), fur=document.getElementById('furBlock');
+        if(unf) unf.style.display=(rt==='fur')?'none':'';
+        if(fur) fur.style.display=(rt==='unf')?'none':'';
+      }); }
+
+      /* 2) Bascule commerciale (office / shop+commercial / warehouse / tous) */
+      var cseg=document.getElementById('commSeg');
+      if(cseg){ cseg.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return;
+        cseg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+        var ct=b.dataset.ct, all=window.__commRent||[];
+        var list = (ct==='all')?all : (ct==='shop')?all.filter(function(x){return x.type==='shop'||x.type==='commercial';}) : all.filter(function(x){return x.type===ct;});
+        var grid=document.getElementById('commercialRentGrid');
+        if(grid){ grid.innerHTML=cardsHtml(list);
+          if(window.innerWidth<768){ grid.querySelectorAll('.listing-card').forEach(function(c,i){ if(i>=3)c.classList.add('card-hidden'); }); }
+        }
+      }); }
+
+      /* 3) Bandes Dossier complet (Louer cross-sell + tête Vendre) */
+      waitDB(function(client){
+        if(!client) return;
+        client.from('listings').select('*').eq('status','active').eq('rent_sale','sale').eq('dossier_complet',true).order('created_at',{ascending:false}).limit(6)
+          .then(function(res){
+            var rows=(res&&res.data)||[];
+            ['dossierGridRent','dossierGridSale'].forEach(function(id){
+              var g=document.getElementById(id); if(!g)return; var sec=g.closest('section');
+              if(rows.length){ g.innerHTML=cardsHtml(rows); if(sec)sec.hidden=false; }
+            });
+          }).catch(function(){});
+      });
+
+      /* 4) Blog — 2 derniers articles */
+      waitDB(function(client){
+        var grid=document.getElementById('blogGrid'); if(!grid)return;
+        var sec=grid.closest('section');
+        if(!client){ return; }
+        client.from('blog_articles').select('*').order('created_at',{ascending:false}).limit(2)
+          .then(function(res){
+            var arts=(res&&res.data)||[];
+            if(!arts.length) return;
+            grid.innerHTML=arts.map(function(a){
+              var img=a.cover||a.image||a.cover_url||a.image_url||'';
+              var t=a.title||'Article'; var id=a.slug||a.id; var cat=a.category||'Conseils';
+              return '<a class="blog-card" href="/article/'+id+'"><div class="bimg" style="background-image:url(\''+img+'\')"></div><div class="bbody"><div class="btitle">'+t+'</div><div class="bmeta">'+cat+'</div></div></a>';
+            }).join('');
+            if(sec)sec.hidden=false;
+          }).catch(function(){});
+      });
+    });
+  })();
   </script>
 </body>
 </html>
