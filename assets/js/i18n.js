@@ -45,11 +45,11 @@
     land:        { fr: 'Terrain',     en: 'Plots of land' },
 
     /* ── Sections accueil ── */
-    unfurnishedTitle: { fr: 'Top Appartements Non Meublés', en: 'Top Unfurnished Apartments' },
+    unfurnishedTitle: { fr: 'À louer — Nos sélections', en: 'For Rent — Our Selection' },
     unfurnishedSub:   { fr: 'Premium • Non Meublé',         en: 'Premium • Unfurnished' },
     furnishedTitle:   { fr: 'Top Appartements Meublés',     en: 'Top Furnished Apartments' },
     furnishedSub:     { fr: 'Premium • Meublé',             en: 'Premium • Furnished' },
-    commercialTitle:  { fr: 'Locaux Commerciaux',           en: 'Commercial Spaces' },
+    commercialTitle:  { fr: 'Développez votre activité',  en: 'Grow Your Business' },
     commercialSub:    { fr: 'Boutiques • Bureaux • Entrepôts à louer', en: 'Shops • Offices • Warehouses for rent' },
 
     /* ── Section partenaire ── */
