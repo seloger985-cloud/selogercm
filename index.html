@@ -277,8 +277,8 @@
         <div class="controls">
           <!-- Segmented control -->
           <div class="seg" data-mode="rent" role="tablist" aria-label="Offer type">
-            <button id="rentTab" class="seg-btn active" role="tab" aria-selected="true" data-i18n="home.rent">À LOUER</button>
-            <button id="saleTab" class="seg-btn inactive" role="tab" aria-selected="false" data-i18n="home.sale">À VENDRE</button>
+            <button id="rentTab" class="seg-btn active" role="tab" aria-selected="true" data-i18n="rentTab">À LOUER</button>
+            <button id="saleTab" class="seg-btn inactive" role="tab" aria-selected="false" data-i18n="saleTab">À VENDRE</button>
           </div>
 
           <!-- Search bar -->
@@ -288,7 +288,7 @@
             <div class="field-black">
               <label class="hidden" for="city">Ville</label>
               <select id="city" name="city" aria-label="Ville" data-i18n-placeholder="city">
-                <option value="" data-i18n="home.city">Ville</option>
+                <option value="" data-i18n="city">Ville</option>
                 <option>Douala</option>
                 <option>Yaoundé</option>
                 <option>Bafoussam</option>
@@ -297,13 +297,13 @@
             <div class="field-black">
               <label class="hidden" for="district">Quartier</label>
               <select id="district" name="district" aria-label="Quartier" data-i18n-placeholder="district">
-                <option value="" data-i18n="home.district">Quartier</option>
+                <option value="" data-i18n="district">Quartier</option>
               </select>
             </div>
             <div class="field-black">
               <label class="hidden" for="type">Type de bien</label>
               <select id="type" name="type" aria-label="Type de bien" data-i18n-placeholder="type">
-                <option value="" data-i18n="home.type">Type de bien</option>
+                <option value="" data-i18n="type">Type de bien</option>
                 <option value="apartment" data-i18n="apartment">Appartement</option>
                 <option value="house" data-i18n="house">Maison</option>
                 <option value="studio" data-i18n="studio">Studio</option>
@@ -317,7 +317,7 @@
             <div class="field-black">
               <label class="hidden" for="bedrooms">Chambres</label>
               <select id="bedrooms" name="bedrooms" aria-label="Chambres" data-i18n-placeholder="bedrooms">
-                <option value="" data-i18n="home.bedrooms">Chambres</option>
+                <option value="" data-i18n="bedrooms">Chambres</option>
                 <option value="1">1</option><option value="2">2</option>
                 <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6+</option>
               </select>
@@ -329,7 +329,7 @@
               </select>
             </div>
             <div class="search-btn-cell">
-              <button id="searchBtn" class="btn-primary" data-i18n="home.search">RECHERCHER</button>
+              <button id="searchBtn" class="btn-primary" data-i18n="search">RECHERCHER</button>
             </div>
           </form>
         </div>
@@ -346,7 +346,7 @@
       <!-- À louer (bascule meublé) -->
       <section class="snap section-soft" aria-label="À louer">
         <div class="container px pt pb">
-          <h2 class="section-title" data-i18n="home.unfurnishedTitle">À louer — Nos sélections</h2>
+          <h2 class="section-title" data-i18n="unfurnishedTitle">Notre sélection à louer</h2>
           <div class="slcm-seg" id="rentSeg">
             <button type="button" class="on" data-rt="unf">Non meublé</button>
             <button type="button" data-rt="fur">Meublé</button>
