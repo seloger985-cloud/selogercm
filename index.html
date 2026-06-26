@@ -220,6 +220,8 @@
     .dossier-rail>*{flex:0 0 320px;max-width:86%;scroll-snap-align:start}
     .dossier-arrow{position:absolute;top:46%;transform:translateY(-50%);z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#15161b;font-size:1.4rem;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);align-items:center;justify-content:center;display:flex}
     .dossier-arrow.prev{left:-6px}.dossier-arrow.next{right:-6px}
+    /* Fond beige (kraft) sur les sections Dossier complet — fait ressortir la bande sombre */
+    #dossierRentSection, #dossierSaleSection{background:#efe6d6}
     .blog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem}
     .blog-card{background:#fff;border:1px solid #eef0f3;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;display:block}
     .blog-card .bimg{height:150px;background:#e6e8ec;background-size:cover;background-position:center}
@@ -1101,16 +1103,21 @@ form.addEventListener('submit', async (e) => {
         });
       });
 
-      /* 4) Blog — 2 derniers articles */
+      /* 4) Blog — rotation : 2 articles, qui changent toutes les 6h */
       waitDB(function(client){
         var grid=document.getElementById('blogGrid'); if(!grid)return;
         var sec=grid.closest('section');
         if(!client){ return; }
-        client.from('blog_articles').select('*').order('created_at',{ascending:false}).limit(2)
+        client.from('blog_articles').select('*').order('created_at',{ascending:false}).limit(50)
           .then(function(res){
             var arts=(res&&res.data)||[];
             if(!arts.length) return;
-            grid.innerHTML=arts.map(function(a){
+            /* Rotation déterministe : fenêtre de 2 qui avance toutes les 6h (comme les Réels) */
+            var bucket=Math.floor(Date.now()/(6*3600*1000));
+            var start=(arts.length>2)?((bucket*2)%arts.length):0;
+            var pick=[];
+            for(var i=0;i<Math.min(2,arts.length);i++){ pick.push(arts[(start+i)%arts.length]); }
+            grid.innerHTML=pick.map(function(a){
               var img=a.cover||a.image||a.cover_url||a.image_url||'';
               var t=a.title||'Article'; var id=a.slug||a.id; var cat=a.category||'Conseils';
               return '<a class="blog-card" href="/article/'+id+'"><div class="bimg" style="background-image:url(\''+img+'\')"></div><div class="bbody"><div class="btitle">'+t+'</div><div class="bmeta">'+cat+'</div></div></a>';

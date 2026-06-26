@@ -232,6 +232,13 @@
         </div>
       </div>
     </section>
+
+    <!-- À vendre · Dossier complet — maillage interne (rempli dynamiquement) -->
+    <section id="dossierDoualaSection" style="margin-top:3rem;display:none">
+      <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:.3rem;color:#111">À vendre à Douala — Dossier complet</h2>
+      <p style="font-size:.9rem;color:#666;margin-bottom:1.1rem;line-height:1.6">Une sélection de biens entièrement documentés (titre foncier, bornage, certificats) — consultables en agence.</p>
+      <div id="dossierDoualaLinks" style="display:flex;flex-wrap:wrap;gap:.5rem .7rem"></div>
+    </section>
   </main>
 
   <footer></footer>
@@ -244,6 +251,37 @@
   <script src="/assets/js/lang.js" defer></script>
   <script src="/assets/js/footer.js" defer></script>
   <script src="/assets/js/nav.js" defer></script>
+
+  <!-- À vendre · Dossier complet : liens de maillage interne -->
+  <script>
+  (function(){
+    async function fillDossierDouala(){
+      var box = document.getElementById('dossierDoualaLinks');
+      var sec = document.getElementById('dossierDoualaSection');
+      if (!box || !window.SLCM_DB || typeof window.SLCM_DB.init !== 'function') return;
+      try {
+        var client = await window.SLCM_DB.init();
+        if (!client) return;
+        var res = await client.from('listings')
+          .select('slug,id,type,district,rent_sale,dossier_complet,status,created_at')
+          .eq('status','active').eq('rent_sale','sale').eq('dossier_complet',true)
+          .order('created_at',{ascending:false}).limit(12);
+        var rows = (res && res.data) || [];
+        if (!rows.length) return;
+        var TYPE = { villa:'Villa', apartment:'Appartement', house:'Maison', land:'Terrain', studio:'Studio', office:'Bureau', shop:'Local commercial', commercial:'Local commercial', warehouse:'Entrepôt', duplex:'Duplex' };
+        box.innerHTML = rows.map(function(l){
+          var ref = l.slug || l.id;
+          var t = TYPE[l.type] || (l.type ? l.type.charAt(0).toUpperCase()+l.type.slice(1) : 'Bien');
+          var label = t + ' à vendre' + (l.district ? ' à ' + l.district : '');
+          return '<a href="/vente/'+ref+'" style="display:inline-block;font-size:.83rem;font-weight:600;color:#15161b;background:#fff;border:1px solid #e7d9c2;border-radius:999px;padding:.42rem .9rem;text-decoration:none">'+label+'</a>';
+        }).join('');
+        if (sec) sec.style.display = '';
+      } catch(e){}
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fillDossierDouala);
+    else fillDossierDouala();
+  })();
+  </script>
   <script src="/assets/js/favorites.js" defer></script>
 
   <script>

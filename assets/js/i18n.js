@@ -45,7 +45,7 @@
     land:        { fr: 'Terrain',     en: 'Plots of land' },
 
     /* ── Sections accueil ── */
-    unfurnishedTitle: { fr: 'À louer — Nos sélections', en: 'For Rent — Our Selection' },
+    unfurnishedTitle: { fr: 'Notre sélection à louer', en: 'Our Rental Selection' },
     unfurnishedSub:   { fr: 'Premium • Non Meublé',         en: 'Premium • Unfurnished' },
     furnishedTitle:   { fr: 'Top Appartements Meublés',     en: 'Top Furnished Apartments' },
     furnishedSub:     { fr: 'Premium • Meublé',             en: 'Premium • Furnished' },

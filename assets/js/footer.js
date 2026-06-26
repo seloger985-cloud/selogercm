@@ -165,6 +165,14 @@
           </div>
         </div>
 
+        <!-- À vendre · Dossier complet — maillage interne (rempli dynamiquement) -->
+        <div id="footerDossierWrap" style="border-top:1px solid rgba(255,255,255,.08);padding-top:1.2rem;margin-top:1rem;display:none">
+          <p style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem">
+            ${lang === 'fr' ? 'À vendre · Dossier complet' : 'For sale · Full file'}
+          </p>
+          <div id="footerDossierLinks" style="display:flex;flex-wrap:wrap;gap:.4rem .8rem"></div>
+        </div>
+
         <div class="footer-bottom">
           <p class="footer-copy">${C.copyright[lang](year)}</p>
           <div class="footer-legal">
@@ -177,6 +185,37 @@
         </div>
       </div>
     `;
+    fillFooterDossier();
+  }
+
+  /* Remplit le bloc "À vendre · Dossier complet" du footer depuis Supabase.
+     Maillage interne : liens "Villa à vendre à Bonapriso" → /vente/{slug}.
+     No-op gracieux si pas de client Supabase sur la page. */
+  async function fillFooterDossier() {
+    var wrap = document.getElementById('footerDossierWrap');
+    var box  = document.getElementById('footerDossierLinks');
+    if (!wrap || !box || !window.SLCM_DB || typeof window.SLCM_DB.init !== 'function') return;
+    try {
+      var client = await window.SLCM_DB.init();
+      if (!client) return;
+      var res = await client.from('listings')
+        .select('slug,id,type,district,rent_sale,dossier_complet,status,created_at')
+        .eq('status', 'active').eq('rent_sale', 'sale').eq('dossier_complet', true)
+        .order('created_at', { ascending: false }).limit(8);
+      var rows = (res && res.data) || [];
+      if (!rows.length) return;
+      var lang = getLang();
+      var TYPE = { villa:'Villa', apartment:'Appartement', house:'Maison', land:'Terrain', studio:'Studio', office:'Bureau', shop:'Local commercial', commercial:'Local commercial', warehouse:'Entrepôt', duplex:'Duplex' };
+      box.innerHTML = rows.map(function (l) {
+        var ref = l.slug || l.id;
+        var t = TYPE[l.type] || (l.type ? l.type.charAt(0).toUpperCase() + l.type.slice(1) : 'Bien');
+        var label = (lang === 'fr')
+          ? (t + ' à vendre' + (l.district ? ' à ' + l.district : ''))
+          : (t + ' for sale' + (l.district ? ' in ' + l.district : ''));
+        return '<a href="/vente/' + ref + '" style="font-size:.75rem;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s" onmouseover="this.style.color=\'#ff7a00\'" onmouseout="this.style.color=\'rgba(255,255,255,.45)\'">' + label + '</a>';
+      }).join('');
+      wrap.style.display = '';
+    } catch (e) { /* silencieux */ }
   }
 
   if (document.readyState === 'loading') {
