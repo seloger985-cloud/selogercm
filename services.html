@@ -23,6 +23,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
   <link rel="stylesheet" href="/assets/css/style.css">
+  <!-- Consent Mode : refus par défaut AVANT GTM (RGPD) -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('consent', 'default', { ad_storage:'denied', analytics_storage:'denied', ad_user_data:'denied', ad_personalization:'denied', wait_for_update:500 });
+  </script>
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -175,7 +181,9 @@
   <style>
     :root { --nav-h: 68px; }
     body  { padding-top: var(--nav-h); }
-  </style></head>
+  </style>
+  <script src="/assets/js/cookies.js" defer></script>
+</head>
 <body>
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVWKFVTF"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

@@ -160,8 +160,8 @@
 
 [[redirects]]
   from = "/pricing"
-  to = "/pricing.html"
-  status = 200
+  to = "/tarifs"
+  status = 301
 
 [[redirects]]
   from = "/favorites"
