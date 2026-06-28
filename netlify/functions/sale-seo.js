@@ -162,6 +162,7 @@ function buildPrerender(ad, dossier, seo, related = []) {
       <p style="margin-top:.8rem;font-size:.85rem;color:#8a7c63">Documents fournis par le vendeur, consultables en agence. Vente devant notaire (art. 8 de l'ordonnance n° 74-1 du 6 juillet 1974).</p>
       <p style="margin-top:1rem"><a href="${esc(seo.adUrl)}" style="color:#ff7a00;font-weight:700">Voir le dossier complet sur SE LOGER CM</a></p>
       ${relatedHtml}
+      <p style="margin-top:1.2rem;border-top:1px solid #eee;padding-top:1rem;font-size:.92rem"><a href="${SITE}/vente" style="color:#c25e00;text-decoration:none;font-weight:700">Voir tous nos biens à vendre en dossier complet →</a><br><a href="${SITE}/toutes-les-annonces" style="color:#c25e00;text-decoration:none;font-weight:600">Toutes les annonces immobilières à Douala →</a></p>
     </article>`;
 }
 
