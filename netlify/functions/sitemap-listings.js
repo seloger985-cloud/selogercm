@@ -13,7 +13,7 @@ exports.handler = async function () {
   try {
     /* Récupérer les listings actifs */
     const url = `${SUPABASE_URL}/rest/v1/listings`
-      + `?select=id,slug,updated_at,created_at`
+      + `?select=id,slug,updated_at,created_at,rent_sale,dossier_complet`
       + `&status=eq.active`
       + `&order=created_at.desc`
       + `&limit=50000`;
@@ -44,12 +44,17 @@ exports.handler = async function () {
       })
       .map(l => {
         const lastmod = (l.updated_at || l.created_at || '').split('T')[0];
-        const path = `/annonce/${encodeURIComponent(l.slug.trim())}`;
+        /* Dossier complet vente → URL premium /vente/{slug} (sinon /annonce/{slug}).
+           Évite le doublon : chaque bien n'apparaît qu'une fois, à sa bonne URL. */
+        const isDossier = l.dossier_complet === true && l.rent_sale === 'sale';
+        const slug = encodeURIComponent(l.slug.trim());
+        const path = isDossier ? `/vente/${slug}` : `/annonce/${slug}`;
+        const priority = isDossier ? '0.9' : '0.8';
         return `  <url>
     <loc>${SITE_URL}${path}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>${priority}</priority>
   </url>`;
       })
       .join('\n');
