@@ -180,7 +180,7 @@ function buildPrerender(ad, seo, related = []) {
       ${desc}
       <p style="margin-top:1rem"><a href="${esc(seo.adUrl)}" style="color:#ff7a00;font-weight:700">Voir l'annonce complète sur SE LOGER CM</a></p>
       ${relatedHtml}
-      <p style="margin-top:1.4rem;border-top:1px solid #eee;padding-top:1rem;font-size:.92rem"><a href="${SITE}/toutes-les-annonces" style="color:#c25e00;text-decoration:none;font-weight:600">Voir toutes les annonces immobilières à Douala →</a></p>
+      <p style="margin-top:1.4rem;border-top:1px solid #eee;padding-top:1rem;font-size:.92rem"><a href="${SITE}/toutes-les-annonces" style="color:#c25e00;text-decoration:none;font-weight:600">Voir toutes les annonces immobilières à Douala →</a><br><a href="${SITE}/vente" style="color:#c25e00;text-decoration:none;font-weight:600">Découvrir nos biens à vendre en dossier complet →</a></p>
     </article>`;
 }
 
