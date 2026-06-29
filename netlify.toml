@@ -7,7 +7,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["listing_detail.html", "article.html", "vente_detail.html", "index.html"]
+  included_files = ["listing_detail.html", "article.html", "vente_detail.html", "index.html", "douala.html"]
 
 [functions."send-alerts"]
   schedule = "0 */6 * * *"
@@ -58,17 +58,19 @@
   status = 200
 
 # ── Vente à dossier complet ──
+# Collection /vente (exact) → page server-rendue crawlable
+[[redirects]]
+  from = "/vente"
+  to = "/.netlify/functions/vente-index"
+  status = 200
+  force = true
+
+# Fiches /vente/{slug} → sale-seo (OG + prérendu)
 [[redirects]]
   from = "/vente/*"
   to = "/.netlify/functions/sale-seo"
   status = 200
   force = true
-
-# Collection /vente : temporaire vers /annonces (302) en attendant la page dédiée
-[[redirects]]
-  from = "/vente"
-  to = "/annonces"
-  status = 302
 
 # ── Visites Express (réels vidéo partageables) ──
 [[redirects]]
@@ -170,8 +172,15 @@
 
 [[redirects]]
   from = "/douala"
-  to = "/douala.html"
+  to = "/.netlify/functions/douala-seo"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/douala.html"
+  to = "/.netlify/functions/douala-seo"
+  status = 200
+  force = true
 
 # Pages légales
 [[redirects]]
