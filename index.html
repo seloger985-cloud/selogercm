@@ -222,6 +222,15 @@
     .dossier-arrow.prev{left:-6px}.dossier-arrow.next{right:-6px}
     /* Fond beige (kraft) sur les sections Dossier complet — fait ressortir la bande sombre */
     #dossierRentSection, #dossierSaleSection{background:#efe6d6}
+    /* Squelettes de chargement (anti-flash pendant le fetch homepage-listings) */
+    .sk-card{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden}
+    .sk-img{aspect-ratio:4/3;background:#ececec}
+    .sk-pad{padding:.7rem .8rem 1rem}
+    .sk-line{height:12px;border-radius:6px;background:#ececec;margin-bottom:.5rem}
+    .sk-line.sk-short{width:55%;margin-bottom:0}
+    .sk-card .sk-img,.sk-card .sk-line{position:relative;overflow:hidden}
+    .sk-card .sk-img::after,.sk-card .sk-line::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:sk-shimmer 1.3s infinite}
+    @keyframes sk-shimmer{100%{transform:translateX(100%)}}
     .blog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem}
     .blog-card{background:#fff;border:1px solid #eef0f3;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;display:block}
     .blog-card .bimg{height:150px;background:#e6e8ec;background-size:cover;background-position:center}
@@ -608,6 +617,17 @@
         });
       }
     }
+
+    /* Squelettes de chargement : évitent le blanc / le flash "Aucune annonce"
+       pendant le fetch (~3,5 s à froid). Remplacés par fillGrid au retour. */
+    function skeletons(n) {
+      var one = '<div class="sk-card"><div class="sk-img"></div><div class="sk-pad"><div class="sk-line"></div><div class="sk-line sk-short"></div></div></div>';
+      return new Array(n).fill(one).join('');
+    }
+    ['unfurnishedGrid','furnishedGrid','commercialRentGrid','villasGrid','terrainsGrid','commercialSaleGrid'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && !el.children.length) el.innerHTML = skeletons(3);
+    });
 
     try {
       /* Un seul fetch → CDN cache 5 min → pas d'attente Supabase client */

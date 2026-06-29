@@ -89,7 +89,12 @@ function buildSeo(ad, slug) {
   const adImg = cfVariant((ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`, 'og');
   const adImgFull = cfVariant((ad.images && ad.images[0]) || `${SITE}/assets/img/og-cover.png`, 'gallery');
   const canonicalSlug = ad.slug || slug;
-  const adUrl = `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
+  /* Dossier complet vente : l'URL canonique est /vente/{slug} (page premium),
+     pas /annonce/. Évite le contenu dupliqué — Google indexe la bonne page. */
+  const isDossierSale = ad.dossier_complet === true && ad.rent_sale === 'sale';
+  const adUrl = isDossierSale
+    ? `${SITE}/vente/${encodeURIComponent(canonicalSlug)}`
+    : `${SITE}/annonce/${encodeURIComponent(canonicalSlug)}`;
   const pageTitle = `${adTitle} — ${adCity} | SE LOGER CM`;
   const adDesc = ad.type === 'fonds-commerce'
     ? `${adTitle} — ${adCity} — Prix du fonds : ${adPrice}.${ad.business_rent ? ' Loyer : ' + (Number(ad.business_rent) || 0).toLocaleString('fr-FR') + ' FCFA/mois.' : ''} ${cleanDescription ? cleanDescription.slice(0, 120) + '…' : 'Annonce vérifiée par SE LOGER CM.'}`
@@ -175,7 +180,7 @@ function buildPrerender(ad, seo, related = []) {
       ${desc}
       <p style="margin-top:1rem"><a href="${esc(seo.adUrl)}" style="color:#ff7a00;font-weight:700">Voir l'annonce complète sur SE LOGER CM</a></p>
       ${relatedHtml}
-      <p style="margin-top:1.4rem;border-top:1px solid #eee;padding-top:1rem;font-size:.92rem"><a href="${SITE}/toutes-les-annonces" style="color:#c25e00;text-decoration:none;font-weight:600">Voir toutes les annonces immobilières à Douala →</a></p>
+      <p style="margin-top:1.4rem;border-top:1px solid #eee;padding-top:1rem;font-size:.92rem"><a href="${SITE}/toutes-les-annonces" style="color:#c25e00;text-decoration:none;font-weight:600">Voir toutes les annonces immobilières à Douala →</a><br><a href="${SITE}/vente" style="color:#c25e00;text-decoration:none;font-weight:600">Découvrir nos biens à vendre en dossier complet →</a></p>
     </article>`;
 }
 
