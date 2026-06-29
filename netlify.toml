@@ -21,7 +21,7 @@
 [functions."cron-cleanup"]
   schedule = "0 3 * * 0"
 
-# â”€â”€ Canonique : apex selogercm.com (sans www) â”€â”€
+# ── Canonique : apex selogercm.com (sans www) ──
 [[redirects]]
   from = "https://www.selogercm.com/*"
   to = "https://selogercm.com/:splat"
@@ -40,7 +40,7 @@
   status = 301
   force = true
 
-# â”€â”€ URLs propres â†’ fichiers HTML â”€â”€
+# ── URLs propres → fichiers HTML ──
 [[redirects]]
   from = "/annonces"
   to = "/listings_v2.html"
@@ -57,35 +57,22 @@
   to = "/listing_detail.html"
   status = 200
 
-<<<<<<< HEAD
 # ── Vente à dossier complet ──
 # Collection /vente (exact) → page server-rendue crawlable
-=======
-# â”€â”€ Vente Ã  dossier complet â”€â”€
-# Collection /vente (exact) â†’ page server-rendue crawlable
->>>>>>> 9d8a6390d4d378c882cca274ea2ef1d387a8cdd5
 [[redirects]]
   from = "/vente"
   to = "/.netlify/functions/vente-index"
   status = 200
   force = true
 
-<<<<<<< HEAD
 # Fiches /vente/{slug} → sale-seo (OG + prérendu)
-=======
-# Fiches /vente/{slug} â†’ sale-seo (OG + prÃ©rendu)
->>>>>>> 9d8a6390d4d378c882cca274ea2ef1d387a8cdd5
 [[redirects]]
   from = "/vente/*"
   to = "/.netlify/functions/sale-seo"
   status = 200
   force = true
 
-<<<<<<< HEAD
 # ── Visites Express (réels vidéo partageables) ──
-=======
-# â”€â”€ Visites Express (rÃ©els vidÃ©o partageables) â”€â”€
->>>>>>> 9d8a6390d4d378c882cca274ea2ef1d387a8cdd5
 [[redirects]]
   from = "/visites-express/*"
   to = "/.netlify/functions/visite-seo"
@@ -195,7 +182,7 @@
   status = 200
   force = true
 
-# Pages lÃ©gales
+# Pages légales
 [[redirects]]
   from = "/mentions-legales"
   to = "/mentions-legales.html"
@@ -267,7 +254,7 @@
   to = "/seo-landing.html"
   status = 200
 
-# Partage rÃ©seaux sociaux
+# Partage réseaux sociaux
 [[redirects]]
   from = "/share/article/:id"
   to = "/.netlify/functions/og"
@@ -315,7 +302,7 @@
   to = "/404.html"
   status = 404
 
-# â”€â”€ Headers â”€â”€
+# ── Headers ──
 
 [[headers]]
   for = "/sitemap-listings.xml"
